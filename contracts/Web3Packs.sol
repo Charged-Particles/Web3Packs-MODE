@@ -1,0 +1,289 @@
+// SPDX-License-Identifier: MIT
+
+// BlackholePrevention.sol -- Part of the Charged Particles Protocol
+// Copyright (c) 2022 Firma Lux, Inc. <https://charged.fi>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+//                _    ____                   _
+//               | |  |___ \                 | |
+//  __      _____| |__  __) |_ __   __ _  ___| | _____
+//  \ \ /\ / / _ \ '_ \|__ <| '_ \ / _` |/ __| |/ / __|
+//   \ V  V /  __/ |_) |__) | |_) | (_| | (__|   <\__ \
+//    \_/\_/ \___|_.__/____/| .__/ \__,_|\___|_|\_\___/
+//                          | |
+//                          |_|
+
+pragma solidity 0.8.17;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+
+import "./interfaces/IWeb3Packs.sol";
+import "./interfaces/IChargedState.sol";
+import "./interfaces/IChargedParticles.sol";
+
+import "./lib/BlackholePrevention.sol";
+
+contract Web3Packs is
+  IWeb3Packs,
+  ERC721,
+  Ownable,
+  Pausable,
+  ReentrancyGuard,
+  BlackholePrevention
+{
+  using Counters for Counters.Counter;
+
+  uint256 public totalSupply;
+  Counters.Counter private _tokenIdCounter;
+
+  // Polygon Mainnet
+  address _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
+  address _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
+  address _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
+
+  constructor() ERC721("Web3Packs", "W3P") {}
+
+
+  /***********************************|
+  |               Public              |
+  |__________________________________*/
+
+  function bundle(
+    address receiver,
+    uint256 deadline,
+    ERC20SwapOrder[] calldata erc20SwapOrders,
+    Web3PackOrder calldata web3PackOrder
+  )
+    external
+    whenNotPaused
+    nonReentrant
+  {
+    uint256[] memory realAmounts = _swap(deadline, erc20SwapOrders);
+    uint256 tokenId = _bundle(receiver, web3PackOrder, realAmounts);
+    emit PackBundled(tokenId, receiver);
+  }
+
+  function unbundle(
+    address receiver,
+    uint256 tokenId,
+    Web3PackOrder calldata web3PackOrder
+  )
+    external
+    whenNotPaused
+    nonReentrant
+  {
+    require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
+    _unbundle(receiver, tokenId, web3PackOrder);
+    emit PackUnbundled(tokenId, receiver);
+  }
+
+
+  /***********************************|
+  |          Only Admin/DAO           |
+  |__________________________________*/
+
+  /**
+    * @dev Setup the ChargedParticles Interface
+    */
+  function setChargedParticles(address chargedParticles) external onlyOwner {
+    _chargedParticles = chargedParticles;
+    emit ChargedParticlesSet(chargedParticles);
+  }
+
+  /// @dev Setup the Charged-State Controller
+  function setChargedState(address stateController) external onlyOwner {
+    _chargedState = stateController;
+    emit ChargedStateSet(stateController);
+  }
+
+  /// @dev Setup the Uniswap Router
+  function setUniswapRouter(address router) external onlyOwner {
+    _router = router;
+    emit UniswapRouterSet(router);
+  }
+
+  /// @dev Pre-approve ChargedParticles to pull Assets from this contract for bundling
+  function preApproveAsset(address assetAddress) external onlyOwner {
+    IERC20(assetAddress).approve(_chargedParticles, type(uint256).max);
+  }
+
+  /// @dev Pre-approve ChargedParticles to pull NFTs from this contract for bundling
+  function preApproveNft(address nftAddress) external onlyOwner {
+    IERC721(nftAddress).setApprovalForAll(_chargedParticles, true);
+  }
+
+  function pause() public onlyOwner {
+    _pause();
+  }
+
+  function unpause() public onlyOwner {
+    _unpause();
+  }
+
+
+  /***********************************|
+  |          Only Admin/DAO           |
+  |      (blackhole prevention)       |
+  |__________________________________*/
+
+  function withdrawEther(address payable receiver, uint256 amount) external virtual onlyOwner {
+    _withdrawEther(receiver, amount);
+  }
+
+  function withdrawErc20(address payable receiver, address tokenAddress, uint256 amount) external virtual onlyOwner {
+    _withdrawERC20(receiver, tokenAddress, amount);
+  }
+
+  function withdrawERC721(address payable receiver, address tokenAddress, uint256 tokenId) external virtual onlyOwner {
+    _withdrawERC721(receiver, tokenAddress, tokenId);
+  }
+
+  function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
+    _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
+  }
+
+
+  /***********************************|
+  |         Private Functions         |
+  |__________________________________*/
+
+  function _swap(
+    uint256 deadline,
+    ERC20SwapOrder[] calldata erc20SwapOrders
+  )
+    internal
+    virtual
+    returns (uint256[] memory)
+  {
+    address receiver = address(this);
+    uint256[] memory amountsOut;
+    for (uint256 i; i < erc20SwapOrders.length; ) {
+      ISwapRouter.ExactInputParams memory exactInputOrder = ISwapRouter
+        .ExactInputParams(
+          abi.encodePacked(
+            // TODO check if this path is correct
+            erc20SwapOrders[i].inputTokenAddress,
+            erc20SwapOrders[i].outputTokenAddress
+          ),
+          receiver,
+          deadline,
+          erc20SwapOrders[i].inputTokenAmount,
+          erc20SwapOrders[i].outputTokenMinAmount
+        );
+      amountsOut[i] = ISwapRouter(_router).exactInput(exactInputOrder);
+
+      unchecked {
+        i++;
+      }
+    }
+    return amountsOut;
+  }
+
+  function _bundle(address receiver, Web3PackOrder calldata web3PackOrder, uint256[] memory realAmounts)
+    internal
+    virtual
+    returns (uint256 tokenId)
+  {
+    address self = address(this);
+    _tokenIdCounter.increment();
+    tokenId = _tokenIdCounter.current();
+    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
+
+    // Mint NFT to Receiver
+    _safeMint(receiver, tokenId);
+
+    // Bundle Assets into NFT
+    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; ) {
+      chargedParticles.energizeParticle(
+        self,
+        tokenId,
+        "generic.B",
+        web3PackOrder.erc20TokenAddresses[i],
+        realAmounts[i], // web3PackOrder.erc20TokenAmounts[i],
+        self
+      );
+      unchecked {
+        i++;
+      }
+    }
+
+    // Bundle NFTs into NFT
+    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; ) {
+      chargedParticles.covalentBond(
+        self,
+        tokenId,
+        "generic.B",
+        web3PackOrder.erc721TokenAddresses[i],
+        web3PackOrder.erc721TokenIds[i],
+        1
+      );
+      unchecked {
+        i++;
+      }
+    }
+  }
+
+  function _unbundle(
+    address receiver,
+    uint256 tokenId,
+    Web3PackOrder calldata web3PackOrder
+  )
+    internal
+  {
+    address self = address(this);
+    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; ) {
+      IChargedParticles(_chargedParticles).releaseParticleAmount(
+        receiver,
+        self,
+        tokenId,
+        "generic.B",
+        web3PackOrder.erc20TokenAddresses[i],
+        web3PackOrder.erc20TokenAmounts[i]
+      );
+      unchecked {
+        i++;
+      }
+    }
+
+    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; ) {
+      IChargedParticles(_chargedParticles).breakCovalentBond(
+        receiver,
+        self,
+        tokenId,
+        "generic.B",
+        web3PackOrder.erc721TokenAddresses[i],
+        web3PackOrder.erc721TokenIds[i],
+        1
+      );
+      unchecked {
+        i++;
+      }
+    }
+  }
+
+}

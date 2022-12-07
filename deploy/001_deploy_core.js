@@ -1,0 +1,113 @@
+// module.exports = async function (hre) {
+//     const {deployments, getNamedAccounts } = hre;
+//     const {deploy} = deployments;
+
+//     const {deployer} = await getNamedAccounts();
+//     // const chainId = network.config.chainId
+
+//     await deploy('Web3Packs', {
+//       from: deployer,
+//       args: [
+//         '0x3A9891279481bB968a8d1300C40d9279111f1CDA'
+//       ],
+//       log: true,
+//     });
+//   };
+
+//   module.exports.tags = ['core'];
+
+
+const {
+  saveDeploymentData,
+  getContractAbi,
+  getTxGasCost,
+} = require('../js-helpers/deploy');
+
+const {
+  executeTx,
+  getAccumulatedGasCost,
+} = require('../js-helpers/executeTx');
+
+const {
+  log,
+  chainNameById,
+  chainIdByName,
+} = require('../js-helpers/utils');
+
+const _ = require('lodash');
+
+const _ADDRESS = {
+  137: {
+    ChargedParticles: '0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10',
+    ChargedState: '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b',
+    UniswapRouter: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  },
+  80001: {
+    ChargedParticles: '0x51f845af34c60499a1056FCDf47BcBC681A0fA39',
+    ChargedState: '0x581c57b86fC8c2D639f88276478324cE1380979D',
+    UniswapRouter: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  },
+};
+
+module.exports = async (hre) => {
+    const { ethers, getNamedAccounts } = hre;
+    const { deployer, protocolOwner } = await getNamedAccounts();
+    const network = await hre.network;
+    const deployData = {};
+
+    const chainId = chainIdByName(network.name);
+
+    log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    log('Charged Particles - Web3 Packs - Contract Deployment');
+    log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+
+    log(`  Using Network: ${chainNameById(chainId)} (${network.name}:${chainId})`);
+    log('  Using Accounts:');
+    log('  - Deployer: ', deployer);
+    log('  - Owner:    ', protocolOwner);
+    log(' ');
+
+    //
+    // Deploy Contracts
+    //
+
+    log('  Deploying Web3Packs...');
+    const Web3Packs = await ethers.getContractFactory('Web3Packs');
+    const Web3PacksInstance = await Web3Packs.deploy();
+    const web3Packs = await Web3PacksInstance.deployed();
+    deployData['Web3Packs'] = {
+      abi: getContractAbi('Web3Packs'),
+      address: web3Packs.address,
+      deployTransaction: web3Packs.deployTransaction
+    }
+    saveDeploymentData(chainId, deployData);
+    log('  - Web3Packs:   ', web3Packs.address);
+    log('     - Block:    ', web3Packs.deployTransaction.blockNumber);
+    log('     - Gas Cost: ', getTxGasCost({ deployTransaction: web3Packs.deployTransaction }));
+
+
+    //
+    // Prepare Contracts
+    //
+
+    await executeTx('1-a', 'Web3Packs: Setting ChargedParticles', async () =>
+      await web3Packs.setChargedParticles(_ADDRESS[chainId].ChargedParticles)
+    );
+
+    await executeTx('1-b', 'Web3Packs: Setting ChargedState', async () =>
+      await web3Packs.setChargedState(_ADDRESS[chainId].ChargedState)
+    );
+
+    // await executeTx('1-c', 'Web3Packs: Setting Uniswap Router', async () =>
+    //   await web3Packs.setUniswapRouter(_ADDRESS[chainId].UniswapRouter)
+    // );
+
+    // await executeTx('1-d', 'Web3Packs: Transfer Contract Ownership', async () =>
+    //   await web3Packs.transferOwnership(protocolOwner)
+    // );
+
+    log('\n  Contract Deployment Data saved to "deployments" directory.');
+    log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+};
+
+module.exports.tags = ['core']
