@@ -61,13 +61,13 @@ module.exports = {
       137: '',
     },
     user1: {
-      default: 3,
+      default: 2,
     },
     user2: {
-      default: 4,
+      default: 3,
     },
     user3: {
-      default: 5,
+      default: 4,
     },
   },
   paths: {
@@ -96,8 +96,9 @@ module.exports = {
       }
     },
     mumbai: {
-        url: `https://matic-mumbai.chainstacklabs.com/`,
-        gasPrice: 5e9,
+        // url: `https://matic-mumbai.chainstacklabs.com/`,
+        url: 'https://rpc-mumbai.maticvigil.com',
+        gasPrice: 10e9,
         accounts: {
             mnemonic: mnemonic.testnet,
             initialIndex: 0,
@@ -112,7 +113,8 @@ module.exports = {
             mnemonic: mnemonic.mainnet,
             initialIndex: 0,
             count: 3,
-        }
+        },
+        chainId: 137
     },
   },
   etherscan: {
@@ -131,6 +133,6 @@ module.exports = {
     runOnCompile: true,
     clear: true,
     flat: true,
-    only: [ 'Web3Packs' ],
+    only: [ 'Web3Packs', 'Sample20', 'Sample721', 'Sample1155' ],
   },
 };

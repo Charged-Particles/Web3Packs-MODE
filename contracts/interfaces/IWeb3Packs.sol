@@ -34,13 +34,11 @@ interface IWeb3Packs {
     address inputTokenAddress;
     address outputTokenAddress;
     uint256 inputTokenAmount;
-    uint256 outputTokenMinAmount;
   }
 
   struct Web3PackOrder {
     address[] erc20TokenAddresses;
     address[] erc721TokenAddresses;
-    uint256[] erc20TokenAmounts;
     uint256[] erc721TokenIds;
   }
 

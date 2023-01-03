@@ -34,7 +34,7 @@ const resetAccumulatedGasCost = () => {
   __accumulatedGasCost = toBN('0');
 };
 
-const executeTx = async (txId, txDesc, callback) => {
+const executeTx = async (txId, txDesc, callback, retryAttempts = 3) => {
   try {
     if (txId === '1-a') {
       log(`\n`);
@@ -46,8 +46,10 @@ const executeTx = async (txId, txDesc, callback) => {
   }
   catch (err) {
     log(`  - Transaction ${txId} Failed: ${err}`);
-    log(`  - Retrying;`);
-    await executeTx(txId, txDesc, callback);
+    if (retryAttempts > 0) {
+      log(`  - Retrying;`);
+      await executeTx(txId, txDesc, callback, retryAttempts-1);
+    }
   }
 }
 

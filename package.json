@@ -23,6 +23,7 @@
       "gas": "REPORT_GAS=true hardhat test",
       "start": "hardhat node --port 8545",
       "deploy": "hardhat deploy --tags core --network",
+      "setup": "hardhat deploy --tags setup --network",
       "etherscan-verify": "hardhat deploy --tags verify --network",
       "gen-docs": "solidity-docgen -i contracts -o docs"
     },
@@ -50,7 +51,7 @@
       "hardhat-gas-reporter": "^1.0.4",
       "hardhat-watcher": "^2.1.1",
       "lodash": "^4.17.15",
-      "solc": "0.6.12",
+      "solc": "0.8.17",
       "solhint": "^3.0.0",
       "solidity-coverage": "^0.7.4",
       "solidity-docgen": "^0.5.3"

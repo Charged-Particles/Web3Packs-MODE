@@ -58,13 +58,16 @@ contract Web3Packs is
 {
   using Counters for Counters.Counter;
 
-  uint256 public totalSupply;
-  Counters.Counter private _tokenIdCounter;
+  Counters.Counter internal _tokenIdCounter;
 
   // Polygon Mainnet
-  address _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-  address _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
-  address _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
+  address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
+  address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
+  address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
+
+  // Charged Particles Wallet Managers
+  string internal _cpWalletManager = "generic.B";
+  string internal _cpBasketManager = "generic.B";
 
   constructor() ERC721("Web3Packs", "W3P") {}
 
@@ -83,7 +86,8 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    uint256[] memory realAmounts = _swap(deadline, erc20SwapOrders);
+    uint256 startAmount = msg.value;
+    uint256[] memory realAmounts = _swap(deadline, startAmount, erc20SwapOrders);
     uint256 tokenId = _bundle(receiver, web3PackOrder, realAmounts);
     emit PackBundled(tokenId, receiver);
   }
@@ -98,7 +102,23 @@ contract Web3Packs is
     nonReentrant
   {
     require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
-    _unbundle(receiver, tokenId, web3PackOrder);
+    _unbundle(receiver, tokenId, _cpWalletManager, _cpBasketManager, web3PackOrder);
+    emit PackUnbundled(tokenId, receiver);
+  }
+
+  function unbundleFromManager(
+    address receiver,
+    uint256 tokenId,
+    string memory walletManager,
+    string memory basketManager,
+    Web3PackOrder calldata web3PackOrder
+  )
+    external
+    whenNotPaused
+    nonReentrant
+  {
+    require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
+    _unbundle(receiver, tokenId, walletManager, basketManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
 
@@ -174,6 +194,7 @@ contract Web3Packs is
 
   function _swap(
     uint256 deadline,
+    uint256 startAmount,
     ERC20SwapOrder[] calldata erc20SwapOrders
   )
     internal
@@ -182,24 +203,19 @@ contract Web3Packs is
   {
     address receiver = address(this);
     uint256[] memory amountsOut;
-    for (uint256 i; i < erc20SwapOrders.length; ) {
+    for (uint256 i; i < erc20SwapOrders.length; i++) {
       ISwapRouter.ExactInputParams memory exactInputOrder = ISwapRouter
         .ExactInputParams(
           abi.encodePacked(
-            // TODO check if this path is correct
             erc20SwapOrders[i].inputTokenAddress,
             erc20SwapOrders[i].outputTokenAddress
           ),
           receiver,
           deadline,
           erc20SwapOrders[i].inputTokenAmount,
-          erc20SwapOrders[i].outputTokenMinAmount
+          0 // request maximum possible amount
         );
       amountsOut[i] = ISwapRouter(_router).exactInput(exactInputOrder);
-
-      unchecked {
-        i++;
-      }
     }
     return amountsOut;
   }
@@ -214,76 +230,64 @@ contract Web3Packs is
     tokenId = _tokenIdCounter.current();
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
 
-    // Mint NFT to Receiver
+    // Mint Web3Pack NFT to Receiver
     _safeMint(receiver, tokenId);
 
     // Bundle Assets into NFT
-    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; ) {
+    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
       chargedParticles.energizeParticle(
         self,
         tokenId,
-        "generic.B",
+        _cpWalletManager,
         web3PackOrder.erc20TokenAddresses[i],
-        realAmounts[i], // web3PackOrder.erc20TokenAmounts[i],
+        realAmounts[i],
         self
       );
-      unchecked {
-        i++;
-      }
     }
 
     // Bundle NFTs into NFT
-    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; ) {
+    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; i++) {
       chargedParticles.covalentBond(
         self,
         tokenId,
-        "generic.B",
+        _cpBasketManager,
         web3PackOrder.erc721TokenAddresses[i],
         web3PackOrder.erc721TokenIds[i],
         1
       );
-      unchecked {
-        i++;
-      }
     }
   }
 
   function _unbundle(
     address receiver,
     uint256 tokenId,
+    string memory walletManager,
+    string memory basketManager,
     Web3PackOrder calldata web3PackOrder
   )
     internal
   {
     address self = address(this);
-    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; ) {
-      IChargedParticles(_chargedParticles).releaseParticleAmount(
+    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
+      IChargedParticles(_chargedParticles).releaseParticle(
         receiver,
         self,
         tokenId,
-        "generic.B",
-        web3PackOrder.erc20TokenAddresses[i],
-        web3PackOrder.erc20TokenAmounts[i]
+        walletManager,
+        web3PackOrder.erc20TokenAddresses[i]
       );
-      unchecked {
-        i++;
-      }
     }
 
-    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; ) {
+    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; i++) {
       IChargedParticles(_chargedParticles).breakCovalentBond(
         receiver,
         self,
         tokenId,
-        "generic.B",
+        basketManager,
         web3PackOrder.erc721TokenAddresses[i],
         web3PackOrder.erc721TokenIds[i],
         1
       );
-      unchecked {
-        i++;
-      }
     }
   }
-
 }
