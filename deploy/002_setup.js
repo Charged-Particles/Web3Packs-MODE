@@ -163,9 +163,6 @@ module.exports = async (hre) => {
       await web3Packs.transferOwnership(protocolOwner)
     );
 
-    if (chainId === 80001 || chainId === 31337) {
-    }
-
     log('\n  Contract Deployment Data saved to "deployments" directory.');
     log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 };
