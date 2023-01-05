@@ -61,7 +61,6 @@ module.exports = async (hre) => {
     log('  Loading ChargedSettings from: ', ddChargedSettings.address);
     
     const chargedSettings = new ethers.Contract(ddChargedSettings.address , chargedSettingsAbi);
-    // const chargedSettings = await ChargedSettings.attach(ddChargedSettings.address);
 
     let testTokenA1;
     let testTokenA2;
@@ -167,4 +166,4 @@ module.exports = async (hre) => {
     log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 };
 
-module.exports.tags = ['setup']
+module.exports.tags = ['Web3packs']

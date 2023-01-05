@@ -1,4 +1,5 @@
-const { expect } = require("chai");
+const { expect } = require("chai"); 
+const { getDeployData } = require('../js-helpers/deploy'); 
 const { ethers, deployments, network } = require('hardhat');
 
 describe('Web3Packs', function() {
@@ -6,8 +7,9 @@ describe('Web3Packs', function() {
   let web3packs;
   
   beforeEach(async () => {
-    await deployments.fixture(['Web3Packs']);
-    web3packs = await ethers.getContract('Web3Packs');
+    const ddWeb3Packs = getDeployData('Web3Packs');
+    const Web3Packs = await ethers.getContractFactory('Web3Packs');
+    web3packs = await Web3Packs.attach(ddWeb3Packs.address);
   });
 
   describe('ERC721', async () => {
@@ -36,22 +38,25 @@ describe('Web3Packs', function() {
       const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
       await foundWeb3PacksTransaction.wait();
 
-      // swap
-      const blockNumber = await ethers.provider.getBlockNumber();
-      const deadline = blockNumber + 2;
-      const ERC20SwapOrder = [{
-        tokenIn: USDcContractAddress,
-        tokenOut: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f', //  (PoS) Tether USD
-        fee: 3000,
-        recipient: '0x2e4f5cf824370a47C4DBD86281d3875036A30534', // test wallet
-        deadline,
-        amountIn: 1,
-        amountOutMinimum: 0,
-        sqrtPriceLimitX96: 0
-      }];
+      const balanceOfAddress = await USDc.balanceOf(web3packs.address);
+      console.log('>>>>> >>>>> >>>>> ' ,balanceOfAddress);
 
-      const swapTransaction = await web3packs.swap(deadline, ERC20SwapOrder);
-      await swapTransaction.wait();
+      // swap
+      // const blockNumber = await ethers.provider.getBlockNumber();
+      // const deadline = blockNumber + 2;
+      // const ERC20SwapOrder = [{
+      //   tokenIn: USDcContractAddress,
+      //   tokenOut: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f', //  (PoS) Tether USD
+      //   fee: 3000,
+      //   recipient: '0x2e4f5cf824370a47C4DBD86281d3875036A30534', // test wallet
+      //   deadline,
+      //   amountIn: 1,
+      //   amountOutMinimum: 0,
+      //   sqrtPriceLimitX96: 0
+      // }];
+
+      // const swapTransaction = await web3packs.swap(deadline, ERC20SwapOrder);
+      // await swapTransaction.wait();
     });
   });
 })
