@@ -86,8 +86,7 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    uint256 startAmount = msg.value;
-    uint256[] memory realAmounts = _swap(deadline, startAmount, erc20SwapOrders);
+    uint256[] memory realAmounts = _swap(deadline, erc20SwapOrders);
     uint256 tokenId = _bundle(receiver, web3PackOrder, realAmounts);
     emit PackBundled(tokenId, receiver);
   }
@@ -194,7 +193,6 @@ contract Web3Packs is
 
   function _swap(
     uint256 deadline,
-    uint256 startAmount,
     ERC20SwapOrder[] calldata erc20SwapOrders
   )
     internal

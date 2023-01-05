@@ -104,11 +104,6 @@
             "internalType": "uint256",
             "name": "inputTokenAmount",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "outputTokenMinAmount",
-            "type": "uint256"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
@@ -126,11 +121,6 @@
             "internalType": "address[]",
             "name": "erc721TokenAddresses",
             "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc20TokenAmounts",
-            "type": "uint256[]"
           },
           {
             "internalType": "uint256[]",
@@ -171,11 +161,6 @@
             "internalType": "address[]",
             "name": "erc721TokenAddresses",
             "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc20TokenAmounts",
-            "type": "uint256[]"
           },
           {
             "internalType": "uint256[]",

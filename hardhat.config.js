@@ -79,19 +79,19 @@ module.exports = {
       deployments: './deployments'
   },
   networks: {
-    localhost: {
-      chainId: 31337,
-      gasPrice: 1e9,
-      forking: {
-        url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        blockNumber: 7827722
-      }
-    },
+    // localhost: {
+    //   chainId: 31337,
+    //   gasPrice: 1e9,
+    //   forking: {
+    //     url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+    //     blockNumber: 7827722
+    //   }
+    // },
     hardhat: {
       chainId: 31337,
       gasPrice: 100e9,
       forking: {
-        url: "https://eth-goerli.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+        url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
         blockNumber: 7827722
       }
     },

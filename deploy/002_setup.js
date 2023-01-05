@@ -1,22 +1,4 @@
-// module.exports = async function (hre) {
-//     const {deployments, getNamedAccounts } = hre;
-//     const {deploy} = deployments;
-
-//     const {deployer} = await getNamedAccounts();
-//     // const chainId = network.config.chainId
-
-//     await deploy('Web3Packs', {
-//       from: deployer,
-//       args: [
-//         '0x3A9891279481bB968a8d1300C40d9279111f1CDA'
-//       ],
-//       log: true,
-//     });
-//   };
-
-//   module.exports.tags = ['core'];
-
-
+const  { chargedSettingsAbi } = require ('@charged-particles/charged-js-sdk');
 const { getDeployData } = require('../js-helpers/deploy');
 const { executeTx } = require('../js-helpers/executeTx');
 const {
@@ -30,6 +12,12 @@ const _ = require('lodash');
 
 const _ADDRESS = {
   137: {
+    ChargedParticles: '0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10',
+    ChargedState: '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b',
+    ChargedSettings: '0xdc29C7014d104432B15eD2334e654fCBf3d5E528',
+    UniswapRouter: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  },
+  31337: {
     ChargedParticles: '0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10',
     ChargedState: '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b',
     ChargedSettings: '0xdc29C7014d104432B15eD2334e654fCBf3d5E528',
@@ -68,10 +56,13 @@ module.exports = async (hre) => {
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
     const web3Packs = await Web3Packs.attach(ddWeb3Packs.address);
 
+    // new ethers.Contract( address , abi , signerOrProvider )
+
     const ddChargedSettings = { address: _ADDRESS[chainId].ChargedSettings };
     log('  Loading ChargedSettings from: ', ddChargedSettings.address);
-    const ChargedSettings = await ethers.getContractFactory('ChargedSettings');
-    const chargedSettings = await ChargedSettings.attach(ddChargedSettings.address);
+    
+    const chargedSettings = new ethers.Contract(ddChargedSettings.address , chargedSettingsAbi);
+    // const chargedSettings = await ChargedSettings.attach(ddChargedSettings.address);
 
     let testTokenA1;
     let testTokenA2;
@@ -115,29 +106,7 @@ module.exports = async (hre) => {
       log('  Loading Sample1155 from:    ', ddSample1155.address);
       const Sample1155 = await ethers.getContractFactory('Sample1155');
       sample1155 = await Sample1155.attach(ddSample1155.address);
-    }
 
-    //
-    // Prepare Contracts
-    //
-
-    await executeTx('1-a', 'Web3Packs: Setting ChargedParticles', async () =>
-      await web3Packs.setChargedParticles(_ADDRESS[chainId].ChargedParticles)
-    );
-
-    await executeTx('1-b', 'Web3Packs: Setting ChargedState', async () =>
-      await web3Packs.setChargedState(_ADDRESS[chainId].ChargedState)
-    );
-
-    await executeTx('1-c', 'Web3Packs: Setting Uniswap Router', async () =>
-      await web3Packs.setUniswapRouter(_ADDRESS[chainId].UniswapRouter)
-    );
-
-    await executeTx('1-d', 'Web3Packs: Transfer Contract Ownership', async () =>
-      await web3Packs.transferOwnership(protocolOwner)
-    );
-
-    if (chainId === 80001 || chainId === 31337) {
       const testTokenAmount = 10000;
       const max721s = 5;
       const max1155s = 10;
@@ -174,6 +143,28 @@ module.exports = async (hre) => {
       await executeTx('4-a', `Sample1155: Batch-Minting ${max1155s} NFTs to user2`, async () =>
         await sample1155.mintBatch(user2, ids, amounts, '0x')
       );
+    }
+
+    //
+    // Prepare Contracts
+    //
+    await executeTx('1-a', 'Web3Packs: Setting ChargedParticles', async () =>
+      await web3Packs.setChargedParticles(_ADDRESS[chainId].ChargedParticles)
+    );
+
+    await executeTx('1-b', 'Web3Packs: Setting ChargedState', async () =>
+      await web3Packs.setChargedState(_ADDRESS[chainId].ChargedState)
+    );
+
+    await executeTx('1-c', 'Web3Packs: Setting Uniswap Router', async () =>
+      await web3Packs.setUniswapRouter(_ADDRESS[chainId].UniswapRouter)
+    );
+
+    await executeTx('1-d', 'Web3Packs: Transfer Contract Ownership', async () =>
+      await web3Packs.transferOwnership(protocolOwner)
+    );
+
+    if (chainId === 80001 || chainId === 31337) {
     }
 
     log('\n  Contract Deployment Data saved to "deployments" directory.');

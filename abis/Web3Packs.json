@@ -366,11 +366,6 @@
             "internalType": "uint256",
             "name": "inputTokenAmount",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "outputTokenMinAmount",
-            "type": "uint256"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
@@ -388,11 +383,6 @@
             "internalType": "address[]",
             "name": "erc721TokenAddresses",
             "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc20TokenAmounts",
-            "type": "uint256[]"
           },
           {
             "internalType": "uint256[]",
@@ -772,8 +762,53 @@
           },
           {
             "internalType": "uint256[]",
-            "name": "erc20TokenAmounts",
+            "name": "erc721TokenIds",
             "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.Web3PackOrder",
+        "name": "web3PackOrder",
+        "type": "tuple"
+      }
+    ],
+    "name": "unbundle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "walletManager",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "basketManager",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "erc20TokenAddresses",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "erc721TokenAddresses",
+            "type": "address[]"
           },
           {
             "internalType": "uint256[]",
@@ -786,7 +821,7 @@
         "type": "tuple"
       }
     ],
-    "name": "unbundle",
+    "name": "unbundleFromManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
