@@ -35,7 +35,6 @@ module.exports = async (hre) => {
     const { ethers, getNamedAccounts } = hre;
     const { deployer, protocolOwner, user2 } = await getNamedAccounts();
     const network = await hre.network;
-    const deployData = {};
 
     const chainId = chainIdByName(network.name);
 
