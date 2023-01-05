@@ -18,19 +18,20 @@ describe('Web3Packs', function() {
       expect(name).to.equal('Web3Packs');
     });
 
-    it.skip ('Swap a single asset', async() => {
+    it ('Swap a single asset', async() => {
 
       // grant maUSD to the Web3Packs contract.
       const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
-      const maUSDWhale = '0xd6216fc19db775df9774a6e33526131da7d19a2c';
+      const maUSDWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
       await network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ maUSDWhale ],
       });
 
-      // const whaleSigner = await ethers.getSigner(maUSDWhale);
+      const whaleSigner = await ethers.getSigner(maUSDWhale);
       const erc20Abi = [
-        "function transfer(address to, uint amount)"
+        "function transfer(address to, uint amount)",
+        "function balanceOf(address account) public view virtual override returns (uint256)"
       ];
     
       const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, whaleSigner);
@@ -39,7 +40,7 @@ describe('Web3Packs', function() {
       await foundWeb3PacksTransaction.wait();
 
       const balanceOfAddress = await USDc.balanceOf(web3packs.address);
-      console.log('>>>>> >>>>> >>>>> ' ,balanceOfAddress);
+      console.log('>>>>> >>>>> >>>>> ' , balanceOfAddress.toString());
 
       // swap
       // const blockNumber = await ethers.provider.getBlockNumber();
