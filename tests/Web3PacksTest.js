@@ -5,7 +5,16 @@ const { ethers, deployments, network } = require('hardhat');
 describe('Web3Packs', function() {
   
   let web3packs;
-  
+
+  const erc20Abi = [
+    "function transfer(address to, uint amount)",
+    "function balanceOf(address account) public view virtual override returns (uint256)"
+  ];
+
+  const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+  const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+  const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
+   
   beforeEach(async () => {
     const ddWeb3Packs = getDeployData('Web3Packs');
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
@@ -19,49 +28,37 @@ describe('Web3Packs', function() {
     });
 
     it ('Swap a single asset', async() => {
-
       // grant maUSD to the Web3Packs contract.
-      const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
-      const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-      const maUSDWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
       await network.provider.request({
         method: "hardhat_impersonateAccount",
-        params: [ maUSDWhale ],
+        params: [ USDcWhale ],
       });
 
-      const whaleSigner = await ethers.getSigner(maUSDWhale);
-      const erc20Abi = [
-        "function transfer(address to, uint amount)",
-        "function balanceOf(address account) public view virtual override returns (uint256)"
-      ];
-    
+      // Deposit usdc into web3pack contract
+      const whaleSigner = await ethers.getSigner(USDcWhale);
       const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, whaleSigner);
-
       const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
       await foundWeb3PacksTransaction.wait();
 
-      // const balanceOfAddress = await USDc.balanceOf(web3packs.address);
-
-      // swap
-      const blockNumber = await ethers.provider.getBlockNumber();
-      // const blockBefore = await ethers.provider.getBlock(blockNumber);
-      // const timestampBefore = blockBefore.timestamp + 10000;
+      const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
+      expect(balanceBeforeSwap).to.equal(100);
 
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10
+        inputTokenAmount: 90
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
-
-      const receiptSingleSwap = await swapTransaction.wait();
-      // console.log(receiptSingleSwap)
+      await swapTransaction.wait();
 
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, whaleSigner);
-      const USDtBalance = await USDt.balanceOf(web3packs.address);
+      const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
-      console.log(USDtBalance.toString());
+      expect(USDtBalanceAfterSwap).to.equal(89);
+
+      const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
+      console.log(balanceBeforeSwap1.toString());
     });
   });
 })
