@@ -81,7 +81,6 @@ contract Web3Packs is
 
   function bundle(
     address receiver,
-    uint256 deadline,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     Web3PackOrder calldata web3PackOrder
   )
@@ -89,7 +88,7 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    uint256[] memory realAmounts = _swap(deadline, erc20SwapOrders);
+    uint256[] memory realAmounts = _swap(erc20SwapOrders);
     uint256 tokenId = _bundle(receiver, web3PackOrder, realAmounts);
     emit PackBundled(tokenId, receiver);
   }
@@ -125,14 +124,13 @@ contract Web3Packs is
   }
 
   function swap(
-    uint256 deadline,
     ERC20SwapOrder[] calldata erc20SwapOrders
   )
     external
     virtual
     returns (uint256[] memory)
   {
-    return _swap(deadline, erc20SwapOrders);
+    return _swap(erc20SwapOrders);
   }
 
   /***********************************|
@@ -205,54 +203,45 @@ contract Web3Packs is
   |__________________________________*/
 
   function _swap(
-    uint256 deadline,
     ERC20SwapOrder[] calldata erc20SwapOrders
   )
     internal
     virtual
     returns (uint256[] memory)
   {
-    address receiver = address(this);
-    uint256[] memory amountsOut;
+    uint256[] memory amountsOut = new uint256[](erc20SwapOrders.length);
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      ISwapRouter.ExactInputParams memory exactInputOrder = ISwapRouter
-        .ExactInputParams({
-          path: abi.encodePacked(
-            erc20SwapOrders[i].inputTokenAddress,
-            erc20SwapOrders[i].outputTokenAddress
-          ),
-          recipient: receiver,
-          deadline: deadline,
-          amountIn: erc20SwapOrders[i].inputTokenAmount,
-          amountOutMinimum: 0 // request maximum possible amount
-      });
-      amountsOut[i] = ISwapRouter(_router).exactInput(exactInputOrder);
+      amountsOut[i] = _singleSwap(
+        erc20SwapOrders[i].inputTokenAddress,
+        erc20SwapOrders[i].outputTokenAddress,
+        erc20SwapOrders[i].inputTokenAmount
+      );
     }
     return amountsOut;
   }
 
   function _singleSwap(
-    address tokenIn,
-    address tokenOut,
-    uint256 amountIn
-  ) external returns (uint256 amountOut) { //TODO change exposure
+    address inputTokenAddress,
+    address outputTokenAddress,
+    uint256 inputTokenAmount
+  ) internal returns (uint256 amountOut) {
     
     // Approve the router to spend DAI.
-    TransferHelper.safeApprove(tokenIn, address(_router), amountIn);
+    TransferHelper.safeApprove(inputTokenAddress, address(_router), inputTokenAmount);
 
-   ISwapRouter.ExactInputSingleParams memory params =
-    ISwapRouter.ExactInputSingleParams({
-      tokenIn: tokenIn,
-      tokenOut: tokenOut,
-      fee: 3000,
-      recipient: address(this),
-      deadline: block.timestamp,
-      amountIn: amountIn,
-      amountOutMinimum: 0,
-      sqrtPriceLimitX96: 0
-    });
-    // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
-    amountOut = ISwapRouter(_router).exactInputSingle(params);
+    ISwapRouter.ExactInputSingleParams memory params =
+      ISwapRouter.ExactInputSingleParams({
+        tokenIn: inputTokenAddress,
+        tokenOut: outputTokenAddress,
+        fee: 3000,
+        recipient: address(this),
+        deadline: block.timestamp,
+        amountIn: inputTokenAmount,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0
+      });
+      // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
+      amountOut = ISwapRouter(_router).exactInputSingle(params);
   }
 
   function _bundle(address receiver, Web3PackOrder calldata web3PackOrder, uint256[] memory realAmounts)

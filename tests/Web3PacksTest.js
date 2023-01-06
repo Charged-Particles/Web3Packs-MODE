@@ -44,23 +44,16 @@ describe('Web3Packs', function() {
 
       // swap
       const blockNumber = await ethers.provider.getBlockNumber();
-      const blockBefore = await ethers.provider.getBlock(blockNumber);
+      // const blockBefore = await ethers.provider.getBlock(blockNumber);
       // const timestampBefore = blockBefore.timestamp + 10000;
 
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
-        outputTokenAddress: USDtContractAddress, //  (PoS) Tether USD
-        // fee: 3000,
-        // receiver: '0x2e4f5cf824370a47C4DBD86281d3875036A30534', // test wallet
-        // timestampBefore,
-        inputTokenAmount: 1,
+        outputTokenAddress: USDtContractAddress,
+        inputTokenAmount: 10
       }];
 
-      const swapTransaction = await web3packs._singleSwap(
-        USDcContractAddress,
-        USDtContractAddress,
-        10
-      );
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder);
 
       const receiptSingleSwap = await swapTransaction.wait();
       // console.log(receiptSingleSwap)
