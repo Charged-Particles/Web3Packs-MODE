@@ -22,6 +22,7 @@ describe('Web3Packs', function() {
 
       // grant maUSD to the Web3Packs contract.
       const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+      const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
       const maUSDWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
       await network.provider.request({
         method: "hardhat_impersonateAccount",
@@ -39,25 +40,35 @@ describe('Web3Packs', function() {
       const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
       await foundWeb3PacksTransaction.wait();
 
-      const balanceOfAddress = await USDc.balanceOf(web3packs.address);
-      console.log('>>>>> >>>>> >>>>> ' , balanceOfAddress.toString());
+      // const balanceOfAddress = await USDc.balanceOf(web3packs.address);
 
       // swap
-      // const blockNumber = await ethers.provider.getBlockNumber();
-      // const deadline = blockNumber + 2;
-      // const ERC20SwapOrder = [{
-      //   tokenIn: USDcContractAddress,
-      //   tokenOut: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f', //  (PoS) Tether USD
-      //   fee: 3000,
-      //   recipient: '0x2e4f5cf824370a47C4DBD86281d3875036A30534', // test wallet
-      //   deadline,
-      //   amountIn: 1,
-      //   amountOutMinimum: 0,
-      //   sqrtPriceLimitX96: 0
-      // }];
+      const blockNumber = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockNumber);
+      // const timestampBefore = blockBefore.timestamp + 10000;
 
-      // const swapTransaction = await web3packs.swap(deadline, ERC20SwapOrder);
-      // await swapTransaction.wait();
+      const ERC20SwapOrder = [{
+        inputTokenAddress: USDcContractAddress,
+        outputTokenAddress: USDtContractAddress, //  (PoS) Tether USD
+        // fee: 3000,
+        // receiver: '0x2e4f5cf824370a47C4DBD86281d3875036A30534', // test wallet
+        // timestampBefore,
+        inputTokenAmount: 1,
+      }];
+
+      const swapTransaction = await web3packs._singleSwap(
+        USDcContractAddress,
+        USDtContractAddress,
+        10
+      );
+
+      const receiptSingleSwap = await swapTransaction.wait();
+      // console.log(receiptSingleSwap)
+
+      const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, whaleSigner);
+      const USDtBalance = await USDt.balanceOf(web3packs.address);
+
+      console.log(USDtBalance.toString());
     });
   });
 })

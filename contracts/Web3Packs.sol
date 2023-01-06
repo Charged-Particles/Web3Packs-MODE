@@ -31,6 +31,8 @@
 //                          |_|
 
 pragma solidity 0.8.17;
+pragma abicoder v2;
+
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -41,6 +43,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IChargedState.sol";
@@ -121,6 +124,16 @@ contract Web3Packs is
     emit PackUnbundled(tokenId, receiver);
   }
 
+  function swap(
+    uint256 deadline,
+    ERC20SwapOrder[] calldata erc20SwapOrders
+  )
+    external
+    virtual
+    returns (uint256[] memory)
+  {
+    return _swap(deadline, erc20SwapOrders);
+  }
 
   /***********************************|
   |          Only Admin/DAO           |
@@ -203,19 +216,43 @@ contract Web3Packs is
     uint256[] memory amountsOut;
     for (uint256 i; i < erc20SwapOrders.length; i++) {
       ISwapRouter.ExactInputParams memory exactInputOrder = ISwapRouter
-        .ExactInputParams(
-          abi.encodePacked(
+        .ExactInputParams({
+          path: abi.encodePacked(
             erc20SwapOrders[i].inputTokenAddress,
             erc20SwapOrders[i].outputTokenAddress
           ),
-          receiver,
-          deadline,
-          erc20SwapOrders[i].inputTokenAmount,
-          0 // request maximum possible amount
-        );
+          recipient: receiver,
+          deadline: deadline,
+          amountIn: erc20SwapOrders[i].inputTokenAmount,
+          amountOutMinimum: 0 // request maximum possible amount
+      });
       amountsOut[i] = ISwapRouter(_router).exactInput(exactInputOrder);
     }
     return amountsOut;
+  }
+
+  function _singleSwap(
+    address tokenIn,
+    address tokenOut,
+    uint256 amountIn
+  ) external returns (uint256 amountOut) { //TODO change exposure
+    
+    // Approve the router to spend DAI.
+    TransferHelper.safeApprove(tokenIn, address(_router), amountIn);
+
+   ISwapRouter.ExactInputSingleParams memory params =
+    ISwapRouter.ExactInputSingleParams({
+      tokenIn: tokenIn,
+      tokenOut: tokenOut,
+      fee: 3000,
+      recipient: address(this),
+      deadline: block.timestamp,
+      amountIn: amountIn,
+      amountOutMinimum: 0,
+      sqrtPriceLimitX96: 0
+    });
+    // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
+    amountOut = ISwapRouter(_router).exactInputSingle(params);
   }
 
   function _bundle(address receiver, Web3PackOrder calldata web3PackOrder, uint256[] memory realAmounts)
