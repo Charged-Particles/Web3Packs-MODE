@@ -104,28 +104,6 @@
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
         "name": "erc20SwapOrders",
         "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address[]",
-            "name": "erc20TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "address[]",
-            "name": "erc721TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc721TokenIds",
-            "type": "uint256[]"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.Web3PackOrder",
-        "name": "web3PackOrder",
-        "type": "tuple"
       }
     ],
     "name": "bundle",

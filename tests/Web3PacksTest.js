@@ -14,6 +14,7 @@ describe('Web3Packs', function() {
   const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
   const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
   const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
+  const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
   const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
    
   beforeEach(async () => {
@@ -32,7 +33,7 @@ describe('Web3Packs', function() {
       // grant maUSD to the Web3Packs contract.
       await network.provider.request({
         method: "hardhat_impersonateAccount",
-        params: [ USDcWhale ],
+        params: [ USDcWhale ]
       });
 
       // Deposit usdc into web3pack contract
@@ -98,6 +99,19 @@ describe('Web3Packs', function() {
 
       expect(USDtBalanceAfterSwap).to.equal(18);
       expect(UNIBalanceAfterSwap).to.equal(1659805226163);
+    });
+
+    it ('Bundles singled swaped asset', async() => {
+      const ERC20SwapOrder = [{
+        inputTokenAddress: USDcContractAddress,
+        outputTokenAddress: USDtContractAddress,
+        inputTokenAmount: 10 
+      }];
+
+      const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
+      const bundleReceipt = await bundleTransaction.wait();
+
+      console.log(bundleReceipt);
     });
   });
 })

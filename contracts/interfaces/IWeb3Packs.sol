@@ -44,8 +44,7 @@ interface IWeb3Packs {
 
   function bundle(
     address receiver,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
-    Web3PackOrder calldata web3PackOrder
+    ERC20SwapOrder[] calldata erc20SwapOrders
   ) external;
 
   function unbundle(

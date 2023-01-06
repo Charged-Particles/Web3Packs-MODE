@@ -81,15 +81,14 @@ contract Web3Packs is
 
   function bundle(
     address receiver,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
-    Web3PackOrder calldata web3PackOrder
+    ERC20SwapOrder[] calldata erc20SwapOrders
   )
     external
     whenNotPaused
     nonReentrant
   {
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    uint256 tokenId = _bundle(receiver, web3PackOrder, realAmounts);
+    uint256 tokenId = _bundle(receiver, erc20SwapOrders, realAmounts);
     emit PackBundled(tokenId, receiver);
   }
 
@@ -245,7 +244,7 @@ contract Web3Packs is
 
   function _bundle(
     address receiver,
-    Web3PackOrder calldata web3PackOrder,
+    ERC20SwapOrder[] calldata erc20SwapOrders,
     uint256[] memory realAmounts
   )
     internal
@@ -261,26 +260,14 @@ contract Web3Packs is
     _safeMint(receiver, tokenId);
 
     // Bundle Assets into NFT
-    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
+    for (uint256 i; i < erc20SwapOrders.length; i++) {
       chargedParticles.energizeParticle(
         self,
         tokenId,
         _cpWalletManager,
-        web3PackOrder.erc20TokenAddresses[i],
+        erc20SwapOrders[i].outputTokenAddress,
         realAmounts[i],
         self
-      );
-    }
-
-    // Bundle NFTs into NFT
-    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; i++) {
-      chargedParticles.covalentBond(
-        self,
-        tokenId,
-        _cpBasketManager,
-        web3PackOrder.erc721TokenAddresses[i],
-        web3PackOrder.erc721TokenIds[i],
-        1
       );
     }
   }
