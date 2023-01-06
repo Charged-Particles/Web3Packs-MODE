@@ -225,7 +225,6 @@ contract Web3Packs is
     address outputTokenAddress,
     uint256 inputTokenAmount
   ) internal returns (uint256 amountOut) {
-    
     // Approve the router to spend DAI.
     TransferHelper.safeApprove(inputTokenAddress, address(_router), inputTokenAmount);
 
@@ -244,7 +243,11 @@ contract Web3Packs is
       amountOut = ISwapRouter(_router).exactInputSingle(params);
   }
 
-  function _bundle(address receiver, Web3PackOrder calldata web3PackOrder, uint256[] memory realAmounts)
+  function _bundle(
+    address receiver,
+    Web3PackOrder calldata web3PackOrder,
+    uint256[] memory realAmounts
+  )
     internal
     virtual
     returns (uint256 tokenId)

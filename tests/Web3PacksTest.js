@@ -22,7 +22,7 @@ describe('Web3Packs', function() {
     web3packs = await Web3Packs.attach(ddWeb3Packs.address);
   });
 
-  describe('ERC721', async () => {
+  describe('Web3Packs', async () => {
     it ('Gets deployed token name', async() => {
       const name = await web3packs.name();
       expect(name).to.equal('Web3Packs');
