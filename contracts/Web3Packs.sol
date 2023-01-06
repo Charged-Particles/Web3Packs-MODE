@@ -262,13 +262,12 @@ contract Web3Packs is
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-    // address contractAddress,
-    // uint256 tokenId,
-    // string calldata walletManagerId,
-    // address assetToken,
-    // uint256 assetAmount,
-    // address referrer
-      TransferHelper.safeApprove(erc20SwapOrders[i].outputTokenAddress, address(_chargedParticles), realAmounts[i]);
+      TransferHelper.safeApprove(
+        erc20SwapOrders[i].outputTokenAddress, 
+        address(_chargedParticles), 
+        realAmounts[i]
+      );
+
       chargedParticles.energizeParticle(
         _proton,
         tokenId,
