@@ -252,12 +252,9 @@ contract Web3Packs is
     returns (uint256 tokenId)
   {
     address self = address(this);
-    // _tokenIdCounter.increment();
-    // tokenId = _tokenIdCounter.current()
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
 
     // Mint Web3Pack NFT to Receiver
-    // _safeMint(receiver, tokenId);
     tokenId = IBaseProton(_proton).createBasicProton(self, receiver, "test.com");
 
     // Bundle Assets into NFT
