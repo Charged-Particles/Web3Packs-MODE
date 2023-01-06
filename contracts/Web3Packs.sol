@@ -41,14 +41,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IChargedState.sol";
 import "./interfaces/IChargedParticles.sol";
-
+import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
 
 contract Web3Packs is
@@ -64,6 +63,7 @@ contract Web3Packs is
   Counters.Counter internal _tokenIdCounter;
 
   // Polygon Mainnet
+  address internal _proton = 0xC5dECa7eb029e35dC2Fbdca94C76cB08030AaE4F;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
@@ -140,8 +140,8 @@ contract Web3Packs is
     * @dev Setup the ChargedParticles Interface
     */
   function setChargedParticles(address chargedParticles) external onlyOwner {
-    _chargedParticles = chargedParticles;
     emit ChargedParticlesSet(chargedParticles);
+    _chargedParticles = chargedParticles;
   }
 
   /// @dev Setup the Charged-State Controller
@@ -253,11 +253,12 @@ contract Web3Packs is
   {
     address self = address(this);
     _tokenIdCounter.increment();
-    tokenId = _tokenIdCounter.current();
+    // tokenId = _tokenIdCounter.current()
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
 
     // Mint Web3Pack NFT to Receiver
-    _safeMint(receiver, tokenId);
+    // _safeMint(receiver, tokenId);
+    tokenId = IBaseProton(_proton).createProton(address(this), receiver, "test.com");
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
