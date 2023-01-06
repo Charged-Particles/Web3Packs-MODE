@@ -29,4 +29,12 @@ interface IBaseProton {
     address receiver,
     string memory tokenMetaUri
   ) external returns (uint256 newTokenId);
+
+  function createBasicProton(
+    address creator,
+    address receiver,
+    string memory tokenMetaUri
+  )
+    external
+    returns (uint256 newTokenId);
 }

@@ -63,7 +63,7 @@ contract Web3Packs is
   Counters.Counter internal _tokenIdCounter;
 
   // Polygon Mainnet
-  address internal _proton = 0xC5dECa7eb029e35dC2Fbdca94C76cB08030AaE4F;
+  address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
@@ -252,18 +252,25 @@ contract Web3Packs is
     returns (uint256 tokenId)
   {
     address self = address(this);
-    _tokenIdCounter.increment();
+    // _tokenIdCounter.increment();
     // tokenId = _tokenIdCounter.current()
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
 
     // Mint Web3Pack NFT to Receiver
     // _safeMint(receiver, tokenId);
-    tokenId = IBaseProton(_proton).createProton(address(this), receiver, "test.com");
+    tokenId = IBaseProton(_proton).createBasicProton(self, receiver, "test.com");
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
+    // address contractAddress,
+    // uint256 tokenId,
+    // string calldata walletManagerId,
+    // address assetToken,
+    // uint256 assetAmount,
+    // address referrer
+      TransferHelper.safeApprove(erc20SwapOrders[i].outputTokenAddress, address(_chargedParticles), realAmounts[i]);
       chargedParticles.energizeParticle(
-        self,
+        _proton,
         tokenId,
         _cpWalletManager,
         erc20SwapOrders[i].outputTokenAddress,
