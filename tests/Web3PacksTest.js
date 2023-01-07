@@ -121,14 +121,20 @@ describe('Web3Packs', function() {
       expect(bundTokenMass['137']?.value).to.equal(9);
     });
 
-    it ('Bound token with two swaps', async() => {
+    it.only ('Bound token with two swaps and nbundle', async() => {
       await network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ USDcWhale ],
       });
 
-      // Deposit usdc into web3pack contract
       const USDcWhaleSigner = await ethers.getSigner(USDcWhale);
+      const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC)
+      const connectedWallet = walletMnemonic.connect(ethers.provider);
+
+      const foundTestWalletTx = await USDcWhaleSigner.sendTransaction({value: ethers.utils.parseEther('1'), to: testAddress});
+      await foundTestWalletTx.wait();
+
+      // Deposit usdc into web3pack contract
       const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
       const foundUSDcWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
       await foundUSDcWeb3PacksTransaction.wait();
@@ -146,20 +152,35 @@ describe('Web3Packs', function() {
         }
       ];
 
-      const swapTransaction = await web3packs.swap(ERC20SwapOrder);
-      await swapTransaction.wait();
-
       const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
       const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
       await bundleTransaction.wait();
       
-      const charged = new Charged({ providers: ethers.provider });
+      const charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
       const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
       expect(USDtTokenMass['137']?.value).to.equal(9);
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
+
+      console.log(newTokenId, newTokenId.toNumber());
+      console.log(await bundToken.ownerOf());
+
+      
+      const approveWeb3PacksToUseBundleTokenTx = await bundToken.approve(web3packs.address);
+      await approveWeb3PacksToUseBundleTokenTx.wait();
+
+
+      const unbundleTransaction = await web3packs.connect(connectedWallet).unbundle(
+        testAddress,
+        newTokenId.toNumber(),
+        {
+          erc20TokenAddresses: [ USDtContractAddress ]
+        }
+      );
+      const unbundleReceipt = await unbundleTransaction.wait();
+      console.log(unbundleReceipt);
     });
   });
 })

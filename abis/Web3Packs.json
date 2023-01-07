@@ -795,16 +795,6 @@
             "internalType": "address[]",
             "name": "erc20TokenAddresses",
             "type": "address[]"
-          },
-          {
-            "internalType": "address[]",
-            "name": "erc721TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc721TokenIds",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct IWeb3Packs.Web3PackOrder",
@@ -835,26 +825,11 @@
         "type": "string"
       },
       {
-        "internalType": "string",
-        "name": "basketManager",
-        "type": "string"
-      },
-      {
         "components": [
           {
             "internalType": "address[]",
             "name": "erc20TokenAddresses",
             "type": "address[]"
-          },
-          {
-            "internalType": "address[]",
-            "name": "erc721TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc721TokenIds",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct IWeb3Packs.Web3PackOrder",

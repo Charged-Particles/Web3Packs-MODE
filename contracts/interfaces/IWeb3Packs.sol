@@ -20,10 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 pragma solidity 0.8.17;
 
-interface IWeb3Packs {
+interface IWeb3Packs is IERC721{
   event ChargedParticlesSet(address indexed chargedParticles);
   event ChargedStateSet(address indexed chargedState);
   event UniswapRouterSet(address indexed router);
@@ -39,8 +40,6 @@ interface IWeb3Packs {
 
   struct Web3PackOrder {
     address[] erc20TokenAddresses;
-    address[] erc721TokenAddresses;
-    uint256[] erc721TokenIds;
   }
 
   function bundle(

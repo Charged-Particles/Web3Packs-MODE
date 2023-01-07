@@ -97,7 +97,7 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
+    // require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
     _unbundle(receiver, tokenId, _cpWalletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
