@@ -110,20 +110,15 @@ describe('Web3Packs', function() {
       }];
 
       const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
-      // console.log(newTokenId.toString());
 
       const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
-      const bundleReceipt = await bundleTransaction.wait();
-      // console.log(bundleReceipt);
+       await bundleTransaction.wait();
       
       const charged = new Charged({ providers: ethers.provider });
       const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
-      // console.log(bundToken);
+
       const bundTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      console.log('>>>>>>', bundTokenMass['137'].value.toString());
-
-
-      
+      expect(bundTokenMass['137']?.value).to.equal(9);
     });
   });
 })
