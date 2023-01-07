@@ -111,7 +111,9 @@ describe('Web3Packs', function() {
       const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
       console.log(newTokenId.toString());
 
-      // const bundleReceipt = await bundleTransaction.wait();
+      const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
+      const bundleReceipt = await bundleTransaction.wait();
+
 
     });
   });
