@@ -45,7 +45,7 @@ interface IWeb3Packs {
   function bundle(
     address receiver,
     ERC20SwapOrder[] calldata erc20SwapOrders
-  ) external;
+  ) external returns(uint256 tokenId);
 
   function unbundle(
     address receiver,

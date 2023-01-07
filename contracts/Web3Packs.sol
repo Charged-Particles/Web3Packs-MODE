@@ -86,9 +86,10 @@ contract Web3Packs is
     external
     whenNotPaused
     nonReentrant
+    returns(uint256 tokenId)
   {
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    uint256 tokenId = _bundle(receiver, erc20SwapOrders, realAmounts);
+    tokenId = _bundle(receiver, erc20SwapOrders, realAmounts);
     emit PackBundled(tokenId, receiver);
   }
 
