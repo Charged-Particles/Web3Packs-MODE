@@ -156,6 +156,19 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "proton",
+        "type": "address"
+      }
+    ],
+    "name": "ProtonSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -611,6 +624,19 @@
       }
     ],
     "name": "setChargedState",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "proton",
+        "type": "address"
+      }
+    ],
+    "name": "setProton",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

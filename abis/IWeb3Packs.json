@@ -69,6 +69,19 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "proton",
+        "type": "address"
+      }
+    ],
+    "name": "ProtonSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "router",
         "type": "address"
       }

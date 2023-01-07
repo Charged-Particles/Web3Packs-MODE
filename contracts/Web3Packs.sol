@@ -157,6 +157,11 @@ contract Web3Packs is
     emit UniswapRouterSet(router);
   }
 
+  function setProton(address proton) external onlyOwner {
+    _proton = proton;
+    emit ProtonSet(proton);
+  }
+
   /// @dev Pre-approve ChargedParticles to pull Assets from this contract for bundling
   function preApproveAsset(address assetAddress) external onlyOwner {
     IERC20(assetAddress).approve(_chargedParticles, type(uint256).max);
@@ -166,6 +171,8 @@ contract Web3Packs is
   function preApproveNft(address nftAddress) external onlyOwner {
     IERC721(nftAddress).setApprovalForAll(_chargedParticles, true);
   }
+
+
 
   function pause() public onlyOwner {
     _pause();
