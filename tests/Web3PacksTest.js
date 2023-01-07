@@ -134,7 +134,7 @@ describe('Web3Packs', function() {
       const foundTestWalletTx = await USDcWhaleSigner.sendTransaction({value: ethers.utils.parseEther('1'), to: testAddress});
       await foundTestWalletTx.wait();
 
-      // Deposit usdc into web3pack contract
+      // // Deposit usdc into web3pack contract
       const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
       const foundUSDcWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
       await foundUSDcWeb3PacksTransaction.wait();
@@ -164,15 +164,16 @@ describe('Web3Packs', function() {
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
 
-      console.log(newTokenId, newTokenId.toNumber());
-      console.log(await bundToken.ownerOf());
+      // console.log(newTokenId, newTokenId.toNumber());
+      // console.log(await bundToken.ownerOf());
 
-      
-      const approveWeb3PacksToUseBundleTokenTx = await bundToken.approve(web3packs.address);
+      const approveWeb3PacksToUseBundleTokenTx = await bundToken.approveAll(web3packs.address, true);
       await approveWeb3PacksToUseBundleTokenTx.wait();
 
+    //   const ckeckApprove = await bundToken.isApprovedForAll721(testAddress, web3packs.address);
+    //  console.log(ckeckApprove);
 
-      const unbundleTransaction = await web3packs.connect(connectedWallet).unbundle(
+      const unbundleTransaction = await web3packs.unbundle(
         testAddress,
         newTokenId.toNumber(),
         {
