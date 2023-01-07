@@ -98,7 +98,7 @@ contract Web3Packs is
     nonReentrant
   {
     require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
-    _unbundle(receiver, tokenId, _cpWalletManager, _cpBasketManager, web3PackOrder);
+    _unbundle(receiver, tokenId, _cpWalletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
 
@@ -106,7 +106,6 @@ contract Web3Packs is
     address receiver,
     uint256 tokenId,
     string memory walletManager,
-    string memory basketManager,
     Web3PackOrder calldata web3PackOrder
   )
     external
@@ -114,7 +113,7 @@ contract Web3Packs is
     nonReentrant
   {
     require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
-    _unbundle(receiver, tokenId, walletManager, basketManager, web3PackOrder);
+    _unbundle(receiver, tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
 
@@ -283,31 +282,17 @@ contract Web3Packs is
     address receiver,
     uint256 tokenId,
     string memory walletManager,
-    string memory basketManager,
     Web3PackOrder calldata web3PackOrder
   )
     internal
   {
-    address self = address(this);
     for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
       IChargedParticles(_chargedParticles).releaseParticle(
         receiver,
-        self,
+        _proton,
         tokenId,
         walletManager,
         web3PackOrder.erc20TokenAddresses[i]
-      );
-    }
-
-    for (uint256 i; i < web3PackOrder.erc721TokenAddresses.length; i++) {
-      IChargedParticles(_chargedParticles).breakCovalentBond(
-        receiver,
-        self,
-        tokenId,
-        basketManager,
-        web3PackOrder.erc721TokenAddresses[i],
-        web3PackOrder.erc721TokenIds[i],
-        1
       );
     }
   }
