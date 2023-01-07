@@ -178,21 +178,22 @@ describe('Web3Packs', function() {
         bundToken.tokenId,
         web3packs.address 
       );
-      const approveWeb3PackReleaseReceipt = await approveWeb3PackReleaseTx.wait();
-      // console.log(approveWeb3PackReleaseReceipt);
 
+      await approveWeb3PackReleaseTx.wait();
 
       const unbundleTransaction = await web3packs.unbundle(
         testAddress,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ UniContractAddress ]
+          erc20TokenAddresses: [ UniContractAddress, USDtContractAddress]
         }
       );
-      const unbundleReceipt = await unbundleTransaction.wait();
 
-      console.log(await bundToken.getMass(UniContractAddress, 'generic.B'));
-    
+      await unbundleTransaction.wait();
+      const uniLeftInBoundle = await bundToken.getMass(UniContractAddress, 'generic.B');
+      const USDLeftInBoundle = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      expect(uniLeftInBoundle['137']?.value).to.eq(0);
+      expect(USDLeftInBoundle['137']?.value).to.eq(0);
     });
   });
 })
