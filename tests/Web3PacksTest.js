@@ -102,7 +102,7 @@ describe('Web3Packs', function() {
       expect(UNIBalanceAfterSwap).to.equal(1659805226163);
     });
 
-    it ('Bundles singled swaped asset', async() => {
+    it ('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
@@ -112,13 +112,54 @@ describe('Web3Packs', function() {
       const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
 
       const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
-       await bundleTransaction.wait();
+      await bundleTransaction.wait();
       
       const charged = new Charged({ providers: ethers.provider });
       const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
 
       const bundTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
       expect(bundTokenMass['137']?.value).to.equal(9);
+    });
+
+    it ('Bound token with two swaps', async() => {
+      await network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [ USDcWhale ],
+      });
+
+      // Deposit usdc into web3pack contract
+      const USDcWhaleSigner = await ethers.getSigner(USDcWhale);
+      const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
+      const foundUSDcWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
+      await foundUSDcWeb3PacksTransaction.wait();
+
+      const ERC20SwapOrder = [
+        {
+          inputTokenAddress: USDcContractAddress,
+          outputTokenAddress: USDtContractAddress,
+          inputTokenAmount: 10
+        },
+        {
+          inputTokenAddress: USDcContractAddress,
+          outputTokenAddress: UniContractAddress,
+          inputTokenAmount: 10
+        }
+      ];
+
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder);
+      await swapTransaction.wait();
+
+      const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
+      const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
+      await bundleTransaction.wait();
+      
+      const charged = new Charged({ providers: ethers.provider });
+      const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
+
+      const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      expect(USDtTokenMass['137']?.value).to.equal(9);
+      const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
+      expect(UniTokenMass['137']?.value).to.be.gt(1);
     });
   });
 })
