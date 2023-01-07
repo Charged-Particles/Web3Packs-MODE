@@ -165,11 +165,8 @@ describe('Web3Packs', function() {
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
 
-      // console.log(newTokenId, newTokenId.toNumber());
-      // console.log(await bundToken.ownerOf());
-
-      const approveWeb3PacksToUseBundleTokenTx = await bundToken.approveAll(web3packs.address, true);
-      await approveWeb3PacksToUseBundleTokenTx.wait();
+      // const approveWeb3PacksToUseBundleTokenTx = await bundToken.approveAll(web3packs.address, true);
+      // await approveWeb3PacksToUseBundleTokenTx.wait();
 
       // Charged settings contract
       const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
@@ -194,6 +191,11 @@ describe('Web3Packs', function() {
       const USDLeftInBoundle = await bundToken.getMass(USDtContractAddress, 'generic.B');
       expect(uniLeftInBoundle['137']?.value).to.eq(0);
       expect(USDLeftInBoundle['137']?.value).to.eq(0);
+
+      const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
+      const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);
+
+      expect(balanceOfUSDtAfterRelease).to.eq(9);
     });
   });
 })
