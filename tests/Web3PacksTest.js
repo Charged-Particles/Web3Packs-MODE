@@ -1,7 +1,8 @@
 const { expect } = require("chai"); 
 const { getDeployData } = require('../js-helpers/deploy'); 
-const { ethers, deployments, network } = require('hardhat');
-const { default: Charged } = require("@charged-particles/charged-js-sdk");
+const { ethers, network } = require('hardhat');
+const { default: Charged, chargedStateAbi } = require("@charged-particles/charged-js-sdk");
+const { Contract } = require("ethers");
 
 describe('Web3Packs', function() {
   
@@ -170,8 +171,16 @@ describe('Web3Packs', function() {
       const approveWeb3PacksToUseBundleTokenTx = await bundToken.approveAll(web3packs.address, true);
       await approveWeb3PacksToUseBundleTokenTx.wait();
 
-    //   const ckeckApprove = await bundToken.isApprovedForAll721(testAddress, web3packs.address);
-    //  console.log(ckeckApprove);
+      // Charged settings contract
+      const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
+      const approveWeb3PackReleaseTx = await chargedState.setReleaseApproval(
+        bundToken.contractAddress,
+        bundToken.tokenId,
+        web3packs.address 
+      );
+      const approveWeb3PackReleaseReceipt = await approveWeb3PackReleaseTx.wait();
+      // console.log(approveWeb3PackReleaseReceipt);
+
 
       const unbundleTransaction = await web3packs.unbundle(
         testAddress,
