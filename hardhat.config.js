@@ -40,6 +40,9 @@ module.exports = {
   solidity: {
     compilers: [
       {
+        version: "0.7.6",
+      },
+      {
         version: "0.8.17",
         settings: {
           optimizer: {
@@ -79,20 +82,20 @@ module.exports = {
       deployments: './deployments'
   },
   networks: {
-    localhost: {
-      chainId: 31337,
-      gasPrice: 1e9,
-      forking: {
-        url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        blockNumber: 7827722
-      }
-    },
+    // localhost: {
+    //   chainId: 31337,
+    //   gasPrice: 1e9,
+    //   forking: {
+    //     url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+    //     blockNumber: 7827722
+    //   }
+    // },
     hardhat: {
-      chainId: 31337,
+      chainId: 137,
       gasPrice: 100e9,
       forking: {
-        url: "https://eth-goerli.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        blockNumber: 7827722
+        url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+        blockNumber: 37704391
       }
     },
     mumbai: {

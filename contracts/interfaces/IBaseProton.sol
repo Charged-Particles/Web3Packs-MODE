@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-// IChargedSettings.sol -- Part of the Charged Particles Protocol
-// Copyright (c) 2022 Firma Lux, Inc. <https://charged.fi>
+// Proton.sol -- Part of the Charged Particles Protocol
+// Copyright (c) 2021 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 pragma solidity 0.8.17;
 
-interface IWeb3Packs is IERC721{
-  event ChargedParticlesSet(address indexed chargedParticles);
-  event ChargedStateSet(address indexed chargedState);
-  event UniswapRouterSet(address indexed router);
-  event ProtonSet(address indexed proton);
-  event PackBundled(uint256 indexed tokenId, address indexed receiver);
-  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
-
-  struct ERC20SwapOrder {
-    address inputTokenAddress;
-    address outputTokenAddress;
-    uint256 inputTokenAmount;
-  }
-
-  struct Web3PackOrder {
-    address[] erc20TokenAddresses;
-  }
-
-  function bundle(
+interface IBaseProton {
+  function createProton(
+    address creator,
     address receiver,
-    ERC20SwapOrder[] calldata erc20SwapOrders
-  ) external returns(uint256 tokenId);
+    string memory tokenMetaUri
+  ) external returns (uint256 newTokenId);
 
-  function unbundle(
+  function createBasicProton(
+    address creator,
     address receiver,
-    uint256 tokenId,
-    Web3PackOrder calldata web3PackOrder
-  ) external;
+    string memory tokenMetaUri
+  )
+    external
+    returns (uint256 newTokenId);
 }

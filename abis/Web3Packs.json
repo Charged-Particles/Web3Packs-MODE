@@ -156,6 +156,19 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "proton",
+        "type": "address"
+      }
+    ],
+    "name": "ProtonSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -346,11 +359,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -366,47 +374,21 @@
             "internalType": "uint256",
             "name": "inputTokenAmount",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "outputTokenMinAmount",
-            "type": "uint256"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
         "name": "erc20SwapOrders",
         "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address[]",
-            "name": "erc20TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "address[]",
-            "name": "erc721TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc20TokenAmounts",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc721TokenIds",
-            "type": "uint256[]"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.Web3PackOrder",
-        "name": "web3PackOrder",
-        "type": "tuple"
       }
     ],
     "name": "bundle",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -650,6 +632,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "proton",
+        "type": "address"
+      }
+    ],
+    "name": "setProton",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "router",
         "type": "address"
       }
@@ -676,6 +671,42 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "inputTokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "outputTokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inputTokenAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
+        "name": "erc20SwapOrders",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "swap",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -764,21 +795,6 @@
             "internalType": "address[]",
             "name": "erc20TokenAddresses",
             "type": "address[]"
-          },
-          {
-            "internalType": "address[]",
-            "name": "erc721TokenAddresses",
-            "type": "address[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc20TokenAmounts",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "erc721TokenIds",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct IWeb3Packs.Web3PackOrder",
@@ -787,6 +803,41 @@
       }
     ],
     "name": "unbundle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "walletManager",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address[]",
+            "name": "erc20TokenAddresses",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.Web3PackOrder",
+        "name": "web3PackOrder",
+        "type": "tuple"
+      }
+    ],
+    "name": "unbundleFromManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
