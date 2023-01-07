@@ -186,11 +186,13 @@ describe('Web3Packs', function() {
         testAddress,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ USDtContractAddress ]
+          erc20TokenAddresses: [ UniContractAddress ]
         }
       );
       const unbundleReceipt = await unbundleTransaction.wait();
-      console.log(unbundleReceipt);
+
+      console.log(await bundToken.getMass(UniContractAddress, 'generic.B'));
+    
     });
   });
 })
