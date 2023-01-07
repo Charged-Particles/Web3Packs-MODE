@@ -91,7 +91,7 @@ module.exports = {
     //   }
     // },
     hardhat: {
-      chainId: 31337,
+      chainId: 137,
       gasPrice: 100e9,
       forking: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,

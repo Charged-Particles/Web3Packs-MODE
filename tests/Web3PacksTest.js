@@ -1,6 +1,7 @@
 const { expect } = require("chai"); 
 const { getDeployData } = require('../js-helpers/deploy'); 
 const { ethers, deployments, network } = require('hardhat');
+const { default: Charged } = require("@charged-particles/charged-js-sdk");
 
 describe('Web3Packs', function() {
   
@@ -109,12 +110,20 @@ describe('Web3Packs', function() {
       }];
 
       const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
-      console.log(newTokenId.toString());
+      // console.log(newTokenId.toString());
 
       const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
       const bundleReceipt = await bundleTransaction.wait();
+      // console.log(bundleReceipt);
+      
+      const charged = new Charged({ providers: ethers.provider });
+      const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
+      // console.log(bundToken);
+      const bundTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      console.log('>>>>>>', bundTokenMass['137'].value.toString());
 
 
+      
     });
   });
 })
