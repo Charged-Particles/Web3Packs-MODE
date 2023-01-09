@@ -121,6 +121,7 @@ contract Web3Packs is
     ERC20SwapOrder[] calldata erc20SwapOrders
   )
     external
+    payable
     virtual
     returns (uint256[] memory)
   {
@@ -233,7 +234,7 @@ contract Web3Packs is
       ISwapRouter.ExactInputSingleParams({
         tokenIn: inputTokenAddress,
         tokenOut: outputTokenAddress,
-        fee: 3000,
+        fee: 500,
         recipient: address(this),
         deadline: block.timestamp,
         amountIn: inputTokenAmount,
@@ -241,7 +242,7 @@ contract Web3Packs is
         sqrtPriceLimitX96: 0
       });
       // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
-      amountOut = ISwapRouter(_router).exactInputSingle(params);
+      amountOut = ISwapRouter(_router).exactInputSingle{value: msg.value }(params);
   }
 
   function _bundle(
