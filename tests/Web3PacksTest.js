@@ -122,7 +122,7 @@ describe('Web3Packs', function() {
       expect(bundTokenMass['137']?.value).to.equal(9);
     });
 
-    it.only ('Bound token with two swaps and nbundle', async() => {
+    it ('Bound token with two swaps and nbundle', async() => {
       await network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ USDcWhale ],
