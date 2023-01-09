@@ -88,91 +88,91 @@ module.exports = async (hre) => {
 
 
     if (chainId === 80001 || chainId === 31337) {
-      log('\n  Deploying Sample20 as TestTokenA1...');
-      const TestTokenA1 = await ethers.getContractFactory('Sample20');
-      const TestTokenA1Instance = await TestTokenA1.deploy('TestTokenA1', 'TTA1');
-      const testTokenA1 = await TestTokenA1Instance.deployed();
-      deployData['TestTokenA1'] = {
-        abi: getContractAbi('Sample20'),
-        address: testTokenA1.address,
-        deployTransaction: testTokenA1.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - TestTokenA1:   ', testTokenA1.address);
-      log('     - Block:    ', testTokenA1.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA1.deployTransaction }));
+      // log('\n  Deploying Sample20 as TestTokenA1...');
+      // const TestTokenA1 = await ethers.getContractFactory('Sample20');
+      // const TestTokenA1Instance = await TestTokenA1.deploy('TestTokenA1', 'TTA1');
+      // const testTokenA1 = await TestTokenA1Instance.deployed();
+      // deployData['TestTokenA1'] = {
+      //   abi: getContractAbi('Sample20'),
+      //   address: testTokenA1.address,
+      //   deployTransaction: testTokenA1.deployTransaction
+      // }
+      // saveDeploymentData(chainId, deployData);
+      // log('  - TestTokenA1:   ', testTokenA1.address);
+      // log('     - Block:    ', testTokenA1.deployTransaction.blockNumber);
+      // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA1.deployTransaction }));
 
-      log('\n  Deploying Sample20 as TestTokenA2...');
-      const TestTokenA2 = await ethers.getContractFactory('Sample20');
-      const TestTokenA2Instance = await TestTokenA2.deploy('TestTokenA2', 'TTA2');
-      const testTokenA2 = await TestTokenA2Instance.deployed();
-      deployData['TestTokenA2'] = {
-        abi: getContractAbi('Sample20'),
-        address: testTokenA2.address,
-        deployTransaction: testTokenA2.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - TestTokenA2:   ', testTokenA2.address);
-      log('     - Block:    ', testTokenA2.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA2.deployTransaction }));
+      // log('\n  Deploying Sample20 as TestTokenA2...');
+      // const TestTokenA2 = await ethers.getContractFactory('Sample20');
+      // const TestTokenA2Instance = await TestTokenA2.deploy('TestTokenA2', 'TTA2');
+      // const testTokenA2 = await TestTokenA2Instance.deployed();
+      // deployData['TestTokenA2'] = {
+      //   abi: getContractAbi('Sample20'),
+      //   address: testTokenA2.address,
+      //   deployTransaction: testTokenA2.deployTransaction
+      // }
+      // saveDeploymentData(chainId, deployData);
+      // log('  - TestTokenA2:   ', testTokenA2.address);
+      // log('     - Block:    ', testTokenA2.deployTransaction.blockNumber);
+      // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA2.deployTransaction }));
 
-      log('\n  Deploying Sample20 as TestTokenA3...');
-      const TestTokenA3 = await ethers.getContractFactory('Sample20');
-      const TestTokenA3Instance = await TestTokenA3.deploy('TestTokenA3', 'TTA3');
-      const testTokenA3 = await TestTokenA3Instance.deployed();
-      deployData['TestTokenA3'] = {
-        abi: getContractAbi('Sample20'),
-        address: testTokenA3.address,
-        deployTransaction: testTokenA3.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - TestTokenA3:   ', testTokenA3.address);
-      log('     - Block:    ', testTokenA3.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA3.deployTransaction }));
+      // log('\n  Deploying Sample20 as TestTokenA3...');
+      // const TestTokenA3 = await ethers.getContractFactory('Sample20');
+      // const TestTokenA3Instance = await TestTokenA3.deploy('TestTokenA3', 'TTA3');
+      // const testTokenA3 = await TestTokenA3Instance.deployed();
+      // deployData['TestTokenA3'] = {
+      //   abi: getContractAbi('Sample20'),
+      //   address: testTokenA3.address,
+      //   deployTransaction: testTokenA3.deployTransaction
+      // }
+      // saveDeploymentData(chainId, deployData);
+      // log('  - TestTokenA3:   ', testTokenA3.address);
+      // log('     - Block:    ', testTokenA3.deployTransaction.blockNumber);
+      // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA3.deployTransaction }));
 
-      log('\n  Deploying Sample20 as TestTokenA4...');
-      const TestTokenA4 = await ethers.getContractFactory('Sample20');
-      const TestTokenA4Instance = await TestTokenA4.deploy('TestTokenA4', 'TTA4');
-      const testTokenA4 = await TestTokenA4Instance.deployed();
-      deployData['TestTokenA4'] = {
-        abi: getContractAbi('Sample20'),
-        address: testTokenA4.address,
-        deployTransaction: testTokenA4.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - TestTokenA4:   ', testTokenA4.address);
-      log('     - Block:    ', testTokenA4.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA4.deployTransaction }));
-
-
-      log('\n  Deploying Sample721...');
-      const Sample721 = await ethers.getContractFactory('Sample721');
-      const Sample721Instance = await Sample721.deploy();
-      const sample721 = await Sample721Instance.deployed();
-      deployData['Sample721'] = {
-        abi: getContractAbi('Sample721'),
-        address: sample721.address,
-        deployTransaction: sample721.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - Sample721:   ', sample721.address);
-      log('     - Block:    ', sample721.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: sample721.deployTransaction }));
+      // log('\n  Deploying Sample20 as TestTokenA4...');
+      // const TestTokenA4 = await ethers.getContractFactory('Sample20');
+      // const TestTokenA4Instance = await TestTokenA4.deploy('TestTokenA4', 'TTA4');
+      // const testTokenA4 = await TestTokenA4Instance.deployed();
+      // deployData['TestTokenA4'] = {
+      //   abi: getContractAbi('Sample20'),
+      //   address: testTokenA4.address,
+      //   deployTransaction: testTokenA4.deployTransaction
+      // }
+      // saveDeploymentData(chainId, deployData);
+      // log('  - TestTokenA4:   ', testTokenA4.address);
+      // log('     - Block:    ', testTokenA4.deployTransaction.blockNumber);
+      // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: testTokenA4.deployTransaction }));
 
 
-      log('\n  Deploying Sample1155...');
-      const Sample1155 = await ethers.getContractFactory('Sample1155');
-      const Sample1155Instance = await Sample1155.deploy();
-      const sample1155 = await Sample1155Instance.deployed();
-      deployData['Sample1155'] = {
-        abi: getContractAbi('Sample1155'),
-        address: sample1155.address,
-        deployTransaction: sample1155.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - Sample1155:   ', sample1155.address);
-      log('     - Block:    ', sample1155.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: sample1155.deployTransaction }));
+      // log('\n  Deploying Sample721...');
+      // const Sample721 = await ethers.getContractFactory('Sample721');
+      // const Sample721Instance = await Sample721.deploy();
+      // const sample721 = await Sample721Instance.deployed();
+      // deployData['Sample721'] = {
+      //   abi: getContractAbi('Sample721'),
+      //   address: sample721.address,
+      //   deployTransaction: sample721.deployTransaction
+      // }
+      // saveDeploymentData(chainId, deployData);
+      // log('  - Sample721:   ', sample721.address);
+      // log('     - Block:    ', sample721.deployTransaction.blockNumber);
+      // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: sample721.deployTransaction }));
+
+
+      // log('\n  Deploying Sample1155...');
+      // const Sample1155 = await ethers.getContractFactory('Sample1155');
+      // const Sample1155Instance = await Sample1155.deploy();
+      // const sample1155 = await Sample1155Instance.deployed();
+      // deployData['Sample1155'] = {
+      //   abi: getContractAbi('Sample1155'),
+      //   address: sample1155.address,
+      //   deployTransaction: sample1155.deployTransaction
+      // }
+      // saveDeploymentData(chainId, deployData);
+      // log('  - Sample1155:   ', sample1155.address);
+      // log('     - Block:    ', sample1155.deployTransaction.blockNumber);
+      // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: sample1155.deployTransaction }));
     }
 
 
