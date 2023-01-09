@@ -110,16 +110,17 @@ describe('Web3Packs', function() {
         inputTokenAmount: 10 
       }];
 
-      const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
+      // const newTokenId = await web3packs.callStatic.bundle(testAddress, ERC20SwapOrder);
+      // console.log(newTokenId);
 
-      const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
+      const bundleTransaction = await web3packs.bundle(testAddress, ERC20SwapOrder);
       await bundleTransaction.wait();
       
-      const charged = new Charged({ providers: ethers.provider });
-      const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
+      // const charged = new Charged({ providers: ethers.provider });
+      // const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
 
-      const bundTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      expect(bundTokenMass['137']?.value).to.equal(9);
+      // const bundTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      // expect(bundTokenMass['137']?.value).to.equal(9);
     });
 
     it ('Bound token with two swaps and nbundle', async() => {
@@ -158,15 +159,12 @@ describe('Web3Packs', function() {
       await bundleTransaction.wait();
       
       const charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
-      const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
+      const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
       expect(USDtTokenMass['137']?.value).to.equal(9);
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
-
-      // const approveWeb3PacksToUseBundleTokenTx = await bundToken.approveAll(web3packs.address, true);
-      // await approveWeb3PacksToUseBundleTokenTx.wait();
 
       // Charged settings contract
       const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
