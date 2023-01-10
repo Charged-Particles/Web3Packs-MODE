@@ -35,8 +35,6 @@ pragma abicoder v2;
 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -51,7 +49,6 @@ import "./lib/BlackholePrevention.sol";
 
 contract Web3Packs is
   IWeb3Packs,
-  ERC721,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -67,7 +64,7 @@ contract Web3Packs is
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
 
-  constructor() ERC721("Web3Packs", "W3P") {}
+  constructor(){}
 
 
   /***********************************|
@@ -97,7 +94,6 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    // require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
     _unbundle(receiver, tokenId, _cpWalletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
@@ -112,7 +108,6 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
     _unbundle(receiver, tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
