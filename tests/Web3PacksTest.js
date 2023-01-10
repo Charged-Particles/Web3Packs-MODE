@@ -16,8 +16,12 @@ describe('Web3Packs', function() {
   const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
   const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
   const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
+  const wrapMaticContractAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+
   const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
   const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
+
+  const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
    
   beforeEach(async () => {
     const ddWeb3Packs = getDeployData('Web3Packs');
@@ -26,11 +30,6 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-    it ('Gets deployed token name', async() => {
-      const name = await web3packs.name();
-      expect(name).to.equal('Web3Packs');
-    });
-
     it ('Swap a single asset', async() => {
       // grant maUSD to the Web3Packs contract.
       await network.provider.request({
@@ -50,7 +49,11 @@ describe('Web3Packs', function() {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10 
+        inputTokenAmount: 10,
+        uniSwapPoolFee: 3000,
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
@@ -63,6 +66,28 @@ describe('Web3Packs', function() {
 
       const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
       console.log(balanceBeforeSwap1.toString());
+    });
+
+    it ('Swap matic', async() => {
+      const inputTokenAmount = ethers.utils.parseEther('10');
+      const ERC20SwapOrder = [{
+        inputTokenAddress: wrapMaticContractAddress,
+        outputTokenAddress: USDcContractAddress,
+        uniSwapPoolFee: 500,
+        inputTokenAmount,
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
+      }];
+
+      const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, ethers.provider);
+
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
+      await swapTransaction.wait();
+
+      const USDcBalanceAfterSwap = await USDc.balanceOf(web3packs.address);
+
+      expect(USDcBalanceAfterSwap).to.equal(7925122);
     });
 
     it ('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
@@ -81,12 +106,20 @@ describe('Web3Packs', function() {
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: USDtContractAddress,
-          inputTokenAmount: 10 
+          uniSwapPoolFee: 3000,
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         },
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: UniContractAddress,
-          inputTokenAmount: 10 
+          uniSwapPoolFee: 3000,
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         }
       ];
 
@@ -107,20 +140,15 @@ describe('Web3Packs', function() {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10 
+        inputTokenAmount: 10,
+        uniSwapPoolFee: 3000,
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
       }];
-
-      // const newTokenId = await web3packs.callStatic.bundle(testAddress, ERC20SwapOrder);
-      // console.log(newTokenId);
 
       const bundleTransaction = await web3packs.bundle(testAddress, ERC20SwapOrder);
       await bundleTransaction.wait();
-      
-      // const charged = new Charged({ providers: ethers.provider });
-      // const bundToken = charged.NFT('0x1cefb0e1ec36c7971bed1d64291fc16a145f35dc', newTokenId.toNumber());
-
-      // const bundTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      // expect(bundTokenMass['137']?.value).to.equal(9);
     });
 
     it ('Bound token with two swaps and nbundle', async() => {
@@ -145,12 +173,20 @@ describe('Web3Packs', function() {
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: USDtContractAddress,
-          inputTokenAmount: 10
+          uniSwapPoolFee: 3000,
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         },
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: UniContractAddress,
-          inputTokenAmount: 10
+          uniSwapPoolFee: 3000,
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         }
       ];
 

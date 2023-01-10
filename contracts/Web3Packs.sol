@@ -35,8 +35,6 @@ pragma abicoder v2;
 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -51,7 +49,6 @@ import "./lib/BlackholePrevention.sol";
 
 contract Web3Packs is
   IWeb3Packs,
-  ERC721,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -67,7 +64,7 @@ contract Web3Packs is
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
 
-  constructor() ERC721("Web3Packs", "W3P") {}
+  constructor(){}
 
 
   /***********************************|
@@ -97,7 +94,6 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    // require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
     _unbundle(receiver, tokenId, _cpWalletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
@@ -112,7 +108,6 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    require(isApprovedForAll(ownerOf(tokenId), _msgSender()), "Not owner or operator");
     _unbundle(receiver, tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
@@ -121,6 +116,7 @@ contract Web3Packs is
     ERC20SwapOrder[] calldata erc20SwapOrders
   )
     external
+    payable
     virtual
     returns (uint256[] memory)
   {
@@ -213,35 +209,32 @@ contract Web3Packs is
     uint256[] memory amountsOut = new uint256[](erc20SwapOrders.length);
     for (uint256 i; i < erc20SwapOrders.length; i++) {
       amountsOut[i] = _singleSwap(
-        erc20SwapOrders[i].inputTokenAddress,
-        erc20SwapOrders[i].outputTokenAddress,
-        erc20SwapOrders[i].inputTokenAmount
+        erc20SwapOrders[i]
       );
     }
     return amountsOut;
   }
 
   function _singleSwap(
-    address inputTokenAddress,
-    address outputTokenAddress,
-    uint256 inputTokenAmount
+    ERC20SwapOrder calldata erc20SwapOrder
   ) internal returns (uint256 amountOut) {
-    // Approve the router to spend DAI.
-    TransferHelper.safeApprove(inputTokenAddress, address(_router), inputTokenAmount);
+    // Approve the router to spend ERC20.
+    TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
 
     ISwapRouter.ExactInputSingleParams memory params =
+      // TODO: MOST OF THESE SHOULD BE PASS IN PARAMETERS !
       ISwapRouter.ExactInputSingleParams({
-        tokenIn: inputTokenAddress,
-        tokenOut: outputTokenAddress,
-        fee: 3000,
+        tokenIn: erc20SwapOrder.inputTokenAddress,
+        tokenOut: erc20SwapOrder.outputTokenAddress,
+        fee: erc20SwapOrder.uniSwapPoolFee,
         recipient: address(this),
-        deadline: block.timestamp,
-        amountIn: inputTokenAmount,
-        amountOutMinimum: 0,
-        sqrtPriceLimitX96: 0
+        deadline: erc20SwapOrder.deadline,
+        amountIn: erc20SwapOrder.inputTokenAmount,
+        amountOutMinimum: erc20SwapOrder.amountOutMinimum,
+        sqrtPriceLimitX96: erc20SwapOrder.sqrtPriceLimitX96
       });
       // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
-      amountOut = ISwapRouter(_router).exactInputSingle(params);
+      amountOut = ISwapRouter(_router).exactInputSingle{value: msg.value }(params);
   }
 
   function _bundle(
