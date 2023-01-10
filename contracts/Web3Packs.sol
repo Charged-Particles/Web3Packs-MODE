@@ -55,7 +55,7 @@ contract Web3Packs is
   BlackholePrevention
 {
   // Polygon Mainnet
-  address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
+  address internal _proton = 0xC5b2d04669b6B701195F90c15C560edaa3509C92;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
@@ -78,6 +78,7 @@ contract Web3Packs is
     external
     whenNotPaused
     nonReentrant
+    payable
     returns(uint256 tokenId)
   {
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
@@ -222,7 +223,6 @@ contract Web3Packs is
     TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
 
     ISwapRouter.ExactInputSingleParams memory params =
-      // TODO: MOST OF THESE SHOULD BE PASS IN PARAMETERS !
       ISwapRouter.ExactInputSingleParams({
         tokenIn: erc20SwapOrder.inputTokenAddress,
         tokenOut: erc20SwapOrder.outputTokenAddress,

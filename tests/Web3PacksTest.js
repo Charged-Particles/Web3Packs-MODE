@@ -90,7 +90,7 @@ describe('Web3Packs', function() {
       expect(USDcBalanceAfterSwap).to.equal(7925122);
     });
 
-    it ('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
+    it('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
       await network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ USDcWhale ],
@@ -136,7 +136,7 @@ describe('Web3Packs', function() {
       expect(UNIBalanceAfterSwap).to.equal(1659805226163);
     });
 
-    it ('Bundles singled swap asset', async() => {
+    it('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
