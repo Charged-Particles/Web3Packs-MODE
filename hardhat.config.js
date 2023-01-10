@@ -54,7 +54,7 @@ module.exports = {
     ],
   },
   namedAccounts: {
-    // deployer: 0,
+    // er: 0,
     // tokenOwner: 1,
     deployer: {
       default: 0,

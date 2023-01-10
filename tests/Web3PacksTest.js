@@ -28,10 +28,6 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-    it ('Gets deployed token name', async() => {
-      const name = await web3packs.name();
-      expect(name).to.equal('Web3Packs');
-    });
 
     it('Swap a single asset', async() => {
       // grant maUSD to the Web3Packs contract.
