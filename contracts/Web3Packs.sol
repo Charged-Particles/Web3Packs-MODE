@@ -231,6 +231,7 @@ contract Web3Packs is
     TransferHelper.safeApprove(inputTokenAddress, address(_router), inputTokenAmount);
 
     ISwapRouter.ExactInputSingleParams memory params =
+      // TODO: MOST OF THESE SHOULD BE PASS IN PARAMETERS !
       ISwapRouter.ExactInputSingleParams({
         tokenIn: inputTokenAddress,
         tokenOut: outputTokenAddress,
