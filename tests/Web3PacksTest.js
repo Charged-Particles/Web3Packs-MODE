@@ -30,7 +30,7 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-    it.only ('Swap a single asset', async() => {
+    it ('Swap a single asset', async() => {
       // grant maUSD to the Web3Packs contract.
       await network.provider.request({
         method: "hardhat_impersonateAccount",
@@ -74,7 +74,10 @@ describe('Web3Packs', function() {
         inputTokenAddress: wrapMaticContractAddress,
         outputTokenAddress: USDcContractAddress,
         uniSwapPoolFee: 500,
-        inputTokenAmount
+        inputTokenAmount,
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
       }];
 
       const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, ethers.provider);
@@ -104,13 +107,19 @@ describe('Web3Packs', function() {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: USDtContractAddress,
           uniSwapPoolFee: 3000,
-          inputTokenAmount: 10 
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         },
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: UniContractAddress,
           uniSwapPoolFee: 3000,
-          inputTokenAmount: 10 
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         }
       ];
 
@@ -133,6 +142,9 @@ describe('Web3Packs', function() {
         outputTokenAddress: USDtContractAddress,
         inputTokenAmount: 10,
         uniSwapPoolFee: 3000,
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
       }];
 
       const bundleTransaction = await web3packs.bundle(testAddress, ERC20SwapOrder);
@@ -162,13 +174,19 @@ describe('Web3Packs', function() {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: USDtContractAddress,
           uniSwapPoolFee: 3000,
-          inputTokenAmount: 10
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         },
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: UniContractAddress,
           uniSwapPoolFee: 3000,
-          inputTokenAmount: 10
+          inputTokenAmount: 10,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
         }
       ];
 
