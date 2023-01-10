@@ -212,7 +212,10 @@ contract Web3Packs is
         erc20SwapOrders[i].inputTokenAddress,
         erc20SwapOrders[i].outputTokenAddress,
         erc20SwapOrders[i].inputTokenAmount,
-        erc20SwapOrders[i].uniSwapPoolFee
+        erc20SwapOrders[i].uniSwapPoolFee,
+        erc20SwapOrders[i].deadline,
+        erc20SwapOrders[i].amountOutMinimum,
+        erc20SwapOrders[i].sqrtPriceLimitX96
       );
     }
     return amountsOut;
@@ -222,7 +225,10 @@ contract Web3Packs is
     address inputTokenAddress,
     address outputTokenAddress,
     uint256 inputTokenAmount,
-    uint24 uniSwapPoolFee
+    uint24 uniSwapPoolFee,
+    uint256 deadline,
+    uint256 amountOutMinimum,
+    uint160 sqrtPriceLimitX96
   ) internal returns (uint256 amountOut) {
     // Approve the router to spend ERC20.
     TransferHelper.safeApprove(inputTokenAddress, address(_router), inputTokenAmount);
@@ -234,10 +240,10 @@ contract Web3Packs is
         tokenOut: outputTokenAddress,
         fee: uniSwapPoolFee,
         recipient: address(this),
-        deadline: block.timestamp,
+        deadline: deadline,
         amountIn: inputTokenAmount,
-        amountOutMinimum: 0,
-        sqrtPriceLimitX96: 0
+        amountOutMinimum: amountOutMinimum,
+        sqrtPriceLimitX96: sqrtPriceLimitX96
       });
       // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
       amountOut = ISwapRouter(_router).exactInputSingle{value: msg.value }(params);

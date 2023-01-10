@@ -35,6 +35,9 @@ interface IWeb3Packs {
     address outputTokenAddress;
     uint256 inputTokenAmount;
     uint24 uniSwapPoolFee;
+    uint256 deadline;
+    uint256 amountOutMinimum;
+    uint160 sqrtPriceLimitX96; 
   }
 
   struct Web3PackOrder {

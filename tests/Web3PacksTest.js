@@ -20,6 +20,8 @@ describe('Web3Packs', function() {
 
   const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
   const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
+
+  const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
    
   beforeEach(async () => {
     const ddWeb3Packs = getDeployData('Web3Packs');
@@ -28,7 +30,7 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-    it ('Swap a single asset', async() => {
+    it.only ('Swap a single asset', async() => {
       // grant maUSD to the Web3Packs contract.
       await network.provider.request({
         method: "hardhat_impersonateAccount",
@@ -48,7 +50,10 @@ describe('Web3Packs', function() {
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
         inputTokenAmount: 10,
-        uniSwapPoolFee: 3000
+        uniSwapPoolFee: 3000,
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);

@@ -267,6 +267,21 @@
             "internalType": "uint24",
             "name": "uniSwapPoolFee",
             "type": "uint24"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMinimum",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceLimitX96",
+            "type": "uint160"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
@@ -426,6 +441,21 @@
             "internalType": "uint24",
             "name": "uniSwapPoolFee",
             "type": "uint24"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMinimum",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceLimitX96",
+            "type": "uint160"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
