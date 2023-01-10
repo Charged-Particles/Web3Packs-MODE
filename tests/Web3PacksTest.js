@@ -28,8 +28,7 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-
-    it('Swap a single asset', async() => {
+    it ('Swap a single asset', async() => {
       // grant maUSD to the Web3Packs contract.
       await network.provider.request({
         method: "hardhat_impersonateAccount",
@@ -48,7 +47,8 @@ describe('Web3Packs', function() {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10 
+        inputTokenAmount: 10,
+        uniSwapPoolFee: 3000
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
@@ -68,6 +68,7 @@ describe('Web3Packs', function() {
       const ERC20SwapOrder = [{
         inputTokenAddress: wrapMaticContractAddress,
         outputTokenAddress: USDcContractAddress,
+        uniSwapPoolFee: 500,
         inputTokenAmount
       }];
 
@@ -97,11 +98,13 @@ describe('Web3Packs', function() {
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: USDtContractAddress,
+          uniSwapPoolFee: 3000,
           inputTokenAmount: 10 
         },
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: UniContractAddress,
+          uniSwapPoolFee: 3000,
           inputTokenAmount: 10 
         }
       ];
@@ -116,18 +119,16 @@ describe('Web3Packs', function() {
       const UNIBalanceAfterSwap = await UNI.balanceOf(web3packs.address);
 
       expect(USDtBalanceAfterSwap).to.equal(18);
-      expect(UNIBalanceAfterSwap).to.equal(1650758266678);
+      expect(UNIBalanceAfterSwap).to.equal(1659805226163);
     });
 
     it ('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10 
+        inputTokenAmount: 10,
+        uniSwapPoolFee: 3000,
       }];
-
-      // const newTokenId = await web3packs.callStatic.bundle(testAddress, ERC20SwapOrder);
-      // console.log(newTokenId);
 
       const bundleTransaction = await web3packs.bundle(testAddress, ERC20SwapOrder);
       await bundleTransaction.wait();
@@ -155,11 +156,13 @@ describe('Web3Packs', function() {
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: USDtContractAddress,
+          uniSwapPoolFee: 3000,
           inputTokenAmount: 10
         },
         {
           inputTokenAddress: USDcContractAddress,
           outputTokenAddress: UniContractAddress,
+          uniSwapPoolFee: 3000,
           inputTokenAmount: 10
         }
       ];

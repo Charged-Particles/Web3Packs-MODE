@@ -211,7 +211,8 @@ contract Web3Packs is
       amountsOut[i] = _singleSwap(
         erc20SwapOrders[i].inputTokenAddress,
         erc20SwapOrders[i].outputTokenAddress,
-        erc20SwapOrders[i].inputTokenAmount
+        erc20SwapOrders[i].inputTokenAmount,
+        erc20SwapOrders[i].uniSwapPoolFee
       );
     }
     return amountsOut;
@@ -220,9 +221,10 @@ contract Web3Packs is
   function _singleSwap(
     address inputTokenAddress,
     address outputTokenAddress,
-    uint256 inputTokenAmount
+    uint256 inputTokenAmount,
+    uint24 uniSwapPoolFee
   ) internal returns (uint256 amountOut) {
-    // Approve the router to spend DAI.
+    // Approve the router to spend ERC20.
     TransferHelper.safeApprove(inputTokenAddress, address(_router), inputTokenAmount);
 
     ISwapRouter.ExactInputSingleParams memory params =
@@ -230,7 +232,7 @@ contract Web3Packs is
       ISwapRouter.ExactInputSingleParams({
         tokenIn: inputTokenAddress,
         tokenOut: outputTokenAddress,
-        fee: 500,
+        fee: uniSwapPoolFee,
         recipient: address(this),
         deadline: block.timestamp,
         amountIn: inputTokenAmount,

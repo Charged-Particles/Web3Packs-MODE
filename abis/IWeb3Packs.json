@@ -112,6 +112,11 @@
             "internalType": "uint256",
             "name": "inputTokenAmount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint24",
+            "name": "uniSwapPoolFee",
+            "type": "uint24"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
