@@ -36,5 +36,6 @@ interface IBaseProton {
     string memory tokenMetaUri
   )
     external
+    payable
     returns (uint256 newTokenId);
 }

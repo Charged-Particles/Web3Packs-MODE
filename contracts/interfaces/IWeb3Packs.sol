@@ -46,8 +46,9 @@ interface IWeb3Packs {
 
   function bundle(
     address receiver,
+    string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders
-  ) external returns(uint256 tokenId);
+  ) external payable returns(uint256 tokenId);
 
   function unbundle(
     address receiver,
