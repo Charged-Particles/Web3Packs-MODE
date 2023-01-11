@@ -74,7 +74,7 @@ contract Web3Packs is
   function bundle(
     address receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC20SwapOrder[] calldata erc20SwapOrders
   )
     external
     whenNotPaused
@@ -240,7 +240,7 @@ contract Web3Packs is
 
   function _bundle(
     address receiver,
-    string tokenMetaUri,
+    string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     uint256[] memory realAmounts
   )

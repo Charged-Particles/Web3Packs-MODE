@@ -247,6 +247,11 @@
         "type": "address"
       },
       {
+        "internalType": "string",
+        "name": "tokenMetaUri",
+        "type": "string"
+      },
+      {
         "components": [
           {
             "internalType": "address",
