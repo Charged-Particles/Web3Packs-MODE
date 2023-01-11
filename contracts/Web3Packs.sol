@@ -73,7 +73,8 @@ contract Web3Packs is
 
   function bundle(
     address receiver,
-    ERC20SwapOrder[] calldata erc20SwapOrders
+    string calldata tokenMetaUri,
+    ERC20SwapOrder[] calldata erc20SwapOrders,
   )
     external
     whenNotPaused
@@ -82,7 +83,7 @@ contract Web3Packs is
     returns(uint256 tokenId)
   {
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    tokenId = _bundle(receiver, erc20SwapOrders, realAmounts);
+    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
     emit PackBundled(tokenId, receiver);
   }
 
@@ -239,6 +240,7 @@ contract Web3Packs is
 
   function _bundle(
     address receiver,
+    string tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     uint256[] memory realAmounts
   )
@@ -250,7 +252,7 @@ contract Web3Packs is
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
 
     // Mint Web3Pack NFT to Receiver
-    tokenId = IBaseProton(_proton).createBasicProton(self, receiver, "test.com");
+    tokenId = IBaseProton(_proton).createBasicProton(self, receiver, tokenMetaUri);
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
