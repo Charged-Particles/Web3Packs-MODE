@@ -21,6 +21,8 @@ describe('Web3Packs', function() {
   const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
   const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
 
+  const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
+
   const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
    
   beforeEach(async () => {
@@ -87,7 +89,7 @@ describe('Web3Packs', function() {
 
       const USDcBalanceAfterSwap = await USDc.balanceOf(web3packs.address);
 
-      expect(USDcBalanceAfterSwap).to.equal(7925122);
+      expect(USDcBalanceAfterSwap).to.equal(6938574);
     });
 
     it('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
@@ -133,7 +135,7 @@ describe('Web3Packs', function() {
       const UNIBalanceAfterSwap = await UNI.balanceOf(web3packs.address);
 
       expect(USDtBalanceAfterSwap).to.equal(18);
-      expect(UNIBalanceAfterSwap).to.equal(1659805226163);
+      expect(UNIBalanceAfterSwap).to.equal(1287754786557);
     });
 
     it('Bundles singled swap asset', async() => {
@@ -147,7 +149,7 @@ describe('Web3Packs', function() {
         sqrtPriceLimitX96: 0,
       }];
 
-      const bundleTransaction = await web3packs.bundle(testAddress, ERC20SwapOrder);
+      const bundleTransaction = await web3packs.bundle(testAddress, ipfsMetadata, ERC20SwapOrder);
       await bundleTransaction.wait();
     });
 
@@ -190,8 +192,8 @@ describe('Web3Packs', function() {
         }
       ];
 
-      const newTokenId = await web3packs.callStatic.bundle(testAddress ,ERC20SwapOrder);
-      const bundleTransaction = await web3packs.bundle(testAddress ,ERC20SwapOrder);
+      const newTokenId = await web3packs.callStatic.bundle(testAddress, ipfsMetadata, ERC20SwapOrder);
+      const bundleTransaction = await web3packs.bundle(testAddress, ipfsMetadata, ERC20SwapOrder);
       await bundleTransaction.wait();
       
       const charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
