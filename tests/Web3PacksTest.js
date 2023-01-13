@@ -153,7 +153,7 @@ describe('Web3Packs', function() {
       await bundleTransaction.wait();
     });
 
-    it ('Bound token with two swaps and nbundle', async() => {
+    it ('Bundles token with two swaps and then unbundles the nft', async() => {
       await network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ USDcWhale ],

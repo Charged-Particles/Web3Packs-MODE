@@ -54,8 +54,7 @@ contract Web3Packs is
   ReentrancyGuard,
   BlackholePrevention
 {
-  // Polygon Mainnet 0xC5b2d04669b6B701195F90c15C560edaa3509C92
-  address internal _proton = 0xC5b2d04669b6B701195F90c15C560edaa3509C92;
+  address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
@@ -153,18 +152,6 @@ contract Web3Packs is
     _proton = proton;
     emit ProtonSet(proton);
   }
-
-  /// @dev Pre-approve ChargedParticles to pull Assets from this contract for bundling
-  function preApproveAsset(address assetAddress) external onlyOwner {
-    IERC20(assetAddress).approve(_chargedParticles, type(uint256).max);
-  }
-
-  /// @dev Pre-approve ChargedParticles to pull NFTs from this contract for bundling
-  function preApproveNft(address nftAddress) external onlyOwner {
-    IERC721(nftAddress).setApprovalForAll(_chargedParticles, true);
-  }
-
-
 
   function pause() public onlyOwner {
     _pause();
