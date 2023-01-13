@@ -59,8 +59,6 @@ module.exports = async (hre) => {
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
     const web3Packs = await Web3Packs.attach(ddWeb3Packs.address);
 
-    // new ethers.Contract( address , abi , signerOrProvider )
-
     const ddChargedSettings = { address: _ADDRESS[chainId].ChargedSettings };
     log('  Loading ChargedSettings from: ', ddChargedSettings.address);
     
