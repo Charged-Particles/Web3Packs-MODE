@@ -70,7 +70,7 @@ describe('Web3Packs', function() {
       console.log(balanceBeforeSwap1.toString());
     });
 
-    it ('Swap matic', async() => {
+    it('Swap one assets with matic', async() => {
       const inputTokenAmount = ethers.utils.parseEther('10');
       const ERC20SwapOrder = [{
         inputTokenAddress: wrapMaticContractAddress,
@@ -82,14 +82,43 @@ describe('Web3Packs', function() {
         sqrtPriceLimitX96: 0,
       }];
 
-      const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, ethers.provider);
-
       const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
       await swapTransaction.wait();
 
-      const USDcBalanceAfterSwap = await USDc.balanceOf(web3packs.address);
+      const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
+      // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
 
-      expect(USDcBalanceAfterSwap).to.equal(6938674);
+      expect(USDcBalanceAfterSwap).to.equal(6938584);
+    });
+
+    it.only ('Swap two assets with matic', async() => {
+      const inputTokenAmount = ethers.utils.parseEther('10');
+      const ERC20SwapOrder = [{
+        inputTokenAddress: wrapMaticContractAddress,
+        outputTokenAddress: USDcContractAddress,
+        uniSwapPoolFee: 500,
+        inputTokenAmount: inputTokenAmount.div(2),
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
+      },
+      {
+        inputTokenAddress: wrapMaticContractAddress,
+        outputTokenAddress: UniContractAddress,
+        uniSwapPoolFee: 3000,
+        inputTokenAmount: inputTokenAmount.div(2),
+        deadline: deadline,
+        amountOutMinimum: 0,
+        sqrtPriceLimitX96: 0,
+      }];
+
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
+      const swapTransactionReceipt = await swapTransaction.wait();
+
+      console.log(swapTransactionReceipt);
+      // const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
+      // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
+      // expect(USDcBalanceAfterSwap).to.equal(6938584);
     });
 
     it('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.

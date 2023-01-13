@@ -222,7 +222,7 @@ contract Web3Packs is
         sqrtPriceLimitX96: erc20SwapOrder.sqrtPriceLimitX96
       });
       // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
-      amountOut = ISwapRouter(_router).exactInputSingle{value: msg.value }(params);
+      amountOut = ISwapRouter(_router).exactInputSingle{value: erc20SwapOrder.inputTokenAmount }(params);
   }
 
   function _bundle(
