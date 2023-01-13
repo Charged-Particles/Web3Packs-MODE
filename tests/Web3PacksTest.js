@@ -115,10 +115,8 @@ describe('Web3Packs', function() {
       const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
       const swapTransactionReceipt = await swapTransaction.wait();
 
-      console.log(swapTransactionReceipt);
-      // const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
-      // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
-      // expect(USDcBalanceAfterSwap).to.equal(6938584);
+      // TODO: CHECK CORRECT BALANCE SWAP !!
+      // console.log(swapTransactionReceipt);
     });
 
     it('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
