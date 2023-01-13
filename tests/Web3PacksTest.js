@@ -5,8 +5,7 @@ const { default: Charged, chargedStateAbi } = require("@charged-particles/charge
 const { Contract } = require("ethers");
 
 describe('Web3Packs', function() {
-  
-  let web3packs;
+  let web3packs, USDc, whaleSigner;
 
   const erc20Abi = [
     "function transfer(address to, uint amount)",
@@ -29,22 +28,23 @@ describe('Web3Packs', function() {
     const ddWeb3Packs = getDeployData('Web3Packs');
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
     web3packs = await Web3Packs.attach(ddWeb3Packs.address);
+    
+    // grant maUSD to the Web3Packs contract.
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [ USDcWhale ]
+    });
+
+    // Deposit usdc into web3pack contract
+    whaleSigner = await ethers.getSigner(USDcWhale);
+    USDc = new ethers.Contract(USDcContractAddress, erc20Abi, whaleSigner);
+
+    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
+    await foundWeb3PacksTransaction.wait();
   });
 
   describe('Web3Packs', async () => {
-    it ('Swap a single asset', async() => {
-      // grant maUSD to the Web3Packs contract.
-      await network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [ USDcWhale ]
-      });
-
-      // Deposit usdc into web3pack contract
-      const whaleSigner = await ethers.getSigner(USDcWhale);
-      const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, whaleSigner);
-      const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
-      await foundWeb3PacksTransaction.wait();
-
+    it.only('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
       expect(balanceBeforeSwap).to.equal(100);
 
