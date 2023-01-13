@@ -54,7 +54,6 @@ contract Web3Packs is
   ReentrancyGuard,
   BlackholePrevention
 {
-  // Polygon Mainnet 0xC5b2d04669b6B701195F90c15C560edaa3509C92
   address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
