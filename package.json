@@ -15,7 +15,7 @@
     "clean-test": "rm -rf abis .openzeppelin/${npm_config_network:-'unknown-31337'}.json deployments/${npm_config_network:-hardhat}/*.json test-results.xml",
     "verify": "yarn hint && yarn test",
     "compile": "hardhat --show-stack-traces --max-memory 8192 compile",
-    "test": "yarn clean-test && hardhat test --show-stack-traces && yarn clean-test",
+    "test": "yarn hardhat test tests/* --network hardhat",
     "test-only": "yarn clean-test && hardhat test --show-stack-traces",
     "watch-test": "hardhat watch test",
     "hint": "solhint \"contracts/**/*.sol\"",
