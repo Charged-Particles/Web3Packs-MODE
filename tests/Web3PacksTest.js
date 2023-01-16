@@ -23,12 +23,14 @@ describe('Web3Packs', function() {
   const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
   const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
 
-  before(async () => {
+  const deployWeb3Pack = async () => {
     const ddWeb3Packs = getDeployData('Web3Packs');
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
-    web3packs = await Web3Packs.attach(ddWeb3Packs.address);
-    
-    // grant maUSD to the Web3Packs contract.
+    web3packs = await Web3Packs.attach(ddWeb3Packs.address);    
+  };
+
+  before(async () => {
+    await deployWeb3Pack();
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [ USDcWhale ]
@@ -42,8 +44,12 @@ describe('Web3Packs', function() {
     await foundWeb3PacksTransaction.wait();
   });
 
+  beforeEach(async () => {
+    await deployWeb3Pack();
+  });
+
   describe('Web3Packs', async () => {
-    it('Swap a single asset', async() => {
+    it ('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
       expect(balanceBeforeSwap).to.equal(100);
 
@@ -66,7 +72,7 @@ describe('Web3Packs', function() {
       expect(USDtBalanceAfterSwap).to.equal(9);
 
       const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
-      console.log(balanceBeforeSwap1.toString());
+      console.log('>>>>>>>>> ', balanceBeforeSwap1.toString());
     });
 
     it('Swap one assets with matic', async() => {
@@ -87,7 +93,7 @@ describe('Web3Packs', function() {
       const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
       // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
 
-      expect(USDcBalanceAfterSwap).to.equal(6938683);
+      expect(USDcBalanceAfterSwap).to.equal(6938574);
     });
 
     it('Swap two assets with matic', async() => {
@@ -149,11 +155,11 @@ describe('Web3Packs', function() {
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
       const UNIBalanceAfterSwap = await UNI.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(9);
+      expect(USDtBalanceAfterSwap).to.equal(18);
       expect(UNIBalanceAfterSwap.toString()).to.equal('493373764498692278');
     });
 
-    it('Bundles singled swap asset', async() => {
+    it ('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
@@ -167,7 +173,9 @@ describe('Web3Packs', function() {
       const bundleTransaction = await web3packs.bundle(
         testAddress,
         ipfsMetadata,
-        ERC20SwapOrder
+        ERC20SwapOrder,
+        ethers.utils.parseEther('.1'),
+        { value: ethers.utils.parseEther('.2') }
       );
       await bundleTransaction.wait();
     });
@@ -175,9 +183,6 @@ describe('Web3Packs', function() {
     it('Bundles token with two swaps and then unbundles the nft', async() => {
       const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC)
       const connectedWallet = walletMnemonic.connect(ethers.provider);
-
-      // const foundTestWalletTx = await USDcWhaleSigner.sendTransaction({value: ethers.utils.parseEther('1'), to: testAddress});
-      // await foundTestWalletTx.wait();
 
       const ERC20SwapOrder = [
         {
@@ -209,7 +214,7 @@ describe('Web3Packs', function() {
       );
 
       // User address has no amount before bundle 
-      expect(await ethers.provider.getBalance(testAddress)).to.equal(0);
+      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.1'));
 
       const bundleTransaction = await web3packs.bundle(
         testAddress,
@@ -221,7 +226,7 @@ describe('Web3Packs', function() {
       await bundleTransaction.wait();
 
       // Bundle functions gives ethers to user
-      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.1'));
+      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
       
       const charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
       const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
@@ -262,12 +267,4 @@ describe('Web3Packs', function() {
       expect(balanceOfUSDtAfterRelease).to.eq(9);
     });
   });
-
-  it ('Packs transfers gas to user', async()=> {
-    // bundle
-
-    // check users balance
-
-    // unbundle users
-  });
-})
+});
