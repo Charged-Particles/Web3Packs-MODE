@@ -24,7 +24,6 @@ const _ADDRESS = {
     ChargedSettings: '0xdc29C7014d104432B15eD2334e654fCBf3d5E528',
     UniswapRouter: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     Proton: '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
- 
   },
   80001: {
     ChargedParticles: '0x51f845af34c60499a1056FCDf47BcBC681A0fA39',
@@ -77,12 +76,12 @@ module.exports = async (hre) => {
       await web3Packs.setUniswapRouter(_ADDRESS[chainId].UniswapRouter)
     );
 
-    await executeTx('1-d', 'Web3Packs: Transfer Contract Ownership', async () =>
-      await web3Packs.transferOwnership(protocolOwner)
+    await executeTx('1-e', 'Web3Packs: Set proton address ', async () =>
+      await web3Packs.setProton(_ADDRESS[chainId].Proton)
     );
 
-    await executeTx('1-e', 'Web3Packs: Set proton address ', async () =>
-      await web3Packs.transferOwnership(_ADDRESS[chainId].Proton)
+    await executeTx('1-d', 'Web3Packs: Transfer Contract Ownership', async () =>
+      await web3Packs.transferOwnership(protocolOwner)
     );
 
     log('\n  Contract Deployment Data saved to "deployments" directory.');

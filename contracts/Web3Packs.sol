@@ -82,10 +82,12 @@ contract Web3Packs is
     payable
     returns(uint256 tokenId)
   {
-    require(receiver != address(0x0), "BHP:E-403");
-    uint256[] memory realAmounts = _swap(erc20SwapOrders);
+    require(receiver != address(0x0), "Receiver is null");
 
+    uint256[] memory realAmounts = _swap(erc20SwapOrders);
+    
     tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
+
     _fund(receiver, fundingAmount);
 
     emit PackBundled(tokenId, receiver);
