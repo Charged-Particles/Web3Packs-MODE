@@ -295,7 +295,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "unBundleGasAmount",
+        "name": "fundingAmount",
         "type": "uint256"
       }
     ],
