@@ -50,7 +50,7 @@ describe('Web3Packs', function() {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 1,
+        inputTokenAmount: 10,
         uniSwapPoolFee: 3000,
         deadline: deadline,
         amountOutMinimum: 0,
@@ -172,7 +172,7 @@ describe('Web3Packs', function() {
       await bundleTransaction.wait();
     });
 
-    it.only('Bundles token with two swaps and then unbundles the nft', async() => {
+    it('Bundles token with two swaps and then unbundles the nft', async() => {
       const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC)
       const connectedWallet = walletMnemonic.connect(ethers.provider);
 
