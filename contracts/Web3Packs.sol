@@ -71,9 +71,10 @@ contract Web3Packs is
   |__________________________________*/
 
   function bundle(
-    address receiver,
+    address payable receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders
+    ERC20SwapOrder[] calldata erc20SwapOrders,
+    uint256 fundingAmount
   )
     external
     whenNotPaused
@@ -81,8 +82,14 @@ contract Web3Packs is
     payable
     returns(uint256 tokenId)
   {
+    require(receiver != address(0x0), "Receiver is null");
+
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
+    
     tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
+
+    _fund(receiver, fundingAmount);
+
     emit PackBundled(tokenId, receiver);
   }
 
@@ -279,6 +286,13 @@ contract Web3Packs is
         walletManager,
         web3PackOrder.erc20TokenAddresses[i]
       );
+    }
+  }
+
+  function _fund(address payable receiver, uint256 fundigAmount) private{
+    if (address(this).balance >= fundigAmount) {
+      (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
+      require(sent, "Failed to send Ether");
     }
   }
 }
