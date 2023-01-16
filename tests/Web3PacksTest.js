@@ -21,9 +21,8 @@ describe('Web3Packs', function() {
   const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
 
   const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
-
   const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
-   
+
   beforeEach(async () => {
     const ddWeb3Packs = getDeployData('Web3Packs');
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
@@ -35,16 +34,16 @@ describe('Web3Packs', function() {
       params: [ USDcWhale ]
     });
 
-
-    // send gas to contract.
-    
-
     // Deposit usdc into web3pack contract
     USDcWhaleSigner = await ethers.getSigner(USDcWhale);
     USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
 
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
     await foundWeb3PacksTransaction.wait();
+
+    // Estimate unbundle gas usage
+
+
   });
 
   describe('Web3Packs', async () => {
@@ -169,11 +168,15 @@ describe('Web3Packs', function() {
         sqrtPriceLimitX96: 0,
       }];
 
-      const bundleTransaction = await web3packs.bundle(testAddress, ipfsMetadata, ERC20SwapOrder);
+      const bundleTransaction = await web3packs.bundle(
+        testAddress,
+        ipfsMetadata,
+        ERC20SwapOrder
+      );
       await bundleTransaction.wait();
     });
 
-    it ('Bundles token with two swaps and then unbundles the nft', async() => {
+    it.only('Bundles token with two swaps and then unbundles the nft', async() => {
       const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC)
       const connectedWallet = walletMnemonic.connect(ethers.provider);
 
@@ -205,9 +208,22 @@ describe('Web3Packs', function() {
           sqrtPriceLimitX96: 0,
         }
       ];
+      
+      const newTokenId = await web3packs.callStatic.bundle(
+        testAddress,
+        ipfsMetadata,
+        ERC20SwapOrder,
+        ethers.utils.parseEther('.1'),
+        { value: ethers.utils.parseEther('.2') }
+      );
 
-      const newTokenId = await web3packs.callStatic.bundle(testAddress, ipfsMetadata, ERC20SwapOrder);
-      const bundleTransaction = await web3packs.bundle(testAddress, ipfsMetadata, ERC20SwapOrder);
+      const bundleTransaction = await web3packs.bundle(
+        testAddress,
+        ipfsMetadata,
+        ERC20SwapOrder,
+        ethers.utils.parseEther('.1'),
+       { value: ethers.utils.parseEther('.2') }
+      );
       await bundleTransaction.wait();
       
       const charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
@@ -247,5 +263,13 @@ describe('Web3Packs', function() {
 
       expect(balanceOfUSDtAfterRelease).to.eq(9);
     });
+  });
+
+  it ('Packs transfers gas to user', async()=> {
+    // bundle
+
+    // check users balance
+
+    // unbundle users
   });
 })

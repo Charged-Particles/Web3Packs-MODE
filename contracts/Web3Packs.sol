@@ -71,9 +71,10 @@ contract Web3Packs is
   |__________________________________*/
 
   function bundle(
-    address receiver,
+    address payable receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders
+    ERC20SwapOrder[] calldata erc20SwapOrders,
+    uint256 unBundleGasAmount
   )
     external
     whenNotPaused
@@ -82,7 +83,12 @@ contract Web3Packs is
     returns(uint256 tokenId)
   {
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
+
     tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
+
+    (bool sent, bytes memory data) = receiver.call{value: unBundleGasAmount}("");
+    require(sent, "Failed to send Ether");
+
     emit PackBundled(tokenId, receiver);
   }
 

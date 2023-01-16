@@ -242,7 +242,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "address payable",
         "name": "receiver",
         "type": "address"
       },
@@ -292,6 +292,11 @@
         "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
         "name": "erc20SwapOrders",
         "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unBundleGasAmount",
+        "type": "uint256"
       }
     ],
     "name": "bundle",
