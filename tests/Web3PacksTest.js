@@ -23,7 +23,7 @@ describe('Web3Packs', function() {
   const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
   const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
 
-  beforeEach(async () => {
+  before(async () => {
     const ddWeb3Packs = getDeployData('Web3Packs');
     const Web3Packs = await ethers.getContractFactory('Web3Packs');
     web3packs = await Web3Packs.attach(ddWeb3Packs.address);
@@ -40,10 +40,6 @@ describe('Web3Packs', function() {
 
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
     await foundWeb3PacksTransaction.wait();
-
-    // Estimate unbundle gas usage
-
-
   });
 
   describe('Web3Packs', async () => {
