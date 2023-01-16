@@ -179,11 +179,6 @@ describe('Web3Packs', function() {
       const foundTestWalletTx = await USDcWhaleSigner.sendTransaction({value: ethers.utils.parseEther('1'), to: testAddress});
       await foundTestWalletTx.wait();
 
-      // // Deposit usdc into web3pack contract
-      const USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
-      const foundUSDcWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
-      await foundUSDcWeb3PacksTransaction.wait();
-
       const ERC20SwapOrder = [
         {
           inputTokenAddress: USDcContractAddress,
