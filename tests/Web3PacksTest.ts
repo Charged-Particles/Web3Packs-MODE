@@ -1,11 +1,14 @@
-const { expect } = require("chai"); 
-const { getDeployData } = require('../js-helpers/deploy'); 
-const { ethers, network } = require('hardhat');
-const { default: Charged, chargedStateAbi } = require("@charged-particles/charged-js-sdk");
-const { Contract } = require("ethers");
+import { expect } from "chai"; 
+import { ethers, network } from 'hardhat';
+import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
+import { Contract, Signer } from "ethers";
 
-describe('Web3Packs', function() {
-  let web3packs, USDc, USDcWhaleSigner;
+// @ts-ignore
+import { getDeployData } from '../js-helpers/deploy'; 
+
+describe('Web3Packs', async ()=> {
+  let web3packs: Contract, USDc: Contract; 
+  let USDcWhaleSigner: Signer;
 
   const erc20Abi = [
     "function transfer(address to, uint amount)",
@@ -49,7 +52,7 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-    it ('Swap a single asset', async() => {
+    it('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
       expect(balanceBeforeSwap).to.equal(100);
 
@@ -71,8 +74,7 @@ describe('Web3Packs', function() {
 
       expect(USDtBalanceAfterSwap).to.equal(9);
 
-      const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
-      console.log('>>>>>>>>> ', balanceBeforeSwap1.toString());
+      // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });
 
     it('Swap one assets with matic', async() => {
@@ -181,7 +183,7 @@ describe('Web3Packs', function() {
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
-      const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC)
+      const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '')
       const connectedWallet = walletMnemonic.connect(ethers.provider);
 
       const ERC20SwapOrder = [
