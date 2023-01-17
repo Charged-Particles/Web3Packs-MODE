@@ -1,14 +1,3 @@
-// require('dotenv').config();
-
-// require('@nomiclabs/hardhat-waffle');
-// require('@nomiclabs/hardhat-etherscan');
-// require('@nomiclabs/hardhat-ethers');
-// require('hardhat-gas-reporter');
-// require('hardhat-abi-exporter');
-// require('solidity-coverage');
-// require('hardhat-deploy-ethers');
-// require('hardhat-deploy');
-// require("hardhat-watcher");
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -29,7 +18,7 @@ import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
 task(
   TASK_TEST,
   "Runs the coverage report",
-  async (args, hre, runSuper) => {
+  async (args: Object, hre, runSuper) => {
     await hre.run('compile');
     await hre.deployments.fixture();
     return runSuper({...args, noCompile: true});

@@ -1,11 +1,14 @@
 import { expect } from "chai"; 
-import { getDeployData } from '../js-helpers/deploy'; 
 import { ethers, network } from 'hardhat';
 import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
-import { Contract } from "ethers";
+import { Contract, Signer } from "ethers";
+
+// @ts-ignore
+import { getDeployData } from '../js-helpers/deploy'; 
 
 describe('Web3Packs', async ()=> {
-  let web3packs, USDc, USDcWhaleSigner;
+  let web3packs: Contract, USDc: Contract; 
+  let USDcWhaleSigner: Signer;
 
   const erc20Abi = [
     "function transfer(address to, uint amount)",
@@ -180,7 +183,7 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
-      const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC)
+      const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '')
       const connectedWallet = walletMnemonic.connect(ethers.provider);
 
       const ERC20SwapOrder = [
