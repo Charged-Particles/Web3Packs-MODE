@@ -72,7 +72,6 @@ describe('Web3Packs', function() {
       expect(USDtBalanceAfterSwap).to.equal(9);
 
       const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
-      console.log('>>>>>>>>> ', balanceBeforeSwap1.toString());
     });
 
     it('Swap one assets with matic', async() => {
