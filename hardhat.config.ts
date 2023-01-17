@@ -21,20 +21,20 @@ import 'solidity-coverage'
 import 'hardhat-deploy-ethers'
 import 'hardhat-deploy'
 import 'hardhat-watcher'
-import { HardhatUserConfig } from "hardhat/config";
-// import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
+import { HardhatUserConfig, task } from "hardhat/config";
+import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
 
 // Task to run deployment fixtures before tests without the need of "--deploy-fixture"
 //  - Required to get fixtures deployed before running Coverage Reports
-// task(
-//   TASK_TEST,
-//   "Runs the coverage report",
-//   async (args, hre, runSuper) => {
-//     await hre.run('compile');
-//     await hre.deployments.fixture();
-//     return runSuper({...args, noCompile: true});
-//   }
-// );
+task(
+  TASK_TEST,
+  "Runs the coverage report",
+  async (args, hre, runSuper) => {
+    await hre.run('compile');
+    await hre.deployments.fixture();
+    return runSuper({...args, noCompile: true});
+  }
+);
 
 
 const mnemonic = {
