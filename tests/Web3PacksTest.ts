@@ -1,10 +1,10 @@
-const { expect } = require("chai"); 
-const { getDeployData } = require('../js-helpers/deploy'); 
-const { ethers, network } = require('hardhat');
-const { default: Charged, chargedStateAbi } = require("@charged-particles/charged-js-sdk");
-const { Contract } = require("ethers");
+import { expect } from "chai"; 
+import { getDeployData } from '../js-helpers/deploy'; 
+import { ethers, network } from 'hardhat';
+import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
+import { Contract } from "ethers";
 
-describe('Web3Packs', function() {
+describe('Web3Packs', async ()=> {
   let web3packs, USDc, USDcWhaleSigner;
 
   const erc20Abi = [
@@ -49,7 +49,7 @@ describe('Web3Packs', function() {
   });
 
   describe('Web3Packs', async () => {
-    it.only('Swap a single asset', async() => {
+    it('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
       expect(balanceBeforeSwap).to.equal(100);
 
@@ -66,13 +66,10 @@ describe('Web3Packs', function() {
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
       await swapTransaction.wait();
 
-      console.log(swapTransaction, web3packs);
+      const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
+      const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
-      console.log('I run >> !', (await USDc.balanceOf(web3packs.address)).toString());
-      // const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
-      // const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
-
-      // expect(USDtBalanceAfterSwap).to.equal(9);
+      expect(USDtBalanceAfterSwap).to.equal(9);
 
       // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });
