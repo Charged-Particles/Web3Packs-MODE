@@ -1,31 +1,41 @@
-require('dotenv').config();
+// require('dotenv').config();
 
-require('@nomiclabs/hardhat-waffle');
-require('@nomiclabs/hardhat-etherscan');
-require('@nomiclabs/hardhat-ethers');
-require('hardhat-gas-reporter');
-require('hardhat-abi-exporter');
-require('solidity-coverage');
-require('hardhat-deploy-ethers');
-require('hardhat-deploy');
-require("hardhat-watcher");
+// require('@nomiclabs/hardhat-waffle');
+// require('@nomiclabs/hardhat-etherscan');
+// require('@nomiclabs/hardhat-ethers');
+// require('hardhat-gas-reporter');
+// require('hardhat-abi-exporter');
+// require('solidity-coverage');
+// require('hardhat-deploy-ethers');
+// require('hardhat-deploy');
+// require("hardhat-watcher");
+import * as dotenv from 'dotenv'
+dotenv.config()
 
-const {
-  TASK_TEST,
-  TASK_COMPILE_GET_COMPILER_INPUT
-} = require('hardhat/builtin-tasks/task-names');
+import '@nomiclabs/hardhat-waffle'
+import '@nomiclabs/hardhat-etherscan'
+import '@nomiclabs/hardhat-ethers'
+import 'hardhat-gas-reporter'
+import 'hardhat-abi-exporter'
+import 'solidity-coverage'
+import 'hardhat-deploy-ethers'
+import 'hardhat-deploy'
+import 'hardhat-watcher'
+import { HardhatUserConfig } from "hardhat/config";
+
+// import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
 
 // Task to run deployment fixtures before tests without the need of "--deploy-fixture"
 //  - Required to get fixtures deployed before running Coverage Reports
-task(
-  TASK_TEST,
-  "Runs the coverage report",
-  async (args, hre, runSuper) => {
-    await hre.run('compile');
-    await hre.deployments.fixture();
-    return runSuper({...args, noCompile: true});
-  }
-);
+// task(
+//   TASK_TEST,
+//   "Runs the coverage report",
+//   async (args, hre, runSuper) => {
+//     await hre.run('compile');
+//     await hre.deployments.fixture();
+//     return runSuper({...args, noCompile: true});
+//   }
+// );
 
 
 const mnemonic = {
@@ -36,7 +46,7 @@ const mnemonic = {
 const optimizerDisabled = process.env.OPTIMIZER_DISABLED
 
 
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
@@ -139,3 +149,5 @@ module.exports = {
     only: [ 'Web3Packs', 'Sample20', 'Sample721', 'Sample1155' ],
   },
 };
+
+export default config;
