@@ -479,6 +479,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -506,6 +511,11 @@
       {
         "internalType": "address",
         "name": "receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenAddress",
         "type": "address"
       },
       {

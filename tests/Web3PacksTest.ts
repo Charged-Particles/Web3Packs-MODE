@@ -249,6 +249,7 @@ describe('Web3Packs', async ()=> {
         
       const unbundleTransaction = await web3packs.connect(connectedWallet).unbundle(
         testAddress,
+        bundToken.contractAddress,
         newTokenId.toNumber(),
         {
           erc20TokenAddresses: [ UniContractAddress, USDtContractAddress]
