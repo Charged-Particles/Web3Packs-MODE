@@ -115,6 +115,7 @@ contract Web3Packs is
 
   function unbundleFromManager(
     address receiver,
+    address tokenAddress,
     uint256 tokenId,
     string memory walletManager,
     Web3PackOrder calldata web3PackOrder
@@ -123,7 +124,7 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    _unbundle(receiver, tokenId, walletManager, web3PackOrder);
+    _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
 
