@@ -53,6 +53,7 @@ interface IWeb3Packs {
 
   function unbundle(
     address receiver,
+    address contractAddress,
     uint256 tokenId,
     Web3PackOrder calldata web3PackOrder
   ) external;

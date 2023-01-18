@@ -95,6 +95,7 @@ contract Web3Packs is
 
   function unbundle(
     address receiver,
+    address tokenAddress,
     uint256 tokenId,
     Web3PackOrder calldata web3PackOrder
   )
@@ -102,7 +103,13 @@ contract Web3Packs is
     whenNotPaused
     nonReentrant
   {
-    _unbundle(receiver, tokenId, _cpWalletManager, web3PackOrder);
+    _unbundle(
+      receiver, 
+      tokenAddress,
+      tokenId, 
+      _cpWalletManager, 
+      web3PackOrder
+    );
     emit PackUnbundled(tokenId, receiver);
   }
 
@@ -272,6 +279,7 @@ contract Web3Packs is
 
   function _unbundle(
     address receiver,
+    address tokenAddress,
     uint256 tokenId,
     string memory walletManager,
     Web3PackOrder calldata web3PackOrder
@@ -281,7 +289,7 @@ contract Web3Packs is
     for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
       IChargedParticles(_chargedParticles).releaseParticle(
         receiver,
-        _proton,
+        tokenAddress,
         tokenId,
         walletManager,
         web3PackOrder.erc20TokenAddresses[i]
