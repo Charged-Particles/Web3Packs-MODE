@@ -21,7 +21,7 @@ export interface ExampleConfig {
 const CurrentConfig: ExampleConfig = {
   tokens: {
     in: WMATIC_TOKEN,
-    amountIn: 1000,
+    amountIn: 100,
     out: USDC_TOKEN,
     poolFee: 500,
   },
@@ -43,7 +43,7 @@ export async function quote(): Promise<string> {
       CurrentConfig.tokens.amountIn,
       CurrentConfig.tokens.in.decimals
     ).toString(),
-    
+    0
   )
 
   return toReadableAmount(quotedAmountOut, CurrentConfig.tokens.out.decimals)
