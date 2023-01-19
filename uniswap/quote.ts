@@ -2,7 +2,7 @@ import { Swap } from './libs/types';
 import { BigNumber, ethers } from 'ethers'
 import { getProvider } from './libs/providers';
 import { computePoolAddress } from '@uniswap/v3-sdk'
-import { toReadableAmount, fromReadableAmount } from './libs/conversion'
+import { fromReadableAmount } from './libs/conversion'
 import { QUOTER_CONTRACT_ADDRESS, POOL_FACTORY_CONTRACT_ADDRESS } from './libs/constants'
 import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json'
 import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
