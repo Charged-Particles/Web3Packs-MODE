@@ -2,6 +2,8 @@ import { expect } from "chai";
 import { Swap } from "../uniswap/libs/types";
 import { multiQuote, quote } from "../uniswap/quote";
 import { WMATIC_TOKEN, USDC_TOKEN, UNI_TOKEN } from "../uniswap/libs/constants";
+import { toReadableAmount } from "../uniswap/libs/conversion";
+
 
 describe('UniSwap', async () => {
   const maticUSDcSwap: Swap = {
@@ -24,12 +26,21 @@ describe('UniSwap', async () => {
 
   it ('Gets fetches single quote', async () => {
     const quoteResult = await quote(maticUSDcSwap);
-    expect(Number(quoteResult)).to.be.within(90,100);
+    expect(quoteResult).to.be.within(90,100);
   });
 
   it.only ('Fetches multiple quotes using multicall', async () => {
-    const swaps: Swap[] =  [maticUSDcSwap, maticUniSwap]
-    const quotesResult = await multiQuote(swaps);
-    console.log(quotesResult);
+    const swaps: Swap[] =  [ maticUSDcSwap, maticUniSwap ];
+    const [ usdcQuote, uniQuote ] = await multiQuote(swaps);
+
+    expect(Number(toReadableAmount(
+      usdcQuote,
+      USDC_TOKEN.decimals
+    ))).to.be.within(90, 100);
+
+    expect(Number(toReadableAmount(
+      uniQuote,
+      UNI_TOKEN.decimals
+    ))).to.be.within(10, 20);
   });
 });

@@ -1,5 +1,5 @@
 import { Swap } from './libs/types';
-import { ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import { getProvider } from './libs/providers';
 import { computePoolAddress } from '@uniswap/v3-sdk'
 import { toReadableAmount, fromReadableAmount } from './libs/conversion'
@@ -8,7 +8,7 @@ import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/I
 import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 
 
-export async function quote(swap: Swap): Promise<string> {
+export async function quote(swap: Swap): Promise<BigNumber> {
   const quoterContract = new ethers.Contract(
     QUOTER_CONTRACT_ADDRESS,
     Quoter.abi,
@@ -26,10 +26,11 @@ export async function quote(swap: Swap): Promise<string> {
     0
   )
 
-  return toReadableAmount(quotedAmountOut, swap.tokens.out.decimals)
+  return quotedAmountOut;
+  // return toReadableAmount(quotedAmountOut, swap.tokens.out.decimals)
 }
 
-export async function multiQuote(swaps: Swap[]): Promise<string[]> {
+export async function multiQuote(swaps: Swap[]): Promise<BigNumber[]> {
   const quotesPromises = swaps.map(swap => { return quote(swap) });
 
   return await Promise.all(quotesPromises)

@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers'
 import JSBI from 'jsbi'
 
 export function fromReadableAmount(amount: number, decimals: number): JSBI {
@@ -12,7 +13,7 @@ export function fromReadableAmount(amount: number, decimals: number): JSBI {
   )
 }
 
-export function toReadableAmount(rawAmount: number, decimals: number): string {
+export function toReadableAmount(rawAmount: BigNumber, decimals: number): string {
   return JSBI.divide(
     JSBI.BigInt(rawAmount),
     JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimals))
