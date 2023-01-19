@@ -14,12 +14,11 @@ export async function quote(swap: Swap): Promise<string> {
     Quoter.abi,
     getProvider()
   )
-  const poolConstants = await getPoolConstants(swap)
 
   const quotedAmountOut = await quoterContract.callStatic.quoteExactInputSingle(
-    poolConstants.token0,
-    poolConstants.token1,
-    poolConstants.fee,
+    swap.tokens.in.address,
+    swap.tokens.out.address,
+    swap.tokens.poolFee,
     fromReadableAmount(
       swap.tokens.amountIn,
       swap.tokens.in.decimals
