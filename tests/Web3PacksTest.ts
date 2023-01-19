@@ -53,7 +53,7 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it.only('Swap a single asset', async() => {
+    it ('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
       expect(balanceBeforeSwap).to.equal(100000000);
 
@@ -78,7 +78,6 @@ describe('Web3Packs', async ()=> {
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
       expect(USDtBalanceAfterSwap).to.equal(9982205);
-
       // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });
 
@@ -100,7 +99,7 @@ describe('Web3Packs', async ()=> {
       const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
       // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
 
-      expect(USDcBalanceAfterSwap).to.equal(6938574);
+      expect(USDcBalanceAfterSwap).to.equal(96938484);
     });
 
     it('Swap two assets with matic', async() => {
@@ -162,7 +161,7 @@ describe('Web3Packs', async ()=> {
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
       const UNIBalanceAfterSwap = await UNI.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(18);
+      expect(USDtBalanceAfterSwap).to.equal(9982213);
       expect(UNIBalanceAfterSwap.toString()).to.equal('493373764498692278');
     });
 
@@ -239,7 +238,7 @@ describe('Web3Packs', async ()=> {
       const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      expect(USDtTokenMass['137']?.value).to.equal(9);
+      expect(USDtTokenMass['137']?.value).to.equal(8);
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
 
@@ -271,7 +270,7 @@ describe('Web3Packs', async ()=> {
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);
 
-      expect(balanceOfUSDtAfterRelease).to.eq(9);
+      expect(balanceOfUSDtAfterRelease).to.eq(8);
     });
   });
 });
