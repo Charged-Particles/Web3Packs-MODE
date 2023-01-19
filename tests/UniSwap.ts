@@ -20,7 +20,7 @@ describe('UniSwap', async () => {
     poolFee: 3000,
   };
 
-  it ('Gets fetches single quote', async () => {
+  it ('Fetches single quote', async () => {
     const quoteResult = await quote(maticUSDcSwap);
     expect(Number(toReadableAmount(
       quoteResult,
@@ -28,7 +28,7 @@ describe('UniSwap', async () => {
     ))).to.be.within(90, 100);
   });
 
-  it ('Fetches multiple quotes using multicall', async () => {
+  it ('Fetches multiple quotes', async () => {
     const swaps: Swap[] =  [ maticUSDcSwap, maticUniSwap ];
     const [ usdcQuote, uniQuote ] = await multiQuote(swaps);
 
