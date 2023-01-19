@@ -30,7 +30,7 @@ export async function quote(swap: Swap): Promise<BigNumber> {
 }
 
 export async function multiQuote(swaps: Swap[]): Promise<BigNumber[]> {
-  const quotesPromises = swaps.map(swap => { return quote(swap) });
+  const quotesPromises = swaps.map(swap =>  quote(swap));
 
   return await Promise.all(quotesPromises)
 };
