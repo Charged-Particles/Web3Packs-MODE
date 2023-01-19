@@ -5,7 +5,7 @@ import { BigNumber, Contract, FixedNumber, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 // @ts-ignore
 import { getDeployData } from '../js-helpers/deploy'; 
-import { quote } from "../uniswap/quote";
+import { amountOutMinimum, quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
   let web3packs: Contract, USDc: Contract; 
@@ -59,7 +59,7 @@ describe('Web3Packs', async ()=> {
 
       // calculate expected amount
       const swapEstimation = await quote(USDC_USDT_SWAP);
-      const swapPriceTolerance = swapEstimation.mul(BigNumber.from(90)).div(BigNumber.from(100));
+      const swapPriceTolerance = amountOutMinimum(swapEstimation, 10) ;
 
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
