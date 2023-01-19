@@ -29,7 +29,7 @@ export async function quote(swap: Swap): Promise<string> {
   return toReadableAmount(quotedAmountOut, swap.tokens.out.decimals)
 }
 
-async function getPoolConstants(swap: Swap): Promise<{
+export async function getPoolConstants(swap: Swap): Promise<{
   token0: string
   token1: string
   fee: number
