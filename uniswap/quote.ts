@@ -29,6 +29,12 @@ export async function quote(swap: Swap): Promise<string> {
   return toReadableAmount(quotedAmountOut, swap.tokens.out.decimals)
 }
 
+export async function multiQuote(swaps: [Swap]): Promise<string[]> {
+  const quotesPromises = swaps.map(swap => { return quote(swap) });
+
+  return await Promise.all(quotesPromises)
+};
+
 export async function getPoolConstants(swap: Swap): Promise<{
   token0: string
   token1: string

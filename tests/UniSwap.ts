@@ -18,7 +18,7 @@ describe('UniSwap', async () => {
     expect(Number(quoteResult)).to.be.within(90,100);
   });
 
-  it.skip ('Fetches multiple quotes using multicall', async () => {
+  it.only ('Fetches multiple quotes using multicall', async () => {
     // const swaps: [Swap] =  []
     // const quotesResult = await multiQuotes(swaps);
   });
