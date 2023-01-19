@@ -16,12 +16,12 @@ export async function quote(swap: Swap): Promise<BigNumber> {
   )
 
   const quotedAmountOut = await quoterContract.callStatic.quoteExactInputSingle(
-    swap.tokens.in.address,
-    swap.tokens.out.address,
-    swap.tokens.poolFee,
+    swap.in.address,
+    swap.out.address,
+    swap.poolFee,
     fromReadableAmount(
-      swap.tokens.amountIn,
-      swap.tokens.in.decimals
+      swap.amountIn,
+      swap.in.decimals
     ).toString(),
     0
   )
@@ -43,9 +43,9 @@ export async function getPoolConstants(swap: Swap): Promise<{
 }> {
   const currentPoolAddress = computePoolAddress({
     factoryAddress: POOL_FACTORY_CONTRACT_ADDRESS,
-    tokenA: swap.tokens.in,
-    tokenB: swap.tokens.out,
-    fee: swap.tokens.poolFee,
+    tokenA: swap.in,
+    tokenB: swap.out,
+    fee: swap.poolFee,
   })
 
   const poolContract = new ethers.Contract(

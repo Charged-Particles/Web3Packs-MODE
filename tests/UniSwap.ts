@@ -7,29 +7,28 @@ import { toReadableAmount } from "../uniswap/libs/conversion";
 
 describe('UniSwap', async () => {
   const maticUSDcSwap: Swap = {
-    tokens: {
-      in: WMATIC_TOKEN,
-      amountIn: 100,
-      out: USDC_TOKEN,
-      poolFee: 500,
-    },
+    in: WMATIC_TOKEN,
+    amountIn: 100,
+    out: USDC_TOKEN,
+    poolFee: 500,
   };
 
   const maticUniSwap: Swap = {
-    tokens: {
-      in: WMATIC_TOKEN,
-      amountIn: 100,
-      out: UNI_TOKEN,
-      poolFee: 3000,
-    },
+    in: WMATIC_TOKEN,
+    amountIn: 100,
+    out: UNI_TOKEN,
+    poolFee: 3000,
   };
 
   it ('Gets fetches single quote', async () => {
     const quoteResult = await quote(maticUSDcSwap);
-    expect(quoteResult).to.be.within(90,100);
+    expect(Number(toReadableAmount(
+      quoteResult,
+      USDC_TOKEN.decimals
+    ))).to.be.within(90, 100);
   });
 
-  it.only ('Fetches multiple quotes using multicall', async () => {
+  it ('Fetches multiple quotes using multicall', async () => {
     const swaps: Swap[] =  [ maticUSDcSwap, maticUniSwap ];
     const [ usdcQuote, uniQuote ] = await multiQuote(swaps);
 
