@@ -1,8 +1,9 @@
+import { expect } from "chai";
 import { quote } from "../uniswap/quote";
 
 describe('UniSwap', async () => {
-  it.only('Gets a pool contract', async () => {
+  it ('Gets fetches single quote', async () => {
     const quoteResult = await quote();
-    console.log(quoteResult);
+    expect(quoteResult).to.be.eq('93');
   });
 });

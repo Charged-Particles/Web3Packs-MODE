@@ -1,5 +1,5 @@
+import { Swap } from './libs/types';
 import { ethers } from 'ethers'
-import { Token } from '@uniswap/sdk-core'
 import { getProvider } from './libs/providers';
 import { computePoolAddress } from '@uniswap/v3-sdk'
 import { toReadableAmount, fromReadableAmount } from './libs/conversion'
@@ -9,16 +9,7 @@ import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Qu
 
 import { WMATIC_TOKEN, USDC_TOKEN } from './libs/constants';
 
-export interface ExampleConfig {
-  tokens: {
-    in: Token
-    amountIn: number
-    out: Token
-    poolFee: number
-  }
-}
-
-const CurrentConfig: ExampleConfig = {
+const CurrentConfig: Swap = {
   tokens: {
     in: WMATIC_TOKEN,
     amountIn: 100,
