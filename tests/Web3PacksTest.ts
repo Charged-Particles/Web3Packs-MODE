@@ -1,10 +1,11 @@
 import { expect } from "chai"; 
 import { ethers, network } from 'hardhat';
 import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
-import { Contract, Signer } from "ethers";
-
+import { BigNumber, Contract, FixedNumber, Signer } from "ethers";
+import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 // @ts-ignore
 import { getDeployData } from '../js-helpers/deploy'; 
+import { quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
   let web3packs: Contract, USDc: Contract; 
@@ -43,7 +44,7 @@ describe('Web3Packs', async ()=> {
     USDcWhaleSigner = await ethers.getSigner(USDcWhale);
     USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
 
-    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
+    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
   });
 
@@ -52,27 +53,31 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it('Swap a single asset', async() => {
+    it.only('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
-      expect(balanceBeforeSwap).to.equal(100);
+      expect(balanceBeforeSwap).to.equal(100000000);
+
+      // calculate expected amount
+      const swapEstimation = await quote(USDC_USDT_SWAP);
+      const swapPriceTolerance = swapEstimation.mul(BigNumber.from(90)).div(BigNumber.from(100));
 
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10,
+        inputTokenAmount: ethers.utils.parseUnits('10', 6),
         uniSwapPoolFee: 3000,
         deadline: deadline,
-        amountOutMinimum: 0,
+        amountOutMinimum: swapPriceTolerance,
         sqrtPriceLimitX96: 0,
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
-      await swapTransaction.wait();
+      await swapTransaction.wait()
 
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(9);
+      expect(USDtBalanceAfterSwap).to.equal(9982205);
 
       // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });

@@ -1,4 +1,5 @@
 import { Token, SupportedChainId } from '@uniswap/sdk-core'
+import { Swap } from './types';
 
 // todo convert to object chainId => address
 export const POOL_FACTORY_CONTRACT_ADDRESS =
@@ -29,3 +30,19 @@ export const USDC_TOKEN = new Token(
   'USDC',
   'USD//C'
 )
+
+export const USDT_TOKEN = new Token(
+  SupportedChainId.POLYGON,
+  '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+  6,
+  'USDT',
+  'USD//T'
+)
+
+export const USDC_USDT_SWAP: Swap = {
+  in: USDC_TOKEN,
+  amountIn: 10,
+  out: USDT_TOKEN,
+  poolFee: 3000,
+};
+
