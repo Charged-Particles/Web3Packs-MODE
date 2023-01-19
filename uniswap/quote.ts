@@ -1,5 +1,5 @@
 import { Swap } from './libs/types';
-import { BigNumber, ethers } from 'ethers'
+import { BigNumber, BigNumberish, ethers } from 'ethers'
 import { getProvider } from './libs/providers';
 import { computePoolAddress } from '@uniswap/v3-sdk'
 import { fromReadableAmount } from './libs/conversion'
@@ -34,6 +34,16 @@ export async function multiQuote(swaps: Swap[]): Promise<BigNumber[]> {
   const quotesPromises = swaps.map(swap => { return quote(swap) });
 
   return await Promise.all(quotesPromises)
+};
+
+export function amountOutMinimum(swapEstimation: BigNumber, slippagePercent: number = 1): BigNumber{
+  if (slippagePercent > 100) {
+    throw new Error('slippagePercent cannot be greater than 100');
+  }
+
+  const slippage = 100 - slippagePercent; 
+
+  return swapEstimation.mul(BigNumber.from(slippage)).div(BigNumber.from(100)); 
 };
 
 export async function getPoolConstants(swap: Swap): Promise<{
