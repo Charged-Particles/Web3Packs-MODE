@@ -27,7 +27,6 @@ export async function quote(swap: Swap): Promise<BigNumber> {
   )
 
   return quotedAmountOut;
-  // return toReadableAmount(quotedAmountOut, swap.tokens.out.decimals)
 }
 
 export async function multiQuote(swaps: Swap[]): Promise<BigNumber[]> {
