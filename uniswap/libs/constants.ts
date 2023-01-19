@@ -14,6 +14,14 @@ export const WMATIC_TOKEN = new Token(
   'Wrapped Matic'
 )
 
+export const UNI_TOKEN = new Token(
+  SupportedChainId.POLYGON,
+  '0xb33EaAd8d922B1083446DC23f610c2567fB5180f',
+  18,
+  'UNI',
+  'Uniswap'
+)
+
 export const USDC_TOKEN = new Token(
   SupportedChainId.POLYGON,
   '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
