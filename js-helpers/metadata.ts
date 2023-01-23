@@ -8,28 +8,33 @@ import {
 
 const createWeb3PackMetadata = () => {
   // iterate over swaps constants and add out token to metadata
-  const swaps = [USDC_USDT_SWAP, WMATIC_USDC_SWAP, WAMTIC_UNI_SWAP];
+  const web3PackTrades = [
+    [ WMATIC_USDC_SWAP, WAMTIC_UNI_SWAP ],
+  ];
 
   // for every swap in swaps create a new object with the out token address as key
-  swaps.forEach((swap ) => {
-    const { in: tokenIn, out: tokenOut } = swap;
-    const fileName = `${tokenIn.symbol}_${tokenOut.symbol}.json`;
-    const  swapMetadata = {
-      ...metadata,
-      swap: {
+  web3PackTrades.forEach((trades, index) => {
+    const swaps = trades.map((swap) => {
+      const { in: tokenIn, out: tokenOut } = swap;
+      return {
+        in: {
+          address: tokenIn.address,
+          decimals: tokenIn.decimals,
+          name: tokenIn.name,
+          symbol: tokenIn.symbol
+        },
         out: {
           address: tokenOut.address,
           decimals: tokenOut.decimals,
           name: tokenOut.name,
           symbol: tokenOut.symbol
-        },
-        in: {
-         address: tokenIn.address,
-          decimals: tokenIn.decimals,
-          name: tokenIn.name,
-          symbol: tokenIn.symbol
         }
       }
+    }); 
+    const fileName = `${index + 1}_web3Pack`;
+    const  swapMetadata = {
+      ...metadata,
+      swaps
     }
     // create new json file with the merged metada
     fs.writeFileSync(`./public/metadata/${fileName}.json`, JSON.stringify(swapMetadata, null, 2));
