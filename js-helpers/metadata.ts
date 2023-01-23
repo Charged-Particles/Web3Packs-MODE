@@ -1,5 +1,5 @@
 import fs from 'fs';
-import metadata from '../public/metadata.json';
+import metadata from '../public/metadata/metadata.json';
 import {
   USDC_USDT_SWAP,
   WMATIC_USDC_SWAP,
@@ -11,8 +11,9 @@ const createWeb3PackMetadata = () => {
   const swaps = [USDC_USDT_SWAP, WMATIC_USDC_SWAP, WAMTIC_UNI_SWAP];
 
   // for every swap in swaps create a new object with the out token address as key
-  swaps.forEach((swap, index) => {
+  swaps.forEach((swap ) => {
     const { in: tokenIn, out: tokenOut } = swap;
+    const fileName = `${tokenIn.symbol}_${tokenOut.symbol}.json`;
     const  swapMetadata = {
       ...metadata,
       swap: {
@@ -31,8 +32,7 @@ const createWeb3PackMetadata = () => {
       }
     }
     // create new json file with the merged metada
-    console.log(swapMetadata);
-    // fs.writeFileSync(`./${index}.json`, JSON.stringify(swapMetadata, null, 2));
+    fs.writeFileSync(`./public/metadata/${fileName}.json`, JSON.stringify(swapMetadata, null, 2));
   });
 };
 
