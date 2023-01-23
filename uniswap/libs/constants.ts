@@ -46,3 +46,16 @@ export const USDC_USDT_SWAP: Swap = {
   poolFee: 3000,
 };
 
+export const WMATIC_USDC_SWAP: Swap = {
+  in: WMATIC_TOKEN,
+  amountIn: 10,
+  out: USDC_TOKEN,
+  poolFee: 500,
+};
+
+export const WAMTIC_UNI_SWAP: Swap = {
+  in: WMATIC_TOKEN,
+  amountIn: 10,
+  out: UNI_TOKEN,
+  poolFee: 3000,
+};

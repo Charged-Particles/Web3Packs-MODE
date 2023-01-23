@@ -15,6 +15,5 @@
   "resaleRoyalty": 0,
   "aiGeneratedImage": false,
   "imageCid": true,
-  "soulBound": false,
-  "swaps": []
-  }
+  "soulBound": false
+}
