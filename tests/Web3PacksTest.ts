@@ -1,10 +1,11 @@
 import { expect } from "chai"; 
 import { ethers, network } from 'hardhat';
 import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
-import { Contract, Signer } from "ethers";
-
+import { BigNumber, Contract, FixedNumber, Signer } from "ethers";
+import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 // @ts-ignore
 import { getDeployData } from '../js-helpers/deploy'; 
+import { amountOutMinimum, quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
   let web3packs: Contract, USDc: Contract; 
@@ -43,7 +44,7 @@ describe('Web3Packs', async ()=> {
     USDcWhaleSigner = await ethers.getSigner(USDcWhale);
     USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
 
-    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, 100);
+    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
   });
 
@@ -52,28 +53,31 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it('Swap a single asset', async() => {
+    it ('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
-      expect(balanceBeforeSwap).to.equal(100);
+      expect(balanceBeforeSwap).to.equal(100000000);
+
+      // calculate expected amount
+      const swapEstimation = await quote(USDC_USDT_SWAP);
+      const swapPriceTolerance = amountOutMinimum(swapEstimation, 10) ;
 
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
-        inputTokenAmount: 10,
+        inputTokenAmount: ethers.utils.parseUnits('10', 6),
         uniSwapPoolFee: 3000,
         deadline: deadline,
-        amountOutMinimum: 0,
+        amountOutMinimum: swapPriceTolerance,
         sqrtPriceLimitX96: 0,
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
-      await swapTransaction.wait();
+      await swapTransaction.wait()
 
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(9);
-
+      expect(USDtBalanceAfterSwap).to.equal(9982205);
       // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });
 
@@ -95,7 +99,7 @@ describe('Web3Packs', async ()=> {
       const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
       // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
 
-      expect(USDcBalanceAfterSwap).to.equal(6938574);
+      expect(USDcBalanceAfterSwap).to.equal(96938484);
     });
 
     it('Swap two assets with matic', async() => {
@@ -157,7 +161,7 @@ describe('Web3Packs', async ()=> {
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
       const UNIBalanceAfterSwap = await UNI.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(18);
+      expect(USDtBalanceAfterSwap).to.equal(9982213);
       expect(UNIBalanceAfterSwap.toString()).to.equal('493373764498692278');
     });
 
@@ -234,7 +238,7 @@ describe('Web3Packs', async ()=> {
       const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      expect(USDtTokenMass['137']?.value).to.equal(9);
+      expect(USDtTokenMass['137']?.value).to.equal(8);
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
 
@@ -267,7 +271,7 @@ describe('Web3Packs', async ()=> {
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);
 
-      expect(balanceOfUSDtAfterRelease).to.eq(9);
+      expect(balanceOfUSDtAfterRelease).to.eq(8);
     });
   });
 });
