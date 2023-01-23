@@ -1,0 +1,20 @@
+{
+  "description": "",
+  "external_url": "",
+  "animation_url": "",
+  "youtube_url": "",
+  "icon": "",
+  "image": "",
+  "thumbnail": "",
+  "name": "Web3Pack",
+  "symbol": "Proton",
+  "background_color": "",
+  "attributes": [],
+  "particleType": "erc721",
+  "creatorAnnuity": 0,
+  "resaleRoyalty": 0,
+  "aiGeneratedImage": false,
+  "imageCid": true,
+  "soulBound": false,
+  "swaps": []
+  }
