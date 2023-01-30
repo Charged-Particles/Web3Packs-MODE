@@ -1,0 +1,45 @@
+{
+  "description": "Bitcoin, DeFi, and NFTs--all-in-one Web3 Pack",
+  "external_url": "Web3Packs.com",
+  "image": "QmcVFXv9SdV8VP2BdYigftRCAxbbTxqM6PCvvRiDNHUqrY",
+  "name": "Web3Pack",
+  "symbol": "W3P",
+  "background_color": "",
+  "attributes": [],
+  "particleType": "erc721",
+  "creatorAnnuity": 0,
+  "resaleRoyalty": 0,
+  "aiGeneratedImage": false,
+  "imageCid": true,
+  "soulBound": false,
+  "swaps": [
+    {
+      "in": {
+        "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+        "decimals": 18,
+        "name": "Wrapped Matic",
+        "symbol": "WMATIC"
+      },
+      "out": {
+        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6,
+        "name": "USD//C",
+        "symbol": "USDC"
+      }
+    },
+    {
+      "in": {
+        "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+        "decimals": 18,
+        "name": "Wrapped Matic",
+        "symbol": "WMATIC"
+      },
+      "out": {
+        "address": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
+        "decimals": 18,
+        "name": "Uniswap",
+        "symbol": "UNI"
+      }
+    }
+  ]
+}
