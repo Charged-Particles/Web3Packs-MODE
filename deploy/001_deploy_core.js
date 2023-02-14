@@ -1,22 +1,3 @@
-// module.exports = async function (hre) {
-//     const {deployments, getNamedAccounts } = hre;
-//     const {deploy} = deployments;
-
-//     const {deployer} = await getNamedAccounts();
-//     // const chainId = network.config.chainId
-
-//     await deploy('Web3Packs', {
-//       from: deployer,
-//       args: [
-//         '0x3A9891279481bB968a8d1300C40d9279111f1CDA'
-//       ],
-//       log: true,
-//     });
-//   };
-
-//   module.exports.tags = ['core'];
-
-
 const {
   saveDeploymentData,
   getContractAbi,
