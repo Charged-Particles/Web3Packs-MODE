@@ -59,7 +59,6 @@ const config: HardhatUserConfig = {
     },
     protocolOwner: {
       default: 1,
-      137: '',
     },
     user1: {
       default: 2,
@@ -80,14 +79,6 @@ const config: HardhatUserConfig = {
       deployments: './deployments'
   },
   networks: {
-    // localhost: {
-    //   chainId: 31337,
-    //   gasPrice: 1e9,
-    //   forking: {
-    //     url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-    //     blockNumber: 7827722
-    //   }
-    // },
     hardhat: {
       chainId: 137,
       gasPrice: 100e9,
