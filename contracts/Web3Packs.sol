@@ -221,7 +221,10 @@ contract Web3Packs is
 
   function _singleSwap(
     ERC20SwapOrder calldata erc20SwapOrder
-  ) internal returns (uint256 amountOut) {
+  )
+   internal
+   returns (uint256 amountOut)
+  {
     // Approve the router to spend ERC20.
     TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
 
@@ -242,6 +245,27 @@ contract Web3Packs is
 
     amountOut = ISwapRouter(_router).exactInputSingle{value: amountIn }(params);
   }
+
+  function _bond(
+    address contractAddress,
+    uint256 tokenId,
+    string calldata basketManagerId,
+    address nftTokenAddress,
+    uint256 nftTokenId,
+    uint256 nftTokenAmount
+  ) 
+    internal
+  {
+    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
+    chargedParticles.covalentBond(
+      contractAddress,
+      tokenId,
+      basketManagerId,
+      nftTokenAddress,
+      nftTokenId,
+      nftTokenAmount
+    );
+  }  
 
   function _bundle(
     address receiver,
