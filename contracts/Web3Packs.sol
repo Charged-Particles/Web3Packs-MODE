@@ -35,6 +35,7 @@ pragma abicoder v2;
 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -46,12 +47,14 @@ import "./interfaces/IChargedState.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
+import "./lib/ERC721Mintable.sol";
 
 contract Web3Packs is
   IWeb3Packs,
   Ownable,
   Pausable,
   ReentrancyGuard,
+  IERC721Receiver,
   BlackholePrevention
 {
   address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
@@ -74,6 +77,7 @@ contract Web3Packs is
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    address[] calldata nftOrders,
     uint256 fundingAmount
   )
     external
@@ -86,7 +90,7 @@ contract Web3Packs is
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     
-    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
+    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, nftOrders,realAmounts);
 
     _fund(receiver, fundingAmount);
 
@@ -251,11 +255,12 @@ contract Web3Packs is
     uint256 tokenId,
     string calldata basketManagerId,
     address nftTokenAddress,
-    uint256 nftTokenId,
-    uint256 nftTokenAmount
   ) 
     internal
   {
+    // mint 
+    uint256 nftTokenId = ERC721Mintable(nftTokenAddress).safeMint(address(this));
+
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
     chargedParticles.covalentBond(
       contractAddress,
@@ -263,7 +268,7 @@ contract Web3Packs is
       basketManagerId,
       nftTokenAddress,
       nftTokenId,
-      nftTokenAmount
+      1
     );
   }  
 
@@ -271,6 +276,7 @@ contract Web3Packs is
     address receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    address[] calldata nftOrders,
     uint256[] memory realAmounts
   )
     internal
@@ -298,6 +304,15 @@ contract Web3Packs is
         erc20SwapOrders[i].outputTokenAddress,
         realAmounts[i],
         self
+      );
+    }
+
+    for (uint256 i; i < nftOrders.length; i++) {
+      this._bond(
+        _proton,
+        tokenId,
+        "generic.B",
+        nftOrders[i],
       );
     }
   }

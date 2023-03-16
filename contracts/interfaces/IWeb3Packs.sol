@@ -48,6 +48,7 @@ interface IWeb3Packs {
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    address[] calldata nftsOrders,
     uint256 unBundleGasAmount
   ) external payable returns(uint256 tokenId);
 
