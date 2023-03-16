@@ -33,7 +33,6 @@ const mnemonic = {
 
 const optimizerDisabled = process.env.OPTIMIZER_DISABLED
 
-
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [

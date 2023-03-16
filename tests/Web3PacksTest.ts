@@ -1,7 +1,7 @@
 import { expect } from "chai"; 
-import { ethers, network } from 'hardhat';
+import { ethers, network, deployments } from 'hardhat';
 import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
-import { BigNumber, Contract, FixedNumber, Signer } from "ethers";
+import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 // @ts-ignore
 import { getDeployData } from '../js-helpers/deploy'; 
@@ -278,6 +278,9 @@ describe('Web3Packs', async ()=> {
   describe.only('Bonding', async() => {
     // In order to have this working we need deployed allow listed nft contract. 
     it ('Bonds a single assets', async() => {
+      await deployments.fixture('ERC721Mintable');
+      const nft = await ethers.getContract('ERC721Mintable');
+      console.log(await nft.name());
       // Mint proton token
 
       // User bond method to mint and bond proton token

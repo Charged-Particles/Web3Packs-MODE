@@ -1,14 +1,3 @@
-const {
-    saveDeploymentData,
-    getContractAbi,
-    getTxGasCost,
-  } = require('../js-helpers/deploy');
-  
-  const {
-    executeTx,
-    getAccumulatedGasCost,
-  } = require('../js-helpers/executeTx');
-  
   const {
     log,
     chainNameById,
@@ -16,15 +5,16 @@ const {
   } = require('../js-helpers/utils');
   
   module.exports = async (hre) => {
-      const { ethers, getNamedAccounts } = hre;
+      const { getNamedAccounts, deployments } = hre;
+      const { deploy } = deployments;
+
       const { deployer, protocolOwner, user1 } = await getNamedAccounts();
       const network = await hre.network;
-      const deployData = {};
   
       const chainId = chainIdByName(network.name);
   
       log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-      log('Charged Particles - Web3 Packs - Contract Deployment');
+      log('Charged Particles - NFT test - Contract Deployment');
       log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
   
       log(`  Using Network: ${chainNameById(chainId)} (${network.name}:${chainId})`);
@@ -37,24 +27,13 @@ const {
       //
       // Deploy Contracts
       //
-  
       log('Deploying Test NFT...');
-      const ERC721Mintable = await ethers.getContractFactory('ERC721Mintable');
-      const ERC721MintableInstance = await ERC721Mintable.deploy();
-      const erc712Mintable = await ERC721MintableInstance.deployed();
 
-      deployData['ERC721Mintable'] = {
-        abi: getContractAbi('ERC721Mintable'),
-        address: erc712Mintable.address,
-        deployTransaction: erc712Mintable.deployTransaction
-      }
-      saveDeploymentData(chainId, deployData);
-      log('  - MyTestNFT:   ', erc712Mintable.address);
-      log('     - Block:    ', erc712Mintable.deployTransaction.blockNumber);
-      log('     - Gas Cost: ', getTxGasCost({ deployTransaction: erc712Mintable.deployTransaction }));
-  
-      log('\n  Contract Deployment Data saved to "deployments" directory.');
-      log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+      await deploy('ERC721Mintable', {
+        from: deployer,
+        args: [],
+        log: true,
+      });
   };
   
   module.exports.tags = ['ERC721Mintable']
