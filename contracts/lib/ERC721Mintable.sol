@@ -12,13 +12,13 @@ contract MyToken is ERC721, Ownable {
 
   constructor() ERC721("MyTestToken", "MTK") {}
 
-  function safeMint(address to)
+  function mint(address to)
     public
     onlyOwner
     returns (uint256 tokenId)
   {
     tokenId = _tokenIdCounter.current();
     _tokenIdCounter.increment();
-    _safeMint(to, tokenId);
+    _mint(to, tokenId);
   }
 }

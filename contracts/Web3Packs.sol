@@ -143,6 +143,18 @@ contract Web3Packs is
     return _swap(erc20SwapOrders);
   }
 
+  function bond(
+    address contractAddress,
+    uint256 tokenId,
+    string calldata basketManagerId,
+    address nftTokenAddress,
+  )
+   external
+  {
+    this._bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
+  } 
+
+
   /***********************************|
   |          Only Admin/DAO           |
   |__________________________________*/
@@ -259,7 +271,7 @@ contract Web3Packs is
     internal
   {
     // mint 
-    uint256 nftTokenId = ERC721Mintable(nftTokenAddress).safeMint(address(this));
+    uint256 nftTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
 
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
     chargedParticles.covalentBond(
