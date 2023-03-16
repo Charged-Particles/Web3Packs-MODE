@@ -144,6 +144,11 @@
         "type": "tuple[]"
       },
       {
+        "internalType": "address[]",
+        "name": "nftsOrders",
+        "type": "address[]"
+      },
+      {
         "internalType": "uint256",
         "name": "unBundleGasAmount",
         "type": "uint256"

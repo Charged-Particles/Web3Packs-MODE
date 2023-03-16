@@ -35,7 +35,6 @@ pragma abicoder v2;
 
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -54,7 +53,6 @@ contract Web3Packs is
   Ownable,
   Pausable,
   ReentrancyGuard,
-  IERC721Receiver,
   BlackholePrevention
 {
   address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
@@ -146,12 +144,12 @@ contract Web3Packs is
   function bond(
     address contractAddress,
     uint256 tokenId,
-    string calldata basketManagerId,
-    address nftTokenAddress,
+    string memory basketManagerId,
+    address nftTokenAddress
   )
    external
   {
-    this._bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
+    _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
   } 
 
 
@@ -265,8 +263,8 @@ contract Web3Packs is
   function _bond(
     address contractAddress,
     uint256 tokenId,
-    string calldata basketManagerId,
-    address nftTokenAddress,
+    string memory basketManagerId,
+    address nftTokenAddress
   ) 
     internal
   {
@@ -320,11 +318,11 @@ contract Web3Packs is
     }
 
     for (uint256 i; i < nftOrders.length; i++) {
-      this._bond(
+      _bond(
         _proton,
         tokenId,
         "generic.B",
-        nftOrders[i],
+        nftOrders[i]
       );
     }
   }

@@ -274,4 +274,15 @@ describe('Web3Packs', async ()=> {
       expect(balanceOfUSDtAfterRelease).to.eq(8);
     });
   });
+
+  describe.only('Bonding', async() => {
+    // In order to have this working we need deployed allow listed nft contract. 
+    it ('Bonds a single assets', async() => {
+      // Mint proton token
+
+      // User bond method to mint and bond proton token
+
+      // Check if proton token is bonded
+    });
+  });
 });
