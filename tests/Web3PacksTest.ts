@@ -313,11 +313,12 @@ describe('Web3Packs', async ()=> {
   describe.only('Bonding', async() => {
     it ('Bonds a single assets', async() => {
       const { protocolOwner } = await getNamedAccounts();
-      // // Mint proton token
-      // await Proton.createBasicProton(
-      // ).then(tx => tx.wait());
 
+      // Mint proton token
       await TestNFT.connect(ownerSigner).mint(protocolOwner).then(tx => tx.wait());
+
+      // Allow protocol to bond proton token
+      await TestNFT.connect(ownerSigner).setApprovalForAll(web3packs.address, true).then(tx => tx.wait());
 
       // User bond method to mint and bond proton token
       await web3packs.connect(ownerSigner).bond(
@@ -326,9 +327,10 @@ describe('Web3Packs', async ()=> {
         'generic.B',
         TestNFT.address
       ).then(tx => tx.wait());
-
-      console.log(' Z>>>>');
+      
       // Check if proton token is bonded
+      // const energizedProton = charged.NFT(Proton.address, 1);
+      // const protonBondBalance = await 
     });
   });
 });
