@@ -1,5 +1,5 @@
 import { expect } from "chai"; 
-import { ethers, network, deployments } from 'hardhat';
+import { ethers, network, deployments, getNamedAccounts } from 'hardhat';
 import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
@@ -34,10 +34,18 @@ describe('Web3Packs', async ()=> {
   };
 
   before(async () => {
+    const { protocolOwner } = await getNamedAccounts();
+
     await deployWeb3Pack();
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [ USDcWhale ]
+    });
+
+    // impersonate admin account 
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [protocolOwner],
     });
 
     // Deposit usdc into web3pack contract
@@ -46,6 +54,12 @@ describe('Web3Packs', async ()=> {
 
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
+
+    // Whitelist custom NFT
+    // const whiteListTx = await ChargedSettingContract.connect(owner).enableNftContracts([customNFTdeployedAddress]);
+    // await whiteListTx.wait();
+
+    // console.log(whiteListTx)
   });
 
   beforeEach(async () => {
@@ -280,8 +294,11 @@ describe('Web3Packs', async ()=> {
     it ('Bonds a single assets', async() => {
       await deployments.fixture('ERC721Mintable');
       const nft = await ethers.getContract('ERC721Mintable');
-      console.log(await nft.name());
+      // console.log(await nft.name());
+
       // Mint proton token
+      await nft.mint(testAddress).then(tx => tx.wait());
+      // console.log(newToken, '>>>>>> ', balance.toNumber());
 
       // User bond method to mint and bond proton token
 
