@@ -1,6 +1,11 @@
 import { expect } from "chai"; 
 import { ethers, network, deployments, getNamedAccounts } from 'hardhat';
-import { default as Charged, chargedStateAbi, chargedSettingsAbi } from "@charged-particles/charged-js-sdk";
+import {
+  default as Charged,
+  chargedStateAbi,
+  chargedSettingsAbi,
+  protonBAbi
+} from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 // @ts-ignore
@@ -8,8 +13,9 @@ import { getDeployData } from '../js-helpers/deploy';
 import { amountOutMinimum, quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
-  let web3packs: Contract, USDc: Contract, TestNFT: Contract; 
+  let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract; 
   let USDcWhaleSigner: Signer;
+  let ownerSigner: Signer;
 
   const erc20Abi = [
     "function transfer(address to, uint amount)",
@@ -36,6 +42,8 @@ describe('Web3Packs', async ()=> {
   before(async () => {
     const { protocolOwner } = await getNamedAccounts();
 
+    ownerSigner = await ethers.getSigner(protocolOwner);
+
     await deployments.fixture('ERC721Mintable');
     await deployWeb3Pack();
 
@@ -56,15 +64,23 @@ describe('Web3Packs', async ()=> {
     await foundWeb3PacksTransaction.wait();
     
     TestNFT = await ethers.getContract('ERC721Mintable');
+    Proton = new ethers.Contract(
+      '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
+      protonBAbi,
+      ownerSigner
+    );
     // Whitelist custom NFT
     const ChargedSettingContract = new ethers.Contract(
       '0x07DdB208d52947320d07E0E4611a80Fb7eFD001D',
       chargedSettingsAbi,
-      await ethers.getSigner(protocolOwner)
+      ownerSigner 
     );
 
     const whiteListTx = await ChargedSettingContract.enableNftContracts([TestNFT.address]);
     await whiteListTx.wait();
+
+    await ChargedSettingContract.enableNftContracts([TestNFT.address]).then((tx: any) => tx.wait()
+  );
   });
 
   beforeEach(async () => {
@@ -297,13 +313,16 @@ describe('Web3Packs', async ()=> {
   describe.only('Bonding', async() => {
     it ('Bonds a single assets', async() => {
       const { protocolOwner } = await getNamedAccounts();
-      // Mint proton token
-      await TestNFT.mint(protocolOwner).then(tx => tx.wait());
+      // // Mint proton token
+      // await Proton.createBasicProton(
+      // ).then(tx => tx.wait());
+
+      await TestNFT.connect(ownerSigner).mint(protocolOwner).then(tx => tx.wait());
 
       // User bond method to mint and bond proton token
-      await web3packs.bond(
-        TestNFT.address,
-        0,
+      await web3packs.connect(ownerSigner).bond(
+        Proton.address,
+        1,
         'generic.B',
         TestNFT.address
       ).then(tx => tx.wait());
