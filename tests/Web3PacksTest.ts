@@ -1,6 +1,6 @@
 import { expect } from "chai"; 
 import { ethers, network, deployments, getNamedAccounts } from 'hardhat';
-import { default as Charged, chargedStateAbi } from "@charged-particles/charged-js-sdk";
+import { default as Charged, chargedStateAbi, chargedSettingsAbi } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 // @ts-ignore
@@ -8,7 +8,7 @@ import { getDeployData } from '../js-helpers/deploy';
 import { amountOutMinimum, quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
-  let web3packs: Contract, USDc: Contract; 
+  let web3packs: Contract, USDc: Contract, TestNFT: Contract; 
   let USDcWhaleSigner: Signer;
 
   const erc20Abi = [
@@ -55,11 +55,17 @@ describe('Web3Packs', async ()=> {
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
 
+    await deployments.fixture('ERC721Mintable');
+    TestNFT = await ethers.getContract('ERC721Mintable');
     // Whitelist custom NFT
-    // const whiteListTx = await ChargedSettingContract.connect(owner).enableNftContracts([customNFTdeployedAddress]);
-    // await whiteListTx.wait();
+    const ChargedSettingContract = new ethers.Contract(
+      '0x07DdB208d52947320d07E0E4611a80Fb7eFD001D',
+      chargedSettingsAbi,
+      await ethers.getSigner(protocolOwner)
+    );
 
-    // console.log(whiteListTx)
+    const whiteListTx = await ChargedSettingContract.enableNftContracts([TestNFT.address]);
+    await whiteListTx.wait();
   });
 
   beforeEach(async () => {
@@ -292,12 +298,11 @@ describe('Web3Packs', async ()=> {
   describe.only('Bonding', async() => {
     // In order to have this working we need deployed allow listed nft contract. 
     it ('Bonds a single assets', async() => {
-      await deployments.fixture('ERC721Mintable');
-      const nft = await ethers.getContract('ERC721Mintable');
+
       // console.log(await nft.name());
 
       // Mint proton token
-      await nft.mint(testAddress).then(tx => tx.wait());
+      await TestNFT.mint(testAddress).then(tx => tx.wait());
       // console.log(newToken, '>>>>>> ', balance.toNumber());
 
       // User bond method to mint and bond proton token

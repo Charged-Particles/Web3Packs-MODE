@@ -1,4 +1,3 @@
-const  { chargedSettingsAbi } = require ('@charged-particles/charged-js-sdk');
 const { getDeployData } = require('../js-helpers/deploy');
 const { executeTx } = require('../js-helpers/executeTx');
 const {
