@@ -36,13 +36,13 @@ describe('Web3Packs', async ()=> {
   before(async () => {
     const { protocolOwner } = await getNamedAccounts();
 
+    await deployments.fixture('ERC721Mintable');
     await deployWeb3Pack();
+
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [ USDcWhale ]
     });
-
-    // impersonate admin account 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [protocolOwner],
@@ -52,10 +52,9 @@ describe('Web3Packs', async ()=> {
     USDcWhaleSigner = await ethers.getSigner(USDcWhale);
     USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
 
-    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
+    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('3', 6));
     await foundWeb3PacksTransaction.wait();
-
-    await deployments.fixture('ERC721Mintable');
+    
     TestNFT = await ethers.getContract('ERC721Mintable');
     // Whitelist custom NFT
     const ChargedSettingContract = new ethers.Contract(
@@ -296,17 +295,20 @@ describe('Web3Packs', async ()=> {
   });
 
   describe.only('Bonding', async() => {
-    // In order to have this working we need deployed allow listed nft contract. 
     it ('Bonds a single assets', async() => {
-
-      // console.log(await nft.name());
-
+      // const { protocolOwner } = await getNamedAccounts();
       // Mint proton token
       await TestNFT.mint(testAddress).then(tx => tx.wait());
-      // console.log(newToken, '>>>>>> ', balance.toNumber());
 
       // User bond method to mint and bond proton token
+      // await web3packs.bond(
+      //   TestNFT.address,
+      //   1,
+      //   'generic.B',
+      //   TestNFT.address
+      // ).then(tx => tx.wait());
 
+      console.log(' Z>>>>');
       // Check if proton token is bonded
     });
   });
