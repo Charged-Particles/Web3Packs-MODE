@@ -296,17 +296,17 @@ describe('Web3Packs', async ()=> {
 
   describe.only('Bonding', async() => {
     it ('Bonds a single assets', async() => {
-      // const { protocolOwner } = await getNamedAccounts();
+      const { protocolOwner } = await getNamedAccounts();
       // Mint proton token
-      await TestNFT.mint(testAddress).then(tx => tx.wait());
+      await TestNFT.mint(protocolOwner).then(tx => tx.wait());
 
       // User bond method to mint and bond proton token
-      // await web3packs.bond(
-      //   TestNFT.address,
-      //   1,
-      //   'generic.B',
-      //   TestNFT.address
-      // ).then(tx => tx.wait());
+      await web3packs.bond(
+        TestNFT.address,
+        0,
+        'generic.B',
+        TestNFT.address
+      ).then(tx => tx.wait());
 
       console.log(' Z>>>>');
       // Check if proton token is bonded
