@@ -134,7 +134,7 @@ describe('Web3Packs', async ()=> {
       expect(USDcBalanceAfterSwap).to.equal(106938484);
     });
 
-    it.only('Swap two assets with matic', async() => {
+    it('Swap two assets with matic', async() => {
 
       // Balances before swap
       const usdcBeforeSwap = await USDc.balanceOf(web3packs.address);
@@ -170,7 +170,7 @@ describe('Web3Packs', async ()=> {
       expect(uniAfterSwap).to.be.gt(uniBeforeSwap);
     });
 
-    it('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
+    it('Swaps multiple assets', async() => {
       const ERC20SwapOrder = [
         {
           inputTokenAddress: USDcContractAddress,
@@ -195,14 +195,11 @@ describe('Web3Packs', async ()=> {
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
       await swapTransaction.wait();
 
-      const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
-      const UNI = new ethers.Contract(UniContractAddress, erc20Abi, USDcWhaleSigner);
+      const USDtBalanceAfterSwap = await USDc.balanceOf(web3packs.address);
+      const UNIBalanceAfterSwap = await Uni.balanceOf(web3packs.address);
 
-      const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
-      const UNIBalanceAfterSwap = await UNI.balanceOf(web3packs.address);
-
-      expect(USDtBalanceAfterSwap).to.equal(9913128);
-      expect(UNIBalanceAfterSwap.toString()).to.equal('949050956128242209');
+      expect(USDtBalanceAfterSwap).to.equal(99999980);
+      expect(UNIBalanceAfterSwap.toString()).to.equal('1287754786557');
     });
 
     it ('Bundles singled swap asset', async() => {
