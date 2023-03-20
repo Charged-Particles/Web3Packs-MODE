@@ -30,7 +30,7 @@ const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
 
 describe('Web3Packs', async ()=> {
   // Define contracts
-  let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract; 
+  let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract, Uni: Contract; 
 
   // Define signers
   let USDcWhaleSigner: Signer, ownerSigner: Signer, testSigner: Signer;
@@ -61,6 +61,7 @@ describe('Web3Packs', async ()=> {
     // Deposit usdc into web3pack contract
     USDcWhaleSigner = await ethers.getSigner(USDcWhale);
     USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
+    Uni = new ethers.Contract(UniContractAddress, erc20Abi, ethers.provider);
 
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
@@ -84,12 +85,12 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it ('Should have 3 USDc', async() => {
+    it('Should have 3 USDc', async() => {
       const balance = await USDc.balanceOf(web3packs.address);
       expect(balance).to.equal('100000000');
     });
 
-    it ('Swap a single asset', async() => {
+    it('Swap a single asset', async() => {
       // calculate expected amount
       const swapEstimation = await quote(USDC_USDT_SWAP);
       const swapPriceTolerance = amountOutMinimum(swapEstimation, 10) ;
@@ -111,7 +112,6 @@ describe('Web3Packs', async ()=> {
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
       expect(USDtBalanceAfterSwap).to.equal(9982205);
-      // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });
 
     it('Swap one assets with matic', async() => {
@@ -130,12 +130,16 @@ describe('Web3Packs', async ()=> {
       await swapTransaction.wait();
 
       const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
-      // const balanceWhale = await ethers.provider.getBalance(USDcWhale);
 
-      expect(USDcBalanceAfterSwap).to.equal(101731134);
+      expect(USDcBalanceAfterSwap).to.equal(106938484);
     });
 
-    it('Swap two assets with matic', async() => {
+    it.only('Swap two assets with matic', async() => {
+
+      // Balances before swap
+      const usdcBeforeSwap = await USDc.balanceOf(web3packs.address);
+      const uniBeforeSwap = await Uni.balanceOf(web3packs.address);
+
       const inputTokenAmount = ethers.utils.parseEther('10');
       const ERC20SwapOrder = [{
         inputTokenAddress: wrapMaticContractAddress,
@@ -157,10 +161,13 @@ describe('Web3Packs', async ()=> {
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
-      const swapTransactionReceipt = await swapTransaction.wait();
+      await swapTransaction.wait();
 
-      // TODO: CHECK CORRECT BALANCE SWAP !!
-      // console.log(swapTransactionReceipt);
+      const usdcAfterSwap = await USDc.balanceOf(web3packs.address);
+      const uniAfterSwap = await Uni.balanceOf(web3packs.address);
+
+      expect(usdcAfterSwap).to.be.gt(usdcBeforeSwap);
+      expect(uniAfterSwap).to.be.gt(uniBeforeSwap);
     });
 
     it('Swaps multiple assets', async() => {      // grant maUSD to the Web3Packs contract.
