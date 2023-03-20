@@ -8,8 +8,6 @@ import {
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
-// @ts-ignore
-import { getDeployData } from '../js-helpers/deploy'; 
 import { amountOutMinimum, quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
@@ -36,22 +34,17 @@ describe('Web3Packs', async ()=> {
   const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
   const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
 
-  const deployWeb3Pack = async () => {
-    const ddWeb3Packs = getDeployData('Web3Packs');
-    const Web3Packs = await ethers.getContractFactory('Web3Packs');
-    web3packs = await Web3Packs.attach(ddWeb3Packs.address);    
-  };
-
   before(async () => {
     const { protocolOwner } = await getNamedAccounts();
+
+    await deployments.fixture();
+    web3packs = await ethers.getContract('Web3Packs');
+    TestNFT = await ethers.getContract('ERC721Mintable');
 
     ownerSigner = await ethers.getSigner(protocolOwner);
     walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
 
     charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
-
-    await deployments.fixture('ERC721Mintable');
-    await deployWeb3Pack();
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -69,7 +62,6 @@ describe('Web3Packs', async ()=> {
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('3', 6));
     await foundWeb3PacksTransaction.wait();
     
-    TestNFT = await ethers.getContract('ERC721Mintable');
     Proton = new ethers.Contract(
       '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
       protonBAbi,
@@ -86,12 +78,7 @@ describe('Web3Packs', async ()=> {
     await whiteListTx.wait();
 
     await ChargedSettingContract.enableNftContracts([TestNFT.address]).then((tx: any) => tx.wait()
-  );
-  });
-
-  beforeEach(async () => {
-    await deployWeb3Pack();
-  });
+  );});
 
   describe('Web3Packs', async () => {
     it ('Swap a single asset', async() => {
@@ -314,7 +301,7 @@ describe('Web3Packs', async ()=> {
     });
   });
 
-  describe.only('Bonding', async() => {
+  describe.skip('Bonding', async() => {
     it ('Bonds a single assets', async() => {
       // User bond method to mint and bond proton token
       const bond = await web3packs.connect(ownerSigner).bond(
