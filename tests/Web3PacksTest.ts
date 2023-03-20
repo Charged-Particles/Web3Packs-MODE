@@ -77,8 +77,8 @@ describe('Web3Packs', async ()=> {
     const whiteListTx = await ChargedSettingContract.enableNftContracts([TestNFT.address]);
     await whiteListTx.wait();
 
-    await ChargedSettingContract.enableNftContracts([TestNFT.address]).then((tx: any) => tx.wait()
-  );});
+    await ChargedSettingContract.enableNftContracts([TestNFT.address]).then((tx: any) => tx.wait());
+  });
 
   describe('Web3Packs', async () => {
     it ('Swap a single asset', async() => {
