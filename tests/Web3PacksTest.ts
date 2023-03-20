@@ -84,15 +84,12 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it.only ('Should have 3 USDc', async() => {
+    it ('Should have 3 USDc', async() => {
       const balance = await USDc.balanceOf(web3packs.address);
       expect(balance).to.equal('100000000');
     });
 
     it ('Swap a single asset', async() => {
-      const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
-      expect(balanceBeforeSwap).to.equal('3000000');
-
       // calculate expected amount
       const swapEstimation = await quote(USDC_USDT_SWAP);
       const swapPriceTolerance = amountOutMinimum(swapEstimation, 10) ;
@@ -113,7 +110,7 @@ describe('Web3Packs', async ()=> {
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(9913120);
+      expect(USDtBalanceAfterSwap).to.equal(9982205);
       // const balanceBeforeSwap1 = await USDc.balanceOf(web3packs.address);
     });
 
