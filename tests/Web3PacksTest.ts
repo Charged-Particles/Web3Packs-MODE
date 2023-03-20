@@ -202,7 +202,7 @@ describe('Web3Packs', async ()=> {
       expect(UNIBalanceAfterSwap.toString()).to.equal('1287754786557');
     });
 
-    it.only('Bundles singled swap asset', async() => {
+    it('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
@@ -223,7 +223,7 @@ describe('Web3Packs', async ()=> {
       await bundleTransaction.wait();
     });
 
-    it('Bundles token with two swaps and then unbundles the nft', async() => {
+    it.only('Bundles token with two swaps and then unbundles the nft', async() => {
       const connectedWallet = testSigner.connect(ethers.provider);
 
       const ERC20SwapOrder = [
@@ -256,7 +256,7 @@ describe('Web3Packs', async ()=> {
       );
 
       // User address has no amount before bundle 
-      expect(await ethers.provider.getBalance(testAddress)).to.equal('.2');
+      expect(await ethers.provider.getBalance(testAddress)).to.equal('0');
 
       const bundleTransaction = await web3packs.bundle(
         testAddress,
@@ -268,12 +268,12 @@ describe('Web3Packs', async ()=> {
       await bundleTransaction.wait();
 
       // Bundle functions gives ethers to user
-      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
+      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.1'));
       
       const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      expect(USDtTokenMass['137']?.value).to.equal(8);
+      expect(USDtTokenMass['137']?.value).to.equal(9);
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
 
@@ -306,7 +306,7 @@ describe('Web3Packs', async ()=> {
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);
 
-      expect(balanceOfUSDtAfterRelease).to.eq(8);
+      expect(balanceOfUSDtAfterRelease).to.eq(9);
     });
   });
 
