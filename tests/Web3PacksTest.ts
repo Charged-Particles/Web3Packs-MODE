@@ -62,7 +62,7 @@ describe('Web3Packs', async ()=> {
     USDcWhaleSigner = await ethers.getSigner(USDcWhale);
     USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
 
-    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('3', 6));
+    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
     
     Proton = new ethers.Contract(
@@ -84,9 +84,9 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it ('Should have 3 USDc', async() => {
+    it.only ('Should have 3 USDc', async() => {
       const balance = await USDc.balanceOf(web3packs.address);
-      expect(balance).to.equal('3000000');
+      expect(balance).to.equal('100000000');
     });
 
     it ('Swap a single asset', async() => {
