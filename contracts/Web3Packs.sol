@@ -33,7 +33,7 @@
 pragma solidity 0.8.17;
 pragma abicoder v2;
 
-
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -271,15 +271,17 @@ contract Web3Packs is
     // mint 
     uint256 nftTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
 
-    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
-    chargedParticles.covalentBond(
-      contractAddress,
-      tokenId,
-      basketManagerId,
-      nftTokenAddress,
-      nftTokenId,
-      1
-    );
+    console.log("nftTokenId >>>>>>>>>>>>>>>>>>> ");
+
+    // IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
+    // bool success = chargedParticles.covalentBond(
+    //   contractAddress,
+    //   tokenId,
+    //   basketManagerId,
+    //   nftTokenAddress,
+    //   nftTokenId,
+    //   1
+    // );
   }  
 
   function _bundle(

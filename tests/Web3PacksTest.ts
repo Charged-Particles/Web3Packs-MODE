@@ -16,6 +16,9 @@ describe('Web3Packs', async ()=> {
   let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract; 
   let USDcWhaleSigner: Signer;
   let ownerSigner: Signer;
+  let walletMnemonic: Signer;
+
+  let charged: Charged;
 
   const erc20Abi = [
     "function transfer(address to, uint amount)",
@@ -43,6 +46,9 @@ describe('Web3Packs', async ()=> {
     const { protocolOwner } = await getNamedAccounts();
 
     ownerSigner = await ethers.getSigner(protocolOwner);
+    walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
+
+    charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
 
     await deployments.fixture('ERC721Mintable');
     await deployWeb3Pack();
@@ -222,7 +228,6 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
-      const walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '')
       const connectedWallet = walletMnemonic.connect(ethers.provider);
 
       const ERC20SwapOrder = [
@@ -269,7 +274,6 @@ describe('Web3Packs', async ()=> {
       // Bundle functions gives ethers to user
       expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
       
-      const charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
       const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
@@ -312,25 +316,23 @@ describe('Web3Packs', async ()=> {
 
   describe.only('Bonding', async() => {
     it ('Bonds a single assets', async() => {
-      const { protocolOwner } = await getNamedAccounts();
-
-      // Mint proton token
-      await TestNFT.connect(ownerSigner).mint(protocolOwner).then(tx => tx.wait());
-
-      // Allow protocol to bond proton token
-      await TestNFT.connect(ownerSigner).setApprovalForAll(web3packs.address, true).then(tx => tx.wait());
-
       // User bond method to mint and bond proton token
-      await web3packs.connect(ownerSigner).bond(
+      const bond = await web3packs.connect(ownerSigner).bond(
         Proton.address,
         1,
         'generic.B',
         TestNFT.address
       ).then(tx => tx.wait());
+
+      // console.log(bond);
       
       // Check if proton token is bonded
-      // const energizedProton = charged.NFT(Proton.address, 1);
-      // const protonBondBalance = await 
+      const energizedProton = charged.NFT(Proton.address, '1');
+      
+      const protonBondBalance = await energizedProton.getBonds('generic.B'); 
+
+      // console.log(protonBondBalance, energizedProton);
+      // expect(protonBondBalance['137']?.value).to.eq(1);
     });
   });
 });
