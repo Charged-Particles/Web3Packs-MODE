@@ -10,42 +10,44 @@ import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 import { amountOutMinimum, quote } from "../uniswap/quote";
 
+
+// Globals constants
+const erc20Abi = [
+  "function transfer(address to, uint amount)",
+  "function balanceOf(address account) public view virtual override returns (uint256)"
+];
+
+const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
+const wrapMaticContractAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+
+const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
+const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
+
+const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
+const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
+
 describe('Web3Packs', async ()=> {
   // Define contracts
   let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract; 
 
   // Define signers
-  let USDcWhaleSigner: Signer, ownerSigner: Signer, walletMnemonic: Signer;
+  let USDcWhaleSigner: Signer, ownerSigner: Signer, testSigner: Signer;
 
   let charged: Charged;
 
-  const erc20Abi = [
-    "function transfer(address to, uint amount)",
-    "function balanceOf(address account) public view virtual override returns (uint256)"
-  ];
-
-  const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
-  const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-  const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
-  const wrapMaticContractAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
-
-  const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
-  const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
-
-  const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
-  const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
-
   before(async () => {
-    const { protocolOwner } = await getNamedAccounts();
-
     await deployments.fixture();
     web3packs = await ethers.getContract('Web3Packs');
     TestNFT = await ethers.getContract('ERC721Mintable');
+    
+    const { protocolOwner } = await getNamedAccounts();
 
     ownerSigner = await ethers.getSigner(protocolOwner);
-    walletMnemonic = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
+    testSigner = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
 
-    charged = new Charged({ providers: ethers.provider, signer: walletMnemonic });
+    charged = new Charged({ providers: ethers.provider, signer: testSigner });
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -82,7 +84,12 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it.only ('Swap a single asset', async() => {
+    it ('Should have 3 USDc', async() => {
+      const balance = await USDc.balanceOf(web3packs.address);
+      expect(balance).to.equal('3000000');
+    });
+
+    it ('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
       expect(balanceBeforeSwap).to.equal('3000000');
 
@@ -216,7 +223,7 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
-      const connectedWallet = walletMnemonic.connect(ethers.provider);
+      const connectedWallet = testSigner.connect(ethers.provider);
 
       const ERC20SwapOrder = [
         {
