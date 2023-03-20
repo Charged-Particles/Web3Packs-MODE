@@ -315,7 +315,7 @@ describe('Web3Packs', async ()=> {
     });
   });
 
-  describe.skip('Bonding', async() => {
+  describe.only('Bonding', async() => {
     it ('Bonds a single assets', async() => {
       // User bond method to mint and bond proton token
       const bond = await web3packs.connect(ownerSigner).bond(
@@ -325,14 +325,14 @@ describe('Web3Packs', async ()=> {
         TestNFT.address
       ).then(tx => tx.wait());
 
-      // console.log(bond);
+      console.log(bond);
       
       // Check if proton token is bonded
-      const energizedProton = charged.NFT(Proton.address, '1');
+      const energizedProton = charged.NFT(Proton.address, 1);
       
       const protonBondBalance = await energizedProton.getBonds('generic.B'); 
 
-      // console.log(protonBondBalance, energizedProton);
+      console.log(protonBondBalance, energizedProton);
       // expect(protonBondBalance['137']?.value).to.eq(1);
     });
   });

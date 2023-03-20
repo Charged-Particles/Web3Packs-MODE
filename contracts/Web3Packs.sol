@@ -270,6 +270,9 @@ contract Web3Packs is
     // mint 
     uint256 nftTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
 
+    // permission
+    ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
+
     IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
     chargedParticles.covalentBond(
       contractAddress,
