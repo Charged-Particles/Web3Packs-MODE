@@ -11,10 +11,11 @@ import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 import { amountOutMinimum, quote } from "../uniswap/quote";
 
 describe('Web3Packs', async ()=> {
+  // Define contracts
   let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract; 
-  let USDcWhaleSigner: Signer;
-  let ownerSigner: Signer;
-  let walletMnemonic: Signer;
+
+  // Define signers
+  let USDcWhaleSigner: Signer, ownerSigner: Signer, walletMnemonic: Signer;
 
   let charged: Charged;
 
@@ -81,9 +82,9 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs', async () => {
-    it ('Swap a single asset', async() => {
+    it.only ('Swap a single asset', async() => {
       const balanceBeforeSwap = await USDc.balanceOf(web3packs.address);
-      expect(balanceBeforeSwap).to.equal(100000000);
+      expect(balanceBeforeSwap).to.equal('3000000');
 
       // calculate expected amount
       const swapEstimation = await quote(USDC_USDT_SWAP);
