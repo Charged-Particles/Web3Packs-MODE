@@ -75,7 +75,6 @@ contract Web3Packs is
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
-    address[] calldata nftOrders,
     uint256 fundingAmount
   )
     external
@@ -88,7 +87,7 @@ contract Web3Packs is
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     
-    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, nftOrders,realAmounts);
+    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
 
     _fund(receiver, fundingAmount);
 
@@ -271,24 +270,21 @@ contract Web3Packs is
     // mint 
     uint256 nftTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
 
-    console.log("nftTokenId >>>>>>>>>>>>>>>>>>> ");
-
-    // IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
-    // bool success = chargedParticles.covalentBond(
-    //   contractAddress,
-    //   tokenId,
-    //   basketManagerId,
-    //   nftTokenAddress,
-    //   nftTokenId,
-    //   1
-    // );
+    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
+    chargedParticles.covalentBond(
+      contractAddress,
+      tokenId,
+      basketManagerId,
+      nftTokenAddress,
+      nftTokenId,
+      1
+    );
   }  
 
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
-    address[] calldata nftOrders,
     uint256[] memory realAmounts
   )
     internal
@@ -316,15 +312,6 @@ contract Web3Packs is
         erc20SwapOrders[i].outputTokenAddress,
         realAmounts[i],
         self
-      );
-    }
-
-    for (uint256 i; i < nftOrders.length; i++) {
-      _bond(
-        _proton,
-        tokenId,
-        "generic.B",
-        nftOrders[i]
       );
     }
   }

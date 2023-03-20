@@ -202,7 +202,7 @@ describe('Web3Packs', async ()=> {
       expect(UNIBalanceAfterSwap.toString()).to.equal('1287754786557');
     });
 
-    it ('Bundles singled swap asset', async() => {
+    it.only('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,

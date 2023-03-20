@@ -322,11 +322,6 @@
         "type": "tuple[]"
       },
       {
-        "internalType": "address[]",
-        "name": "nftOrders",
-        "type": "address[]"
-      },
-      {
         "internalType": "uint256",
         "name": "fundingAmount",
         "type": "uint256"
