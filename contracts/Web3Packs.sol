@@ -275,7 +275,7 @@ contract Web3Packs is
     internal
   {
     // mint 
-    uint256 nftTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
+    uint256 mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
 
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
@@ -286,7 +286,7 @@ contract Web3Packs is
       tokenId,
       basketManagerId,
       nftTokenAddress,
-      nftTokenId,
+      mintedTokenId,
       1
     );
   }  
@@ -323,6 +323,15 @@ contract Web3Packs is
         erc20SwapOrders[i].outputTokenAddress,
         realAmounts[i],
         self
+      );
+    }
+
+    for (uint256 i; i < erc721MintOrders.length; i++) {
+      _bond(
+        _proton,
+        tokenId,
+        erc721MintOrders[i].basketManagerId,
+        erc721MintOrders[i].nftTokenAddress
       );
     }
   }
