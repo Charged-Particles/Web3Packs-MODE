@@ -1,4 +1,3 @@
-const  { chargedSettingsAbi } = require ('@charged-particles/charged-js-sdk');
 const { getDeployData } = require('../js-helpers/deploy');
 const { executeTx } = require('../js-helpers/executeTx');
 const {
@@ -55,8 +54,9 @@ module.exports = async (hre) => {
 
     const ddWeb3Packs = getDeployData('Web3Packs', chainId);
     log('  Loading Web3Packs from:     ', ddWeb3Packs.address);
-    const Web3Packs = await ethers.getContractFactory('Web3Packs');
-    const web3Packs = await Web3Packs.attach(ddWeb3Packs.address);
+    const web3Packs = await ethers.getContract('Web3Packs', deployer);
+    // const Web3Packs = await ethers.getContractFactory('Web3Packs');
+    // const web3Packs = await Web3Packs.attach(ddWeb3Packs.address);
 
     const ddChargedSettings = { address: _ADDRESS[chainId].ChargedSettings };
     log('  Loading ChargedSettings from: ', ddChargedSettings.address);
@@ -83,6 +83,7 @@ module.exports = async (hre) => {
     await executeTx('1-d', 'Web3Packs: Transfer Contract Ownership', async () =>
       await web3Packs.transferOwnership(protocolOwner)
     );
+
 
     log('\n  Contract Deployment Data saved to "deployments" directory.');
     log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');

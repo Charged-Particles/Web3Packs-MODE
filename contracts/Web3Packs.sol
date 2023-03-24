@@ -33,7 +33,7 @@
 pragma solidity 0.8.17;
 pragma abicoder v2;
 
-
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -46,6 +46,7 @@ import "./interfaces/IChargedState.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
+import "./lib/ERC721Mintable.sol";
 
 contract Web3Packs is
   IWeb3Packs,
@@ -74,6 +75,7 @@ contract Web3Packs is
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC721MintOrders[] calldata erc721MintOrders,
     uint256 fundingAmount
   )
     external
@@ -86,7 +88,13 @@ contract Web3Packs is
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     
-    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
+    tokenId = _bundle(
+      receiver,
+      tokenMetaUri,
+      erc20SwapOrders,
+      erc721MintOrders,
+      realAmounts
+    );
 
     _fund(receiver, fundingAmount);
 
@@ -138,6 +146,18 @@ contract Web3Packs is
   {
     return _swap(erc20SwapOrders);
   }
+
+  function bond(
+    address contractAddress,
+    uint256 tokenId,
+    string memory basketManagerId,
+    address nftTokenAddress
+  )
+   external
+  {
+    _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
+  } 
+
 
   /***********************************|
   |          Only Admin/DAO           |
@@ -221,7 +241,10 @@ contract Web3Packs is
 
   function _singleSwap(
     ERC20SwapOrder calldata erc20SwapOrder
-  ) internal returns (uint256 amountOut) {
+  )
+   internal
+   returns (uint256 amountOut)
+  {
     // Approve the router to spend ERC20.
     TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
 
@@ -243,10 +266,36 @@ contract Web3Packs is
     amountOut = ISwapRouter(_router).exactInputSingle{value: amountIn }(params);
   }
 
+  function _bond(
+    address contractAddress,
+    uint256 tokenId,
+    string memory basketManagerId,
+    address nftTokenAddress
+  ) 
+    internal
+  {
+    // mint 
+    uint256 mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
+
+    // permission
+    ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
+
+    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
+    chargedParticles.covalentBond(
+      contractAddress,
+      tokenId,
+      basketManagerId,
+      nftTokenAddress,
+      mintedTokenId,
+      1
+    );
+  }  
+
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC721MintOrders[] calldata erc721MintOrders,
     uint256[] memory realAmounts
   )
     internal
@@ -274,6 +323,15 @@ contract Web3Packs is
         erc20SwapOrders[i].outputTokenAddress,
         realAmounts[i],
         self
+      );
+    }
+
+    for (uint256 i; i < erc721MintOrders.length; i++) {
+      _bond(
+        _proton,
+        tokenId,
+        erc721MintOrders[i].basketManagerId,
+        erc721MintOrders[i].erc721TokenAddress
       );
     }
   }

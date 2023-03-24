@@ -40,6 +40,12 @@ interface IWeb3Packs {
     uint160 sqrtPriceLimitX96; 
   }
 
+  struct ERC721MintOrders {
+    address erc721TokenAddress;
+    string basketManagerId;
+    // uint256 amount;
+  }
+
   struct Web3PackOrder {
     address[] erc20TokenAddresses;
   }
@@ -48,6 +54,7 @@ interface IWeb3Packs {
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC721MintOrders[] calldata erc721MintOrders,
     uint256 unBundleGasAmount
   ) external payable returns(uint256 tokenId);
 
