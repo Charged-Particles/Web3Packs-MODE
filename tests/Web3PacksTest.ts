@@ -218,7 +218,18 @@ describe('Web3Packs', async ()=> {
         sqrtPriceLimitX96: 0,
       }];
 
-      const bundleTransaction = await web3packs.bundle(
+      const ERC712MintOrder = [
+        {
+          erc721TokenAddress: TestNFT.address,
+          basketManagerId: 'generic.B'
+        },
+        {
+          erc721TokenAddress: TestNFT.address,
+          basketManagerId: 'generic.B'
+        },
+      ];
+
+      const newTokenId = await web3packs.callStatic.bundle(
         testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
@@ -226,7 +237,20 @@ describe('Web3Packs', async ()=> {
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
+
+      const bundleTransaction = await web3packs.bundle(
+        testAddress,
+        ipfsMetadata,
+        ERC20SwapOrder,
+        ERC712MintOrder,
+        ethers.utils.parseEther('.1'),
+        { value: ethers.utils.parseEther('.2') }
+      );
       await bundleTransaction.wait();
+      const energizedProton = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId);
+
+      const protonBondBalance = await energizedProton.getBonds('generic.B'); 
+      expect(protonBondBalance['137']?.value).to.eq(2);
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
@@ -321,7 +345,7 @@ describe('Web3Packs', async ()=> {
   describe ('Bonding', async() => {
     it ('Bonds a single assets', async() => {
       // User bond method to mint and bond proton token
-      const bond = await web3packs.connect(ownerSigner).bond(
+      await web3packs.connect(ownerSigner).bond(
         Proton.address,
         1,
         'generic.B',
@@ -333,8 +357,7 @@ describe('Web3Packs', async ()=> {
       
       const protonBondBalance = await energizedProton.getBonds('generic.B'); 
 
-      // console.log(protonBondBalance, energizedProton);
-      // expect(protonBondBalance['137']?.value).to.eq(1);
+      expect(protonBondBalance['137']?.value).to.eq(1);
     });
   });
 });
