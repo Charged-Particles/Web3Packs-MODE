@@ -75,6 +75,7 @@ contract Web3Packs is
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC721MintOrders[] calldata erc721MintOrders,
     uint256 fundingAmount
   )
     external
@@ -87,7 +88,13 @@ contract Web3Packs is
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     
-    tokenId = _bundle(receiver, tokenMetaUri, erc20SwapOrders, realAmounts);
+    tokenId = _bundle(
+      receiver,
+      tokenMetaUri,
+      erc20SwapOrders,
+      realAmounts,
+      erc721MintOrders
+    );
 
     _fund(receiver, fundingAmount);
 
@@ -288,6 +295,7 @@ contract Web3Packs is
     address receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC721MintOrders[] calldata erc721MintOrders,
     uint256[] memory realAmounts
   )
     internal
