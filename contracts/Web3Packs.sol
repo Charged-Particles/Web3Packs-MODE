@@ -92,8 +92,8 @@ contract Web3Packs is
       receiver,
       tokenMetaUri,
       erc20SwapOrders,
-      realAmounts,
-      erc721MintOrders
+      erc721MintOrders,
+      realAmounts
     );
 
     _fund(receiver, fundingAmount);
@@ -331,7 +331,7 @@ contract Web3Packs is
         _proton,
         tokenId,
         erc721MintOrders[i].basketManagerId,
-        erc721MintOrders[i].nftTokenAddress
+        erc721MintOrders[i].erc721TokenAddress
       );
     }
   }

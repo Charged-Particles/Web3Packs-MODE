@@ -322,6 +322,23 @@
         "type": "tuple[]"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "erc721TokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "basketManagerId",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.ERC721MintOrders[]",
+        "name": "erc721MintOrders",
+        "type": "tuple[]"
+      },
+      {
         "internalType": "uint256",
         "name": "fundingAmount",
         "type": "uint256"
