@@ -280,8 +280,7 @@ contract Web3Packs is
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
-    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
-    chargedParticles.covalentBond(
+    IChargedParticles(_chargedParticles).covalentBond(
       contractAddress,
       tokenId,
       basketManagerId,
