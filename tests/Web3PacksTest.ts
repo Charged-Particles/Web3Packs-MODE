@@ -323,7 +323,8 @@ describe('Web3Packs', async ()=> {
         bundToken.contractAddress,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ UniContractAddress, USDtContractAddress]
+          erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
+          nfts: [],
         }
       );
 
