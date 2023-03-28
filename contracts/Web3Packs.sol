@@ -48,6 +48,8 @@ import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
 import "./lib/ERC721Mintable.sol";
 
+import "hardhat/console.sol";
+
 contract Web3Packs is
   IWeb3Packs,
   Ownable,
@@ -154,8 +156,9 @@ contract Web3Packs is
     address nftTokenAddress
   )
    external
+   returns (uint256 mintedTokenId)
   {
-    _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
+    mintedTokenId = _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
   } 
 
 
@@ -273,9 +276,11 @@ contract Web3Packs is
     address nftTokenAddress
   ) 
     internal
+    returns (uint256 mintedTokenId)
   {
     // mint 
-    uint256 mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
+    mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
+    console.log('mintedTokenId: %s', mintedTokenId);
 
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);

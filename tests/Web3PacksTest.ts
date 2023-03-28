@@ -326,6 +326,13 @@ describe('Web3Packs', async ()=> {
         web3packs.address 
       );
       await approveWeb3PackReleaseTx.wait();
+
+      // setBreakBondApproval
+      await chargedState.setBreakBondApproval(
+        bundToken.contractAddress,
+        bundToken.tokenId,
+        web3packs.address
+      ).then((tx) => tx.wait());
         
       const unBundleTransaction = await web3packs.connect(connectedWallet).unbundle(
         testAddress,
@@ -335,7 +342,7 @@ describe('Web3Packs', async ()=> {
           erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
           nfts: [{
             erc721TokenAddress: TestNFT.address,
-            tokenId: 1,
+            tokenId: 2,
           }],
         }
       );
