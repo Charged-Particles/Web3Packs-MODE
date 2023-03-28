@@ -51,8 +51,8 @@ interface IWeb3Packs {
   }
 
   struct NFT {
-    address erc721TokenAddress;
-    uint256 tokenId;
+    address tokenAddress;
+    uint256 id;
   }
 
   function bundle(

@@ -161,66 +161,6 @@ contract Web3Packs is
 
 
   /***********************************|
-  |          Only Admin/DAO           |
-  |__________________________________*/
-
-  /**
-    * @dev Setup the ChargedParticles Interface
-    */
-  function setChargedParticles(address chargedParticles) external onlyOwner {
-    emit ChargedParticlesSet(chargedParticles);
-    _chargedParticles = chargedParticles;
-  }
-
-  /// @dev Setup the Charged-State Controller
-  function setChargedState(address stateController) external onlyOwner {
-    _chargedState = stateController;
-    emit ChargedStateSet(stateController);
-  }
-
-  /// @dev Setup the Uniswap Router
-  function setUniswapRouter(address router) external onlyOwner {
-    _router = router;
-    emit UniswapRouterSet(router);
-  }
-
-  function setProton(address proton) external onlyOwner {
-    _proton = proton;
-    emit ProtonSet(proton);
-  }
-
-  function pause() public onlyOwner {
-    _pause();
-  }
-
-  function unpause() public onlyOwner {
-    _unpause();
-  }
-
-
-  /***********************************|
-  |          Only Admin/DAO           |
-  |      (blackhole prevention)       |
-  |__________________________________*/
-
-  function withdrawEther(address payable receiver, uint256 amount) external virtual onlyOwner {
-    _withdrawEther(receiver, amount);
-  }
-
-  function withdrawErc20(address payable receiver, address tokenAddress, uint256 amount) external virtual onlyOwner {
-    _withdrawERC20(receiver, tokenAddress, amount);
-  }
-
-  function withdrawERC721(address payable receiver, address tokenAddress, uint256 tokenId) external virtual onlyOwner {
-    _withdrawERC721(receiver, tokenAddress, tokenId);
-  }
-
-  function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
-    _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
-  }
-
-
-  /***********************************|
   |         Private Functions         |
   |__________________________________*/
 
@@ -362,8 +302,8 @@ contract Web3Packs is
         tokenAddress,
         tokenId,
         walletManager,
-        web3PackOrder.nfts[i].erc721TokenAddress,
-        web3PackOrder.nfts[i].tokenId,
+        web3PackOrder.nfts[i].tokenAddress,
+        web3PackOrder.nfts[i].id,
         1
       );
     }
@@ -374,5 +314,65 @@ contract Web3Packs is
       (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
       require(sent, "Failed to send Ether");
     }
+  }
+
+
+  /***********************************|
+  |          Only Admin/DAO           |
+  |__________________________________*/
+
+  /**
+    * @dev Setup the ChargedParticles Interface
+  */
+  function setChargedParticles(address chargedParticles) external onlyOwner {
+    emit ChargedParticlesSet(chargedParticles);
+    _chargedParticles = chargedParticles;
+  }
+
+  /// @dev Setup the Charged-State Controller
+  function setChargedState(address stateController) external onlyOwner {
+    _chargedState = stateController;
+    emit ChargedStateSet(stateController);
+  }
+
+  /// @dev Setup the Uniswap Router
+  function setUniswapRouter(address router) external onlyOwner {
+    _router = router;
+    emit UniswapRouterSet(router);
+  }
+
+  function setProton(address proton) external onlyOwner {
+    _proton = proton;
+    emit ProtonSet(proton);
+  }
+
+  function pause() public onlyOwner {
+    _pause();
+  }
+
+  function unpause() public onlyOwner {
+    _unpause();
+  }
+
+
+  /***********************************|
+  |          Only Admin/DAO           |
+  |      (blackhole prevention)       |
+  |__________________________________*/
+
+  function withdrawEther(address payable receiver, uint256 amount) external virtual onlyOwner {
+    _withdrawEther(receiver, amount);
+  }
+
+  function withdrawErc20(address payable receiver, address tokenAddress, uint256 amount) external virtual onlyOwner {
+    _withdrawERC20(receiver, tokenAddress, amount);
+  }
+
+  function withdrawERC721(address payable receiver, address tokenAddress, uint256 tokenId) external virtual onlyOwner {
+    _withdrawERC721(receiver, tokenAddress, tokenId);
+  }
+
+  function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
+    _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
   }
 }

@@ -320,12 +320,6 @@ describe('Web3Packs', async ()=> {
 
       // Charged settings contract
       const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
-      // const approveWeb3PackReleaseTx = await chargedState.setReleaseApproval(
-      //   bundToken.contractAddress,
-      //   bundToken.tokenId,
-      //   web3packs.address 
-      // );
-      // await approveWeb3PackReleaseTx.wait();
 
       // setBreakBondApproval
       await chargedState.setApprovalForAll(
@@ -341,8 +335,8 @@ describe('Web3Packs', async ()=> {
         {
           erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
           nfts: [{
-            erc721TokenAddress: TestNFT.address,
-            tokenId: 2,
+            tokenAddress: TestNFT.address,
+            id: 2,
           }],
         }
       );

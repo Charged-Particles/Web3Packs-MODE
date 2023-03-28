@@ -205,12 +205,12 @@
             "components": [
               {
                 "internalType": "address",
-                "name": "erc721TokenAddress",
+                "name": "tokenAddress",
                 "type": "address"
               },
               {
                 "internalType": "uint256",
-                "name": "tokenId",
+                "name": "id",
                 "type": "uint256"
               }
             ],
