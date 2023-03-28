@@ -263,7 +263,13 @@
       }
     ],
     "name": "bond",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "mintedTokenId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -539,6 +545,23 @@
             "internalType": "address[]",
             "name": "erc20TokenAddresses",
             "type": "address[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "tokenAddress",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IWeb3Packs.NFT[]",
+            "name": "nfts",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct IWeb3Packs.Web3PackOrder",
@@ -579,6 +602,23 @@
             "internalType": "address[]",
             "name": "erc20TokenAddresses",
             "type": "address[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "tokenAddress",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IWeb3Packs.NFT[]",
+            "name": "nfts",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct IWeb3Packs.Web3PackOrder",

@@ -43,11 +43,16 @@ interface IWeb3Packs {
   struct ERC721MintOrders {
     address erc721TokenAddress;
     string basketManagerId;
-    // uint256 amount;
   }
 
   struct Web3PackOrder {
     address[] erc20TokenAddresses;
+    NFT[] nfts;
+  }
+
+  struct NFT {
+    address tokenAddress;
+    uint256 id;
   }
 
   function bundle(

@@ -82,11 +82,6 @@ describe('Web3Packs', async ()=> {
       chargedSettingsAbi,
       ownerSigner 
     );
-
-    const whiteListTx = await ChargedSettingContract.enableNftContracts([TestNFT.address]);
-    await whiteListTx.wait();
-
-    await ChargedSettingContract.enableNftContracts([TestNFT.address]).then((tx: any) => tx.wait());
   });
 
   describe('Web3Packs', async () => {
@@ -276,6 +271,13 @@ describe('Web3Packs', async ()=> {
           sqrtPriceLimitX96: 0,
         }
       ];
+
+      const ERC721MintOrder = [
+        {
+          erc721TokenAddress: TestNFT.address,
+          basketManagerId: 'generic.B'
+        }
+      ];
       
       const newTokenId = await web3packs.callStatic.bundle(
         testAddress,
@@ -293,7 +295,7 @@ describe('Web3Packs', async ()=> {
         testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
-        [],
+        ERC721MintOrder,
         ethers.utils.parseEther('.1'),
        { value: ethers.utils.parseEther('.2') }
       );
@@ -308,37 +310,46 @@ describe('Web3Packs', async ()=> {
       expect(USDtTokenMass['137']?.value).to.equal(8);
       const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
+      const energizedNftsBeforeRelease = await bundToken.getBonds('generic.B'); 
+      expect(energizedNftsBeforeRelease['137']?.value).to.eq(1);
 
       // Charged settings contract
       const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
-      const approveWeb3PackReleaseTx = await chargedState.setReleaseApproval(
+
+      // setBreakBondApproval
+      await chargedState.setApprovalForAll(
         bundToken.contractAddress,
         bundToken.tokenId,
-        web3packs.address 
-      );
-      await approveWeb3PackReleaseTx.wait();
+        web3packs.address
+      ).then((tx) => tx.wait());
         
-      const unbundleTransaction = await web3packs.connect(connectedWallet).unbundle(
+      const unBundleTransaction = await web3packs.connect(connectedWallet).unbundle(
         testAddress,
         bundToken.contractAddress,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ UniContractAddress, USDtContractAddress]
+          erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
+          nfts: [{
+            tokenAddress: TestNFT.address,
+            id: 2,
+          }],
         }
       );
+      await unBundleTransaction.wait();
 
-      const unbundleTransactionReceipt = await unbundleTransaction.wait();
-      // console.log(ethers.utils.formatUnits(unbundleTransactionReceipt.gasUsed))
+      const uniLeftInBundle = await bundToken.getMass(UniContractAddress, 'generic.B');
+      const USDLeftInBundle = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      expect(uniLeftInBundle['137']?.value).to.eq(0);
+      expect(USDLeftInBundle['137']?.value).to.eq(0);
 
-      const uniLeftInBoundle = await bundToken.getMass(UniContractAddress, 'generic.B');
-      const USDLeftInBoundle = await bundToken.getMass(USDtContractAddress, 'generic.B');
-      expect(uniLeftInBoundle['137']?.value).to.eq(0);
-      expect(USDLeftInBoundle['137']?.value).to.eq(0);
+      const energizedNftsAfterUnBundle = await bundToken.getBonds('generic.B'); 
+      expect(energizedNftsAfterUnBundle['137']?.value).to.eq(0);
 
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);
 
       expect(balanceOfUSDtAfterRelease).to.eq(8);
+
     });
   });
 
@@ -354,7 +365,6 @@ describe('Web3Packs', async ()=> {
 
       // Check if proton token is bonded
       const energizedProton = charged.NFT(Proton.address, 1);
-      
       const protonBondBalance = await energizedProton.getBonds('generic.B'); 
 
       expect(protonBondBalance['137']?.value).to.eq(1);

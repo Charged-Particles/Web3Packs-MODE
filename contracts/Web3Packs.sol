@@ -154,69 +154,10 @@ contract Web3Packs is
     address nftTokenAddress
   )
    external
+   returns (uint256 mintedTokenId)
   {
-    _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
+    mintedTokenId = _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
   } 
-
-
-  /***********************************|
-  |          Only Admin/DAO           |
-  |__________________________________*/
-
-  /**
-    * @dev Setup the ChargedParticles Interface
-    */
-  function setChargedParticles(address chargedParticles) external onlyOwner {
-    emit ChargedParticlesSet(chargedParticles);
-    _chargedParticles = chargedParticles;
-  }
-
-  /// @dev Setup the Charged-State Controller
-  function setChargedState(address stateController) external onlyOwner {
-    _chargedState = stateController;
-    emit ChargedStateSet(stateController);
-  }
-
-  /// @dev Setup the Uniswap Router
-  function setUniswapRouter(address router) external onlyOwner {
-    _router = router;
-    emit UniswapRouterSet(router);
-  }
-
-  function setProton(address proton) external onlyOwner {
-    _proton = proton;
-    emit ProtonSet(proton);
-  }
-
-  function pause() public onlyOwner {
-    _pause();
-  }
-
-  function unpause() public onlyOwner {
-    _unpause();
-  }
-
-
-  /***********************************|
-  |          Only Admin/DAO           |
-  |      (blackhole prevention)       |
-  |__________________________________*/
-
-  function withdrawEther(address payable receiver, uint256 amount) external virtual onlyOwner {
-    _withdrawEther(receiver, amount);
-  }
-
-  function withdrawErc20(address payable receiver, address tokenAddress, uint256 amount) external virtual onlyOwner {
-    _withdrawERC20(receiver, tokenAddress, amount);
-  }
-
-  function withdrawERC721(address payable receiver, address tokenAddress, uint256 tokenId) external virtual onlyOwner {
-    _withdrawERC721(receiver, tokenAddress, tokenId);
-  }
-
-  function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
-    _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
-  }
 
 
   /***********************************|
@@ -273,15 +214,15 @@ contract Web3Packs is
     address nftTokenAddress
   ) 
     internal
+    returns (uint256 mintedTokenId)
   {
     // mint 
-    uint256 mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
+    mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
 
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
-    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
-    chargedParticles.covalentBond(
+    IChargedParticles(_chargedParticles).covalentBond(
       contractAddress,
       tokenId,
       basketManagerId,
@@ -354,6 +295,18 @@ contract Web3Packs is
         web3PackOrder.erc20TokenAddresses[i]
       );
     }
+
+    for (uint256 i; i < web3PackOrder.nfts.length; i++) {
+      IChargedParticles(_chargedParticles).breakCovalentBond(
+        receiver,
+        tokenAddress,
+        tokenId,
+        walletManager,
+        web3PackOrder.nfts[i].tokenAddress,
+        web3PackOrder.nfts[i].id,
+        1
+      );
+    }
   }
 
   function _fund(address payable receiver, uint256 fundigAmount) private{
@@ -361,5 +314,65 @@ contract Web3Packs is
       (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
       require(sent, "Failed to send Ether");
     }
+  }
+
+
+  /***********************************|
+  |          Only Admin/DAO           |
+  |__________________________________*/
+
+  /**
+    * @dev Setup the ChargedParticles Interface
+  */
+  function setChargedParticles(address chargedParticles) external onlyOwner {
+    emit ChargedParticlesSet(chargedParticles);
+    _chargedParticles = chargedParticles;
+  }
+
+  /// @dev Setup the Charged-State Controller
+  function setChargedState(address stateController) external onlyOwner {
+    _chargedState = stateController;
+    emit ChargedStateSet(stateController);
+  }
+
+  /// @dev Setup the Uniswap Router
+  function setUniswapRouter(address router) external onlyOwner {
+    _router = router;
+    emit UniswapRouterSet(router);
+  }
+
+  function setProton(address proton) external onlyOwner {
+    _proton = proton;
+    emit ProtonSet(proton);
+  }
+
+  function pause() public onlyOwner {
+    _pause();
+  }
+
+  function unpause() public onlyOwner {
+    _unpause();
+  }
+
+
+  /***********************************|
+  |          Only Admin/DAO           |
+  |      (blackhole prevention)       |
+  |__________________________________*/
+
+  function withdrawEther(address payable receiver, uint256 amount) external virtual onlyOwner {
+    _withdrawEther(receiver, amount);
+  }
+
+  function withdrawErc20(address payable receiver, address tokenAddress, uint256 amount) external virtual onlyOwner {
+    _withdrawERC20(receiver, tokenAddress, amount);
+  }
+
+  function withdrawERC721(address payable receiver, address tokenAddress, uint256 tokenId) external virtual onlyOwner {
+    _withdrawERC721(receiver, tokenAddress, tokenId);
+  }
+
+  function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
+    _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
   }
 }
