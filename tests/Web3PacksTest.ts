@@ -327,22 +327,27 @@ describe('Web3Packs', async ()=> {
       );
       await approveWeb3PackReleaseTx.wait();
         
-      const unbundleTransaction = await web3packs.connect(connectedWallet).unbundle(
+      const unBundleTransaction = await web3packs.connect(connectedWallet).unbundle(
         testAddress,
         bundToken.contractAddress,
         newTokenId.toNumber(),
         {
           erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
-          nfts: [],
+          nfts: [{
+            erc721TokenAddress: TestNFT.address,
+            tokenId: 1,
+          }],
         }
       );
-
-      await unbundleTransaction.wait();
+      await unBundleTransaction.wait();
 
       const uniLeftInBundle = await bundToken.getMass(UniContractAddress, 'generic.B');
       const USDLeftInBundle = await bundToken.getMass(USDtContractAddress, 'generic.B');
       expect(uniLeftInBundle['137']?.value).to.eq(0);
       expect(USDLeftInBundle['137']?.value).to.eq(0);
+
+      const energizedNftsAfterUnBundle = await bundToken.getBonds('generic.B'); 
+      expect(energizedNftsAfterUnBundle['137']?.value).to.eq(0);
 
       const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);

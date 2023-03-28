@@ -353,6 +353,18 @@ contract Web3Packs is
         web3PackOrder.erc20TokenAddresses[i]
       );
     }
+
+    for (uint256 i; i < web3PacksOrder.nfts.length; i++) {
+      IChargedParticles(_chargedParticles).breakCovalentBond(
+        receiver,
+        tokenAddress,
+        tokenId,
+        walletManager,
+        web3PacksOrder.nfts[i].nftTokenAddress,
+        web3PacksOrder.nfts[i].tokenId,
+        1
+      );
+    }
   }
 
   function _fund(address payable receiver, uint256 fundigAmount) private{
