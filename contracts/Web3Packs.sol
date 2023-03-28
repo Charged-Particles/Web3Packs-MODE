@@ -354,14 +354,14 @@ contract Web3Packs is
       );
     }
 
-    for (uint256 i; i < web3PacksOrder.nfts.length; i++) {
+    for (uint256 i; i < web3PackOrder.nfts.length; i++) {
       IChargedParticles(_chargedParticles).breakCovalentBond(
         receiver,
         tokenAddress,
         tokenId,
         walletManager,
-        web3PacksOrder.nfts[i].nftTokenAddress,
-        web3PacksOrder.nfts[i].tokenId,
+        web3PackOrder.nfts[i].erc721TokenAddress,
+        web3PackOrder.nfts[i].tokenId,
         1
       );
     }
