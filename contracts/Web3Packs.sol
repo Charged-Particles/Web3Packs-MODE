@@ -65,7 +65,7 @@ contract Web3Packs is
 
   // Custom Errors
   error FundingFailed();
-  error
+  error NullReceiver();
 
   constructor(){}
 
@@ -87,7 +87,8 @@ contract Web3Packs is
     payable
     returns(uint256 tokenId)
   {
-    require(receiver != address(0x0), "Receiver is null");
+    if (receiver == address(0x0))
+      revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     
