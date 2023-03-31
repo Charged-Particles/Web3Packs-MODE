@@ -33,7 +33,6 @@
 pragma solidity 0.8.17;
 pragma abicoder v2;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -63,6 +62,10 @@ contract Web3Packs is
   // Charged Particles Wallet Managers
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
+
+  // Custom Errors
+  error FundingFailed();
+  error
 
   constructor(){}
 
@@ -312,7 +315,8 @@ contract Web3Packs is
   function _fund(address payable receiver, uint256 fundigAmount) private{
     if (address(this).balance >= fundigAmount) {
       (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
-      require(sent, "Failed to send Ether");
+      if (!sent) 
+        revert FundingFailed();
     }
   }
 
