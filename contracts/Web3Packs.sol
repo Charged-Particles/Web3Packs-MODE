@@ -129,7 +129,7 @@ contract Web3Packs is
     address receiver,
     address tokenAddress,
     uint256 tokenId,
-    string memory walletManager,
+    string calldata walletManager,
     Web3PackOrder calldata web3PackOrder
   )
     external
@@ -154,7 +154,7 @@ contract Web3Packs is
   function bond(
     address contractAddress,
     uint256 tokenId,
-    string memory basketManagerId,
+    string calldata basketManagerId,
     address nftTokenAddress
   )
    external
@@ -244,7 +244,6 @@ contract Web3Packs is
     uint256[] memory realAmounts
   )
     internal
-    virtual
     returns (uint256 tokenId)
   {
     address self = address(this);
@@ -313,7 +312,12 @@ contract Web3Packs is
     }
   }
 
-  function _fund(address payable receiver, uint256 fundigAmount) private{
+  function _fund(
+    address payable receiver,
+    uint256 fundigAmount
+  ) 
+    private
+  {
     if (address(this).balance >= fundigAmount) {
       (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
       if (!sent) 
