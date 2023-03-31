@@ -33,7 +33,6 @@
 pragma solidity 0.8.17;
 pragma abicoder v2;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -64,6 +63,10 @@ contract Web3Packs is
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
 
+  // Custom Errors
+  error FundingFailed();
+  error NullReceiver();
+
   constructor(){}
 
 
@@ -84,7 +87,8 @@ contract Web3Packs is
     payable
     returns(uint256 tokenId)
   {
-    require(receiver != address(0x0), "Receiver is null");
+    if (receiver == address(0x0))
+      revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     
@@ -125,7 +129,7 @@ contract Web3Packs is
     address receiver,
     address tokenAddress,
     uint256 tokenId,
-    string memory walletManager,
+    string calldata walletManager,
     Web3PackOrder calldata web3PackOrder
   )
     external
@@ -150,7 +154,7 @@ contract Web3Packs is
   function bond(
     address contractAddress,
     uint256 tokenId,
-    string memory basketManagerId,
+    string calldata basketManagerId,
     address nftTokenAddress
   )
    external
@@ -240,7 +244,6 @@ contract Web3Packs is
     uint256[] memory realAmounts
   )
     internal
-    virtual
     returns (uint256 tokenId)
   {
     address self = address(this);
@@ -309,10 +312,16 @@ contract Web3Packs is
     }
   }
 
-  function _fund(address payable receiver, uint256 fundigAmount) private{
+  function _fund(
+    address payable receiver,
+    uint256 fundigAmount
+  ) 
+    private
+  {
     if (address(this).balance >= fundigAmount) {
       (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
-      require(sent, "Failed to send Ether");
+      if (!sent) 
+        revert FundingFailed();
     }
   }
 
