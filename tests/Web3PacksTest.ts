@@ -1,5 +1,5 @@
 import { expect } from "chai"; 
-import { ethers, network, deployments, getNamedAccounts } from 'hardhat';
+import { ethers, network, getNamedAccounts } from 'hardhat';
 import {
   default as Charged,
   chargedStateAbi,
