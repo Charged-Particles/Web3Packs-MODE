@@ -45,7 +45,6 @@ import "./interfaces/IChargedState.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
-import "hardhat/console.sol";
 
 contract Web3Packs is
   IWeb3Packs,
@@ -229,12 +228,12 @@ contract Web3Packs is
     returns (uint256 mintedTokenId)
   {
     // mint 
-    mintedTokenId = ERC721Mintable(contractAddress).createBasicProton(
+    mintedTokenId = IBaseProton(contractAddress).createBasicProton(
       address(this),
       address(this),
       tokenMetadataUri
     );
-    console.log("mintedTokenId: %s", mintedTokenId);
+    
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
