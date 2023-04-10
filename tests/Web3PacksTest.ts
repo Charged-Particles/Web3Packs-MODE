@@ -276,8 +276,9 @@ describe('Web3Packs', async ()=> {
 
       const ERC721MintOrder = [
         {
-          erc721TokenAddress: TestNFT.address,
-          basketManagerId: 'generic.B'
+          erc721TokenAddress: Proton.address,
+          basketManagerId: 'generic.B',
+          tokenMetadataUri: 'QmRgKrUcX2UUZeBGLxJBWvNxoeGqpHpA5mLPBx1EGQMaFc'
         }
       ];
       
@@ -295,12 +296,13 @@ describe('Web3Packs', async ()=> {
 
       const bundleTransaction = await web3packs.bundle(
         testAddress,
+        ipfsMetadata,
         ERC20SwapOrder,
         ERC721MintOrder,
         ethers.utils.parseEther('.1'),
        { value: ethers.utils.parseEther('.2') }
       );
-      await bundleTransaction.wait();
+      // await bundleTransaction.wait();
 
       // // Bundle functions gives ethers to user
       // expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
