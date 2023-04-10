@@ -39,13 +39,13 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-
+import "./lib/ERC721Mintable.sol";
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IChargedState.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
-import "./lib/ERC721Mintable.sol";
+import "hardhat/console.sol";
 
 contract Web3Packs is
   IWeb3Packs,
@@ -229,12 +229,12 @@ contract Web3Packs is
     returns (uint256 mintedTokenId)
   {
     // mint 
-    mintedTokenId = ERC721Mintable(nftTokenAddress).createBasicProton(
+    mintedTokenId = ERC721Mintable(contractAddress).createBasicProton(
       address(this),
       address(this),
       tokenMetadataUri
     );
-
+    console.log("mintedTokenId: %s", mintedTokenId);
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
@@ -397,4 +397,13 @@ contract Web3Packs is
   function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
     _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
   }
+  function onERC721Received(
+      address, 
+      address, 
+      uint256, 
+      bytes calldata
+  ) external returns(bytes4) {
+      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+  } 
+
 }

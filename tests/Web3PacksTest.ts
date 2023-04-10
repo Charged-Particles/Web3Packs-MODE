@@ -361,6 +361,7 @@ describe('Web3Packs', async ()=> {
       await web3packs.connect(ownerSigner).bond(
         Proton.address,
         1,
+        'QmVHsu8L3n9rVhwNKiCozaH9Dgy9KtHWFihrejjVTPvvN8',
         'generic.B',
         TestNFT.address
       ).then(tx => tx.wait());
