@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
+
 contract ERC721Mintable is ERC721, ERC721URIStorage  {
   using Counters for Counters.Counter;
 
@@ -33,4 +34,17 @@ contract ERC721Mintable is ERC721, ERC721URIStorage  {
   function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
       super._burn(tokenId);
   } 
+
+  function createBasicProton(
+    address creator,
+    address receiver,
+    string memory tokenMetaUri
+  )
+    external
+    virtual
+    payable
+    returns (uint256 newTokenId)
+  {
+
+  }
 }

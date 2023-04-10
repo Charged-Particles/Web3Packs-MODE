@@ -216,10 +216,12 @@ describe('Web3Packs', async ()=> {
       const ERC712MintOrder = [
         {
           erc721TokenAddress: TestNFT.address,
+          tokenMetadataUri: 'QmVHsu8L3n9rVhwNKiCozaH9Dgy9KtHWFihrejjVTPvvN8',
           basketManagerId: 'generic.B'
         },
         {
           erc721TokenAddress: TestNFT.address,
+          tokenMetadataUri: 'QmRgKrUcX2UUZeBGLxJBWvNxoeGqpHpA5mLPBx1EGQMaFc',
           basketManagerId: 'generic.B'
         },
       ];

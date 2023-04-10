@@ -263,6 +263,11 @@
       },
       {
         "internalType": "string",
+        "name": "tokenMetadataUri",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "basketManagerId",
         "type": "string"
       },
@@ -347,6 +352,11 @@
           {
             "internalType": "string",
             "name": "basketManagerId",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tokenMetadataUri",
             "type": "string"
           }
         ],

@@ -43,6 +43,7 @@ interface IWeb3Packs {
   struct ERC721MintOrders {
     address erc721TokenAddress;
     string basketManagerId;
+    string tokenMetadataUri;
   }
 
   struct Web3PackOrder {

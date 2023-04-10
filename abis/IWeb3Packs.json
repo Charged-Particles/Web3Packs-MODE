@@ -154,6 +154,11 @@
             "internalType": "string",
             "name": "basketManagerId",
             "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tokenMetadataUri",
+            "type": "string"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC721MintOrders[]",

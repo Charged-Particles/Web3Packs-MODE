@@ -154,13 +154,20 @@ contract Web3Packs is
   function bond(
     address contractAddress,
     uint256 tokenId,
+    string calldata tokenMetadataUri, 
     string calldata basketManagerId,
     address nftTokenAddress
   )
    external
    returns (uint256 mintedTokenId)
   {
-    mintedTokenId = _bond(contractAddress, tokenId, basketManagerId, nftTokenAddress);
+    mintedTokenId = _bond(
+      contractAddress,
+      tokenId,
+      tokenMetadataUri, 
+      basketManagerId,
+      nftTokenAddress
+    );
   } 
 
 
@@ -214,6 +221,7 @@ contract Web3Packs is
   function _bond(
     address contractAddress,
     uint256 tokenId,
+    string memory tokenMetadataUri,
     string memory basketManagerId,
     address nftTokenAddress
   ) 
@@ -221,7 +229,11 @@ contract Web3Packs is
     returns (uint256 mintedTokenId)
   {
     // mint 
-    mintedTokenId = ERC721Mintable(nftTokenAddress).mint(address(this));
+    mintedTokenId = ERC721Mintable(nftTokenAddress).createBasicProton(
+      address(this),
+      address(this),
+      tokenMetadataUri
+    );
 
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
@@ -274,6 +286,7 @@ contract Web3Packs is
       _bond(
         _proton,
         tokenId,
+        erc721MintOrders[i].tokenMetadataUri,
         erc721MintOrders[i].basketManagerId,
         erc721MintOrders[i].erc721TokenAddress
       );
