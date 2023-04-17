@@ -1,5 +1,5 @@
 import { expect } from "chai"; 
-import { ethers, network, deployments, getNamedAccounts } from 'hardhat';
+import { ethers, network, getNamedAccounts } from 'hardhat';
 import {
   default as Charged,
   chargedStateAbi,
@@ -215,11 +215,13 @@ describe('Web3Packs', async ()=> {
 
       const ERC712MintOrder = [
         {
-          erc721TokenAddress: TestNFT.address,
+          erc721TokenAddress: Proton.address,
+          tokenMetadataUri: 'QmVHsu8L3n9rVhwNKiCozaH9Dgy9KtHWFihrejjVTPvvN8',
           basketManagerId: 'generic.B'
         },
         {
-          erc721TokenAddress: TestNFT.address,
+          erc721TokenAddress: Proton.address,
+          tokenMetadataUri: 'QmRgKrUcX2UUZeBGLxJBWvNxoeGqpHpA5mLPBx1EGQMaFc',
           basketManagerId: 'generic.B'
         },
       ];
@@ -274,8 +276,9 @@ describe('Web3Packs', async ()=> {
 
       const ERC721MintOrder = [
         {
-          erc721TokenAddress: TestNFT.address,
-          basketManagerId: 'generic.B'
+          erc721TokenAddress: Proton.address,
+          basketManagerId: 'generic.B',
+          tokenMetadataUri: 'QmRgKrUcX2UUZeBGLxJBWvNxoeGqpHpA5mLPBx1EGQMaFc'
         }
       ];
       
@@ -301,10 +304,10 @@ describe('Web3Packs', async ()=> {
       );
       await bundleTransaction.wait();
 
-      // Bundle functions gives ethers to user
+      // // Bundle functions gives ethers to user
       expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
       
-      const bundToken = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId.toNumber());
+      const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
       expect(USDtTokenMass['137']?.value).to.equal(8);
@@ -313,25 +316,25 @@ describe('Web3Packs', async ()=> {
       const energizedNftsBeforeRelease = await bundToken.getBonds('generic.B'); 
       expect(energizedNftsBeforeRelease['137']?.value).to.eq(1);
 
-      // Charged settings contract
+      // // Charged settings contract
       const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
 
       // setBreakBondApproval
       await chargedState.setApprovalForAll(
-        bundToken.contractAddress,
-        bundToken.tokenId,
+        Proton.address,
+        newTokenId.toNumber(),
         web3packs.address
       ).then((tx) => tx.wait());
         
       const unBundleTransaction = await web3packs.connect(connectedWallet).unbundle(
         testAddress,
-        bundToken.contractAddress,
+        Proton.address,
         newTokenId.toNumber(),
         {
           erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
           nfts: [{
-            tokenAddress: TestNFT.address,
-            id: 2,
+            tokenAddress: Proton.address, // nested in the web3 pack token
+            id: 527, // Id of token bonded in web3packs
           }],
         }
       );
@@ -359,8 +362,9 @@ describe('Web3Packs', async ()=> {
       await web3packs.connect(ownerSigner).bond(
         Proton.address,
         1,
+        'QmVHsu8L3n9rVhwNKiCozaH9Dgy9KtHWFihrejjVTPvvN8',
         'generic.B',
-        TestNFT.address
+        Proton.address
       ).then(tx => tx.wait());
 
       // Check if proton token is bonded
