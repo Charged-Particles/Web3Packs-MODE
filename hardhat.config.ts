@@ -144,7 +144,7 @@ const config: HardhatUserConfig = {
     runOnCompile: true,
     clear: true,
     flat: true,
-    only: [ 'Web3Packs', 'Sample20', 'Sample721', 'Sample1155' ],
+    only: [ 'Web3Packs' ],
   },
 };
 

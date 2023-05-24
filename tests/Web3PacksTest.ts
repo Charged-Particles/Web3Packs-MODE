@@ -37,11 +37,11 @@ describe('Web3Packs', async ()=> {
 
   let charged: Charged;
 
-  // beforeEach(async () => {
-  //   await deployments.fixture();
-  //   web3packs = await ethers.getContract('Web3Packs');
-  //   TestNFT = await ethers.getContract('ERC721Mintable');
-  // });
+  beforeEach(async () => {
+    // await deployments.fixture();
+    // web3packs = await ethers.getContract('Web3Packs');
+    // TestNFT = await ethers.getContract('ERC721Mintable');
+  });
 
   beforeEach(async () => {
     const { protocolOwner } = await getNamedAccounts();

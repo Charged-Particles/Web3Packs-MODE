@@ -68,28 +68,28 @@ module.exports = async (hre) => {
 
     log('  Deploying Web3Packs...');
 
-    // await deploy('Web3Packs', {
-    //   from: deployer,
-    //   args: [],
-    //   log: true,
-    // });
+    await deploy('Web3Packs', {
+      from: deployer,
+      args: [],
+      log: true,
+    });
 
 
-    const Web3Packs = await ethers.getContractFactory('Web3Packs');
-    const Web3PacksInstance = await Web3Packs.deploy();
-    const web3Packs = await Web3PacksInstance.deployed();
-    deployData['Web3Packs'] = {
-      abi: getContractAbi('Web3Packs'),
-      address: web3Packs.address,
-      deployTransaction: web3Packs.deployTransaction
-    }
-    saveDeploymentData(chainId, deployData);
-    log('  - Web3Packs:   ', web3Packs.address);
-    log('     - Block:    ', web3Packs.deployTransaction.blockNumber);
-    log('     - Gas Cost: ', getTxGasCost({ deployTransaction: web3Packs.deployTransaction }));
+    // const Web3Packs = await ethers.getContractFactory('Web3Packs');
+    // const Web3PacksInstance = await Web3Packs.deploy();
+    // const web3Packs = await Web3PacksInstance.deployed();
+    // deployData['Web3Packs'] = {
+    //   abi: getContractAbi('Web3Packs'),
+    //   address: web3Packs.address,
+    //   deployTransaction: web3Packs.deployTransaction
+    // }
+    // saveDeploymentData(chainId, deployData);
+    // log('  - Web3Packs:   ', web3Packs.address);
+    // log('     - Block:    ', web3Packs.deployTransaction.blockNumber);
+    // log('     - Gas Cost: ', getTxGasCost({ deployTransaction: web3Packs.deployTransaction }));
 
-    log('\n  Contract Deployment Data saved to "deployments" directory.');
-    log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+    // log('\n  Contract Deployment Data saved to "deployments" directory.');
+    // log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 };
 
 module.exports.tags = ['core']
