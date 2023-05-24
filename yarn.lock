@@ -144,15 +144,6 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
-"@charged-particles/charged-js-sdk@^0.1.8":
-  version "0.1.10"
-  resolved "https://registry.yarnpkg.com/@charged-particles/charged-js-sdk/-/charged-js-sdk-0.1.10.tgz#9a9dc391e1641f2594375ba945441f9999efda55"
-  integrity sha512-89xtYYKn65AQWUMTqH75gMSRuEg2Mkka5vOLfeK8GZwM052D8N/3olFFD6H5OGi0Nygx0oDVZ+DcwwmQ7Pcg/A==
-  dependencies:
-    ethers "^5.6.9"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-
 "@charged-particles/charged-js-sdk@https://github.com/Charged-Particles/charged-js-sdk":
   version "0.1.10"
   resolved "https://github.com/Charged-Particles/charged-js-sdk#c58c8a4a84388640fddbaa74e6d2d53153669f20"

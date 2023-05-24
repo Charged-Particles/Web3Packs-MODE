@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-// IChargedSettings.sol -- Part of the Charged Particles Protocol
-// Copyright (c) 2022 Firma Lux, Inc. <https://charged.fi>
+// IWeb3Packs.sol
+// Copyright (c) 2023 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ interface IWeb3Packs {
     uint24 uniSwapPoolFee;
     uint256 deadline;
     uint256 amountOutMinimum;
-    uint160 sqrtPriceLimitX96; 
+    uint160 sqrtPriceLimitX96;
   }
 
   struct ERC721MintOrders {

@@ -412,7 +412,7 @@
         "type": "bytes4"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -464,19 +464,6 @@
       }
     ],
     "name": "setChargedParticles",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "stateController",
-        "type": "address"
-      }
-    ],
-    "name": "setChargedState",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

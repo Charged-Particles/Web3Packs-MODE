@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// IChargedSettings.sol -- Part of the Charged Particles Protocol
+// IChargedState.sol -- Part of the Charged Particles Protocol
 // Copyright (c) 2021 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,7 +27,7 @@ pragma solidity 0.8.17;
  * @notice Interface for Charged State
  */
 interface IChargedState {
-    /***********************************|
+  /***********************************|
   |             Public API            |
   |__________________________________*/
 

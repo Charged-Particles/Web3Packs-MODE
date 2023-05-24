@@ -86,6 +86,26 @@ const config: HardhatUserConfig = {
         blockNumber: 30784049
       }
     },
+    goerli: {
+        url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        gasPrice: 'auto',
+        // blockGasLimit: 12400000,
+        accounts: {
+            mnemonic: mnemonic.testnet,
+            initialIndex: 0,
+            count: 10,
+        }
+    },
+    mainnet: {
+        url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        gasPrice: 'auto',
+        // blockGasLimit: 12487794,
+        accounts: {
+            mnemonic: mnemonic.mainnet,
+            initialIndex: 0,
+            count: 10,
+        }
+    },
     mumbai: {
         // url: `https://matic-mumbai.chainstacklabs.com/`,
         url: 'https://rpc-mumbai.maticvigil.com',
@@ -99,7 +119,7 @@ const config: HardhatUserConfig = {
     },
     polygon: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        // gasPrice: 62e9,
+        gasPrice: 'auto',
         accounts: {
             mnemonic: mnemonic.mainnet,
             // initialIndex: 0,
