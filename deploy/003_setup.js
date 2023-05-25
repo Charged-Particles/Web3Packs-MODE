@@ -43,15 +43,15 @@ const _ADDRESS = {
 module.exports = async (hre) => {
     const { ethers, getNamedAccounts } = hre;
     const { deployer, protocolOwner, user2 } = await getNamedAccounts();
-    const network = await hre.network;
+    const chainId = hre.network.config.chainId;
 
-    const chainId = chainIdByName(network.name);
+    // const chainId = chainIdByName(network.name);
 
     log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     log('Charged Particles - Web3 Packs - Contract Deployment');
     log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 
-    log(`  Using Network: ${chainNameById(chainId)} (${network.name}:${chainId})`);
+    log(`  Using Network: ${chainNameById(chainId)} (${hre.network.name}:${chainId})`);
     log('  Using Accounts:');
     log('  - Deployer: ', deployer);
     log('  - Owner:    ', protocolOwner);

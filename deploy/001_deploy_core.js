@@ -48,7 +48,6 @@ module.exports = async (hre) => {
     const { deployer, protocolOwner, user1 } = await getNamedAccounts();
     const network = await hre.network;
     const deployData = {};
-
     const chainId = chainIdByName(network.name);
 
     log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');

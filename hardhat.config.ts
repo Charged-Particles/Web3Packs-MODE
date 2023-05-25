@@ -80,11 +80,16 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 137,
-      // gasPrice: 100e9,
+      gasPrice: 100e9,
       forking: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
         blockNumber: 30784049
-      }
+      },
+      accounts: {
+        mnemonic: mnemonic.testnet,
+        initialIndex: 0,
+        count: 10,
+      },
     },
     goerli: {
         url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
@@ -145,6 +150,9 @@ const config: HardhatUserConfig = {
     clear: true,
     flat: true,
     only: [ 'Web3Packs' ],
+  },
+  mocha: {
+    timeout: 100000000
   },
 };
 

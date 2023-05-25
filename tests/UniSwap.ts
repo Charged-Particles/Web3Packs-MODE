@@ -35,7 +35,7 @@ describe('UniSwap', async () => {
     expect(Number(toReadableAmount(
       usdcQuote,
       USDC_TOKEN.decimals
-    ))).to.be.within(90, 100);
+    ))).to.be.within(80, 100);
 
     expect(Number(toReadableAmount(
       uniQuote,

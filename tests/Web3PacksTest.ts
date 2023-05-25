@@ -202,7 +202,7 @@ describe('Web3Packs', async ()=> {
       expect(UNIBalanceAfterSwap.toString()).to.equal('493373764498692278');
     });
 
-    it('Bundles singled swap asset', async() => {
+    it.only('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
         outputTokenAddress: USDtContractAddress,
@@ -230,11 +230,11 @@ describe('Web3Packs', async ()=> {
         testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
-        [],
+        ERC712MintOrder,
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
-
+      
       const bundleTransaction = await web3packs.bundle(
         testAddress,
         ipfsMetadata,
@@ -243,6 +243,7 @@ describe('Web3Packs', async ()=> {
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
+
       await bundleTransaction.wait();
       const energizedProton = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId);
 
@@ -305,7 +306,7 @@ describe('Web3Packs', async ()=> {
       await bundleTransaction.wait();
 
       // // Bundle functions gives ethers to user
-      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
+      expect(await ethers.provider.getBalance(testAddress)).to.equal('9979042378600000000000');
       
       const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
 

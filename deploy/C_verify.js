@@ -42,13 +42,12 @@ module.exports = async (hre) => {
   const { ethers, getNamedAccounts } = hre;
   const { deployer, protocolOwner } = await getNamedAccounts();
 
-  const network = await hre.network;
-  const chainId = chainIdByName(network.name);
+  const chainId = await hre.network.config.chainId;
 
-  const {isHardhat} = chainTypeById(chainId);
+  const isHardhat = hre.network.name == 'hardhat';
   if (isHardhat) { return; }
 
-  const networkName = network.name === 'homestead' ? 'mainnet' : network.name;
+  const networkName = hre.network.name === 'homestead' ? 'mainnet' : network.name;
   log(`Verifying contracts on network "${networkName} (${chainId})"...`);
 
   log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
