@@ -80,11 +80,36 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 137,
-      // gasPrice: 100e9,
+      gasPrice: 100e9,
       forking: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
         blockNumber: 30784049
-      }
+      },
+      accounts: {
+        mnemonic: mnemonic.testnet,
+        initialIndex: 0,
+        count: 10,
+      },
+    },
+    goerli: {
+        url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        gasPrice: 'auto',
+        // blockGasLimit: 12400000,
+        accounts: {
+            mnemonic: mnemonic.testnet,
+            initialIndex: 0,
+            count: 10,
+        }
+    },
+    mainnet: {
+        url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        gasPrice: 'auto',
+        // blockGasLimit: 12487794,
+        accounts: {
+            mnemonic: mnemonic.mainnet,
+            initialIndex: 0,
+            count: 10,
+        }
     },
     mumbai: {
         // url: `https://matic-mumbai.chainstacklabs.com/`,
@@ -99,7 +124,7 @@ const config: HardhatUserConfig = {
     },
     polygon: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        // gasPrice: 62e9,
+        gasPrice: 'auto',
         accounts: {
             mnemonic: mnemonic.mainnet,
             // initialIndex: 0,
@@ -124,8 +149,11 @@ const config: HardhatUserConfig = {
     runOnCompile: true,
     clear: true,
     flat: true,
-    only: [ 'Web3Packs', 'Sample20', 'Sample721', 'Sample1155' ],
+    only: [ 'Web3Packs' ],
   },
+  // mocha: {
+  //   timeout: 100000000
+  // },
 };
 
 export default config;

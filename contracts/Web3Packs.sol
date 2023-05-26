@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-// BlackholePrevention.sol -- Part of the Charged Particles Protocol
-// Copyright (c) 2022 Firma Lux, Inc. <https://charged.fi>
+// Web3Packs.sol
+// Copyright (c) 2023 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,6 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./interfaces/IWeb3Packs.sol";
-import "./interfaces/IChargedState.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
@@ -55,7 +54,6 @@ contract Web3Packs is
 {
   address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-  address internal _chargedState = 0xaB1a1410EA40930755C1330Cc0fB3367897C8c41;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
 
   // Charged Particles Wallet Managers
@@ -90,7 +88,7 @@ contract Web3Packs is
       revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    
+
     tokenId = _bundle(
       receiver,
       tokenMetaUri,
@@ -98,7 +96,6 @@ contract Web3Packs is
       erc721MintOrders,
       realAmounts
     );
-
     _fund(receiver, fundingAmount);
 
     emit PackBundled(tokenId, receiver);
@@ -115,10 +112,10 @@ contract Web3Packs is
     nonReentrant
   {
     _unbundle(
-      receiver, 
+      receiver,
       tokenAddress,
-      tokenId, 
-      _cpWalletManager, 
+      tokenId,
+      _cpWalletManager,
       web3PackOrder
     );
     emit PackUnbundled(tokenId, receiver);
@@ -153,7 +150,7 @@ contract Web3Packs is
   function bond(
     address contractAddress,
     uint256 tokenId,
-    string calldata tokenMetadataUri, 
+    string calldata tokenMetadataUri,
     string calldata basketManagerId,
     address nftTokenAddress
   )
@@ -163,11 +160,11 @@ contract Web3Packs is
     mintedTokenId = _bond(
       contractAddress,
       tokenId,
-      tokenMetadataUri, 
+      tokenMetadataUri,
       basketManagerId,
       nftTokenAddress
     );
-  } 
+  }
 
 
   /***********************************|
@@ -223,17 +220,17 @@ contract Web3Packs is
     string memory tokenMetadataUri,
     string memory basketManagerId,
     address nftTokenAddress
-  ) 
+  )
     internal
     returns (uint256 mintedTokenId)
   {
-    // mint 
+    // mint
     mintedTokenId = IBaseProton(contractAddress).createBasicProton(
       address(this),
       address(this),
       tokenMetadataUri
     );
-    
+
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
@@ -245,7 +242,7 @@ contract Web3Packs is
       mintedTokenId,
       1
     );
-  }  
+  }
 
   function _bundle(
     address receiver,
@@ -266,8 +263,8 @@ contract Web3Packs is
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
       TransferHelper.safeApprove(
-        erc20SwapOrders[i].outputTokenAddress, 
-        address(_chargedParticles), 
+        erc20SwapOrders[i].outputTokenAddress,
+        address(_chargedParticles),
         realAmounts[i]
       );
 
@@ -280,6 +277,7 @@ contract Web3Packs is
         self
       );
     }
+
 
     for (uint256 i; i < erc721MintOrders.length; i++) {
       _bond(
@@ -326,14 +324,15 @@ contract Web3Packs is
 
   function _fund(
     address payable receiver,
-    uint256 fundigAmount
-  ) 
+    uint256 fundingAmount
+  )
     private
   {
-    if (address(this).balance >= fundigAmount) {
-      (bool sent, bytes memory data) = receiver.call{value: fundigAmount}("");
-      if (!sent) 
+    if (address(this).balance >= fundingAmount) {
+      (bool sent, bytes memory data) = receiver.call{value: fundingAmount}("");
+      if (!sent) {
         revert FundingFailed();
+      }
     }
   }
 
@@ -348,12 +347,6 @@ contract Web3Packs is
   function setChargedParticles(address chargedParticles) external onlyOwner {
     emit ChargedParticlesSet(chargedParticles);
     _chargedParticles = chargedParticles;
-  }
-
-  /// @dev Setup the Charged-State Controller
-  function setChargedState(address stateController) external onlyOwner {
-    _chargedState = stateController;
-    emit ChargedStateSet(stateController);
   }
 
   /// @dev Setup the Uniswap Router
@@ -396,13 +389,14 @@ contract Web3Packs is
   function withdrawERC1155(address payable receiver, address tokenAddress, uint256 tokenId, uint256 amount) external virtual onlyOwner {
     _withdrawERC1155(receiver, tokenAddress, tokenId, amount);
   }
+
   function onERC721Received(
-      address, 
-      address, 
-      uint256, 
+      address,
+      address,
+      uint256,
       bytes calldata
-  ) external returns(bytes4) {
+  ) external pure returns(bytes4) {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
-  } 
+  }
 
 }

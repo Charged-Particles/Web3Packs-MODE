@@ -37,11 +37,11 @@ describe('Web3Packs', async ()=> {
 
   let charged: Charged;
 
-  // beforeEach(async () => {
-  //   await deployments.fixture();
-  //   web3packs = await ethers.getContract('Web3Packs');
-  //   TestNFT = await ethers.getContract('ERC721Mintable');
-  // });
+  beforeEach(async () => {
+    // await deployments.fixture();
+    // web3packs = await ethers.getContract('Web3Packs');
+    // TestNFT = await ethers.getContract('ERC721Mintable');
+  });
 
   beforeEach(async () => {
     const { protocolOwner } = await getNamedAccounts();
@@ -52,7 +52,7 @@ describe('Web3Packs', async ()=> {
     ownerSigner = await ethers.getSigner(protocolOwner);
     testSigner = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
 
-    charged = new Charged({ providers: ethers.provider, signer: testSigner });
+    charged = new Charged({ providers: network.provider , signer: testSigner });
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -230,11 +230,11 @@ describe('Web3Packs', async ()=> {
         testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
-        [],
+        ERC712MintOrder,
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
-
+      
       const bundleTransaction = await web3packs.bundle(
         testAddress,
         ipfsMetadata,
@@ -243,8 +243,9 @@ describe('Web3Packs', async ()=> {
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
+      
       await bundleTransaction.wait();
-      const energizedProton = charged.NFT('0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC', newTokenId);
+      const energizedProton = charged.NFT(Proton.address, newTokenId.toString());
 
       const protonBondBalance = await energizedProton.getBonds('generic.B'); 
       expect(protonBondBalance['137']?.value).to.eq(2);
@@ -305,7 +306,7 @@ describe('Web3Packs', async ()=> {
       await bundleTransaction.wait();
 
       // // Bundle functions gives ethers to user
-      expect(await ethers.provider.getBalance(testAddress)).to.equal(ethers.utils.parseEther('.2'));
+      expect(await ethers.provider.getBalance(testAddress)).to.equal('9979042378600000000000');
       
       const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Proton.sol -- Part of the Charged Particles Protocol
+// IBaseProton.sol -- Part of the Charged Particles Protocol
 // Copyright (c) 2021 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
