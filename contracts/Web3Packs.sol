@@ -44,7 +44,6 @@ import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 import "./lib/BlackholePrevention.sol";
-import "hardhat/console.sol";
 
 contract Web3Packs is
   IWeb3Packs,
@@ -97,11 +96,9 @@ contract Web3Packs is
       erc721MintOrders,
       realAmounts
     );
-    // console.log('>>, ', tokenId);
     _fund(receiver, fundingAmount);
 
     emit PackBundled(tokenId, receiver);
-    console.log('>> ', tokenId);
   }
 
   function unbundle(
@@ -245,7 +242,6 @@ contract Web3Packs is
       mintedTokenId,
       1
     );
-    // console.log('>', mintedTokenId);
   }
 
   function _bundle(
@@ -284,7 +280,6 @@ contract Web3Packs is
 
 
     for (uint256 i; i < erc721MintOrders.length; i++) {
-      // console.log(tokenId, i);
       _bond(
         _proton,
         tokenId,
@@ -335,7 +330,6 @@ contract Web3Packs is
   {
     if (address(this).balance >= fundingAmount) {
       (bool sent, bytes memory data) = receiver.call{value: fundingAmount}("");
-      console.log('>>> ', sent);
       if (!sent) {
         revert FundingFailed();
       }
