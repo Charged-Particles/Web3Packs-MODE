@@ -317,7 +317,7 @@ describe('Web3Packs', async ()=> {
       const energizedNftsBeforeRelease = await bundToken.getBonds('generic.B'); 
       expect(energizedNftsBeforeRelease['137']?.value).to.eq(1);
 
-      // // Charged settings contract
+      // Charged settings contract
       const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
 
       // setBreakBondApproval

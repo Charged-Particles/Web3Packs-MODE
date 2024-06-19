@@ -52,6 +52,7 @@ contract Web3Packs is
   ReentrancyGuard,
   BlackholePrevention
 {
+  // @TODO: Remove hardcoded variables
   address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
@@ -277,7 +278,6 @@ contract Web3Packs is
         self
       );
     }
-
 
     for (uint256 i; i < erc721MintOrders.length; i++) {
       _bond(
