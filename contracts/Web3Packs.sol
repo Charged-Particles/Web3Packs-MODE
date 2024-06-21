@@ -342,10 +342,17 @@ contract Web3Packs is
   function _depositLiquidity(
     address token0,
     address token1,
-    uint256 amounamount0ToMintt0,
+    uint256 amount0ToMint,
     uint256 amount1ToMint,
     uint256 poolFee
-  ) private {
+  )
+   private
+   returns (uint256 tokenId)
+  {
+
+    TransferHelper.safeApprove(token0, address(_router), amount0ToMint);
+    TransferHelper.safeApprove(token1, address(_router), amount1ToMint);
+
     INonfungiblePositionManager.mint memory params = 
       INonfungiblePositionManager.mint({
         token0: token0,
@@ -361,7 +368,7 @@ contract Web3Packs is
         deadline: block.timestamp
       });
 
-      (tokenId, liquidity, amount0, amount1) = INonfungiblePositionManager(
+      (tokenId, , , ) = INonfungiblePositionManager(
         _nonfungiblePositionManager 
       ).mint(params);
   }
