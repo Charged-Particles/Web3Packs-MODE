@@ -150,6 +150,25 @@ contract Web3Packs is
     return _swap(erc20SwapOrders);
   }
 
+  function depositLiquidity(
+    address token0,
+    address token1,
+    uint256 amount0ToMint,
+    uint256 amount1ToMint,
+    uint24 poolFee
+  )
+    external
+    returns (uint256) 
+  {
+    return _depositLiquidity(
+      token0,
+      token1,
+      amount0ToMint,
+      amount1ToMint,
+      poolFee
+    );
+  }
+
   function bond(
     address contractAddress,
     uint256 tokenId,
