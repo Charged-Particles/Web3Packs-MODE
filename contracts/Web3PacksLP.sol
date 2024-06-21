@@ -287,7 +287,7 @@ contract Web3Packs is
         erc721MintOrders[i].basketManagerId,
         erc721MintOrders[i].erc721TokenAddress
       );
-    _bond}
+    }
   }
 
   function _unbundle(

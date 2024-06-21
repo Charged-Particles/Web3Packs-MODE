@@ -39,13 +39,12 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
-import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import "./lib/ERC721Mintable.sol";
+import "./lib/BlackholePrevention.sol";
 import "./interfaces/IWeb3Packs.sol";
+import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
-import "./lib/BlackholePrevention.sol";
 
 contract Web3Packs is
   IWeb3Packs,
@@ -344,22 +343,24 @@ contract Web3Packs is
     address token1,
     uint256 amount0ToMint,
     uint256 amount1ToMint,
-    uint256 poolFee
+    uint24 poolFee
   )
    private
    returns (uint256 tokenId)
   {
+    int24 MIN_TICK = -887272;
+    int24 MAX_TICK = -MIN_TICK;
 
     TransferHelper.safeApprove(token0, address(_router), amount0ToMint);
     TransferHelper.safeApprove(token1, address(_router), amount1ToMint);
 
-    INonfungiblePositionManager.mint memory params = 
-      INonfungiblePositionManager.mint({
+    INonfungiblePositionManager.MintParams memory params = 
+      INonfungiblePositionManager.MintParams({
         token0: token0,
         token1: token1,
         fee: poolFee,
-        tickLower: TickMath.MIN_TICK,
-        tickUpper: TickMath.MAX_TICK,
+        tickLower: MIN_TICK,
+        tickUpper: MAX_TICK,
         amount0Desired: amount0ToMint,
         amount1Desired: amount1ToMint,
         amount0Min: 0,
