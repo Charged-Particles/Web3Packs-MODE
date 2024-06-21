@@ -39,8 +39,6 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
-import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import "./lib/ERC721Mintable.sol";
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IChargedParticles.sol";
@@ -57,7 +55,6 @@ contract Web3Packs is
   // @TODO: Remove hardcoded variables
   address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-  address internal _nonfungiblePositionManager = 0xC36442b4a4522E871399CD717aBDD847Ab11FE88;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
 
   // Charged Particles Wallet Managers
@@ -290,7 +287,7 @@ contract Web3Packs is
         erc721MintOrders[i].basketManagerId,
         erc721MintOrders[i].erc721TokenAddress
       );
-    }
+    _bond}
   }
 
   function _unbundle(
@@ -337,33 +334,6 @@ contract Web3Packs is
         revert FundingFailed();
       }
     }
-  }
-
-  function _depositLiquidity(
-    address token0,
-    address token1,
-    uint256 amounamount0ToMintt0,
-    uint256 amount1ToMint,
-    uint256 poolFee
-  ) private {
-    INonfungiblePositionManager.mint memory params = 
-      INonfungiblePositionManager.mint({
-        token0: token0,
-        token1: token1,
-        fee: poolFee,
-        tickLower: TickMath.MIN_TICK,
-        tickUpper: TickMath.MAX_TICK,
-        amount0Desired: amount0ToMint,
-        amount1Desired: amount1ToMint,
-        amount0Min: 0,
-        amount1Min: 0,
-        recipient: address(this),
-        deadline: block.timestamp
-      });
-
-      (tokenId, liquidity, amount0, amount1) = INonfungiblePositionManager(
-        _nonfungiblePositionManager 
-      ).mint(params);
   }
 
 
