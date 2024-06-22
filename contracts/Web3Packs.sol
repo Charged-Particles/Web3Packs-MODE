@@ -369,9 +369,10 @@ contract Web3Packs is
   {
     int24 MIN_TICK = -887272;
     int24 MAX_TICK = -MIN_TICK;
+    int24 SPACE_TICK = 10;
 
-    TransferHelper.safeApprove(token0, address(_router), amount0ToMint);
-    TransferHelper.safeApprove(token1, address(_router), amount1ToMint);
+    TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), amount0ToMint);
+    TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), amount1ToMint);
 
     INonfungiblePositionManager.MintParams memory params = 
       INonfungiblePositionManager.MintParams({
@@ -379,7 +380,7 @@ contract Web3Packs is
         token1: token1,
         fee: poolFee,
         tickLower: MIN_TICK,
-        tickUpper: MAX_TICK,
+        tickUpper: (MAX_TICK - MAX_TICK % SPACE_TICK),
         amount0Desired: amount0ToMint,
         amount1Desired: amount1ToMint,
         amount0Min: 0,
@@ -389,10 +390,9 @@ contract Web3Packs is
       });
 
       (tokenId, , , ) = INonfungiblePositionManager(
-        _nonfungiblePositionManager 
+        _nonfungiblePositionManager
       ).mint(params);
   }
-
 
   /***********************************|
   |          Only Admin/DAO           |

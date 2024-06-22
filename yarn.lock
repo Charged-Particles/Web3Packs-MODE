@@ -144,19 +144,22 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
-"@charged-particles/charged-js-sdk@https://github.com/Charged-Particles/charged-js-sdk":
-  version "0.1.10"
-  resolved "https://github.com/Charged-Particles/charged-js-sdk#c58c8a4a84388640fddbaa74e6d2d53153669f20"
+"@charged-particles/charged-js-sdk@0.1.11":
+  version "0.1.11"
+  resolved "https://registry.npmjs.org/@charged-particles/charged-js-sdk/-/charged-js-sdk-0.1.11.tgz#7f1db89352adde87bdc159639b482fe8084ef4a0"
+  integrity sha512-PWTIZAAj4ztsJutqmSiRGCKx6lVIm52TiDhBK6/W5INxyTa+lv3ZcRHqSi+Sa8WQJwOmvOjpkaZmeMXdSbyh/g==
   dependencies:
-    "@charged-particles/contract-allowlist" "https://github.com/Charged-Particles/contract-allowlist.git"
+    "@charged-particles/contract-allowlist" "1.0.9"
     "@charged-particles/protocol-subgraph" "https://github.com/Charged-Particles/charged-particles-subgraph.git"
     ethers "^5.6.9"
     lodash "^4.17.21"
     lodash-es "^4.17.21"
+    typescript "^4.6.4"
 
-"@charged-particles/contract-allowlist@https://github.com/Charged-Particles/contract-allowlist.git":
-  version "1.0.6"
-  resolved "https://github.com/Charged-Particles/contract-allowlist.git#bd5783da2c27471ecc5f90fe34f8f52f26d803cd"
+"@charged-particles/contract-allowlist@1.0.9":
+  version "1.0.9"
+  resolved "https://registry.npmjs.org/@charged-particles/contract-allowlist/-/contract-allowlist-1.0.9.tgz#30bc8e8b879f6594e1465584964070f125722847"
+  integrity sha512-ePA8mMYatY/rjC6fyXMa6o0qgjIUBmGmnLaAZiirTk2bkOahk27XvDm0qUDtiNZdfTbzEm9aVZcl4yybbgR4Ew==
   dependencies:
     typescript "^4.9.4"
 
@@ -11519,7 +11522,7 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
 
-typescript@^4.9.4:
+typescript@^4.6.4, typescript@^4.9.4:
   version "4.9.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
   integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==

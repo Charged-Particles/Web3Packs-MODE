@@ -202,6 +202,7 @@ describe('Web3Packs', async ()=> {
       expect(UNIBalanceAfterSwap.toString()).to.equal('493373764498692278');
     });
 
+
     it('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: USDcContractAddress,
@@ -373,6 +374,37 @@ describe('Web3Packs', async ()=> {
       const protonBondBalance = await energizedProton.getBonds('generic.B'); 
 
       expect(protonBondBalance['137']?.value).to.eq(1);
+    });
+  });
+
+  describe('LP Liquidity', () => {
+    const POSITION_MANAGER_ADDRESS = '0xC36442b4a4522E871399CD717aBDD847Ab11FE88';
+    const TOKEN_0 = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+    const TOKEN_1 = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619';
+    const POOL_FEE = 500;
+    const USDC_WETH_POOL = '0x45dda9cb7c25131df268515131f647d726f50608'
+
+    it.only('Liquidity manager and pool exist', async() => {
+      const positionManagerCode = await ethers.provider.getCode(POSITION_MANAGER_ADDRESS) 
+      expect(positionManagerCode).to.be.not.empty
+    });
+
+    it.only('Calculates appropiate tick', async() => {
+      // Instantiate pool contract
+      // const pool = 
+    });
+
+    it('Provides liquidity on univ3', async() => {
+      const amount0 = 100;
+      const amount1 = 100;
+
+      await web3packs.depositLiquidity(
+        TOKEN_0,
+        TOKEN_1,
+        amount0,
+        amount1,
+        POOL_FEE,
+      ).then(tx => tx.wait())
     });
   });
 });
