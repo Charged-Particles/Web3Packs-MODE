@@ -8,8 +8,8 @@ import {
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
-import { amountOutMinimum, quote } from "../uniswap/quote";
-
+import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from "../uniswap/quote";
+import { getPoolContract } from "../uniswap/quote";
 
 // Globals constants
 const erc20Abi = [
@@ -390,13 +390,21 @@ describe('Web3Packs', async ()=> {
     });
 
     it.only('Calculates appropiate tick', async() => {
-      // Instantiate pool contract
-      // const pool = 
+      const pool = await getPoolContract(USDC_WETH_POOL);
+      const slot0 = await pool.slot0();
+      const tickSpacing = parseInt(await pool.tickSpacing());
+      const nearestTick = getNearestUsableTick(parseInt(slot0.tick),tickSpacing)
+
+      const tickLow = nearestTick - tickSpacing * 2;
+      const tickHigh = nearestTick + tickSpacing * 2;
+
+      expect(tickLow % tickSpacing).to.be.eq(0);
+      expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
     it('Provides liquidity on univ3', async() => {
       const amount0 = 100;
-      const amount1 = 100;
+      const amount1 = 0;
 
       await web3packs.depositLiquidity(
         TOKEN_0,

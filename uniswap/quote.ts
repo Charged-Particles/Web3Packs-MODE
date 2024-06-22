@@ -1,5 +1,5 @@
 import { Swap } from './libs/types';
-import { BigNumber, BigNumberish, ethers } from 'ethers'
+import { BigNumber, BigNumberish, Contract, ethers } from 'ethers'
 import { getProvider } from './libs/providers';
 import { computePoolAddress } from '@uniswap/v3-sdk'
 import { fromReadableAmount } from './libs/conversion'
@@ -73,4 +73,29 @@ export async function getPoolConstants(swap: Swap): Promise<{
     token1,
     fee,
   }
+}
+
+export async function getPoolContract(address): Promise<Contract> {
+  return new ethers.Contract(
+    address,
+    IUniswapV3PoolABI.abi,
+    getProvider()
+  );
+};
+
+export function getNearestUsableTick (currentTick,space) {
+  // 0 is always a valid tick
+  if(currentTick == 0){
+      return 0
+  }
+  // Determines direction
+  const direction = (currentTick >= 0) ? 1 : -1
+  // Changes direction
+  currentTick *= direction
+  // Calculates nearest tick based on how close the current tick remainder is to space / 2
+  let nearestTick = (currentTick%space <= space/2) ? currentTick - (currentTick%space) : currentTick + (space-(currentTick%space))
+  // Changes direction back
+  nearestTick *= direction
+  
+  return nearestTick
 }
