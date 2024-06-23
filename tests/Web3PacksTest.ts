@@ -12,20 +12,6 @@ import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from 
 import { getPoolContract } from "../uniswap/quote";
 import globals from "./globals";
 
-// Globals constants
-// const erc20Abi = [
-//   "function transfer(address to, uint amount)",
-//   "function balanceOf(address account) public view virtual override returns (uint256)"
-// ];
-
-// const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
-// const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-// const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
-// const wrapMaticContractAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
-
-// const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
-// const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
-
 const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
 const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
 
@@ -379,10 +365,11 @@ describe('Web3Packs', async ()=> {
 
   describe('LP Liquidity', () => {
     const POSITION_MANAGER_ADDRESS = '0xC36442b4a4522E871399CD717aBDD847Ab11FE88';
-    const TOKEN_0 = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
-    const TOKEN_1 = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619';
+    const TOKEN_0 = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
+    const TOKEN_1 = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
     const POOL_FEE = 500;
     const USDC_WETH_POOL = '0x45dda9cb7c25131df268515131f647d726f50608'
+    // const USDC_WMATIC_POOL = '0xA374094527e1673A86dE625aa59517c5dE346d32'
 
     it.only('Liquidity manager and pool exist', async() => {
       const positionManagerCode = await ethers.provider.getCode(POSITION_MANAGER_ADDRESS) 
@@ -403,16 +390,16 @@ describe('Web3Packs', async ()=> {
     });
 
     it.only('Provides liquidity on univ3', async() => {
-      const amount0 = 100;
-      const amount1 = 100;
+      const amount0 = 1;
+      const amount1 = 1;
 
       // get dai
-      const inputTokenAmount = ethers.utils.parseEther('1');
+      const inputTokenAmount = ethers.utils.parseUnits('1', 6);
       const ERC20SwapOrder = [
         {
-          inputTokenAddress: globals.wrapMaticContractAddress,
-          outputTokenAddress: globals.UniContractAddress,
-          uniSwapPoolFee: 3000,
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.wrapMaticContractAddress,
+          uniSwapPoolFee: 500,
           inputTokenAmount: inputTokenAmount,
           deadline: deadline,
           amountOutMinimum: 0,
@@ -420,11 +407,8 @@ describe('Web3Packs', async ()=> {
         }
       ];
 
-      const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder);
       await swapTransaction.wait();
-
-      const uniAfterSwap: BigNumber = await Uni.balanceOf(web3packs.address);
-      expect(uniAfterSwap.gt(0)).be.be.eq(true);
 
       await web3packs.depositLiquidity(
         TOKEN_0,
