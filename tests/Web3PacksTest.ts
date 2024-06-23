@@ -10,20 +10,21 @@ import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from "../uniswap/quote";
 import { getPoolContract } from "../uniswap/quote";
+import globals from "./globals";
 
 // Globals constants
-const erc20Abi = [
-  "function transfer(address to, uint amount)",
-  "function balanceOf(address account) public view virtual override returns (uint256)"
-];
+// const erc20Abi = [
+//   "function transfer(address to, uint amount)",
+//   "function balanceOf(address account) public view virtual override returns (uint256)"
+// ];
 
-const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
-const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
-const wrapMaticContractAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+// const USDcContractAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+// const USDtContractAddress = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+// const UniContractAddress = '0xb33EaAd8d922B1083446DC23f610c2567fB5180f';
+// const wrapMaticContractAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
 
-const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
-const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
+// const testAddress = '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A';
+// const USDcWhale = '0xfa0b641678f5115ad8a8de5752016bd1359681b9';
 
 const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
 const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
@@ -56,7 +57,7 @@ describe('Web3Packs', async ()=> {
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [ USDcWhale ]
+      params: [ globals.USDcWhale ]
     });
     await network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -64,9 +65,9 @@ describe('Web3Packs', async ()=> {
     });
 
     // Deposit usdc into web3pack contract
-    USDcWhaleSigner = await ethers.getSigner(USDcWhale);
-    USDc = new ethers.Contract(USDcContractAddress, erc20Abi, USDcWhaleSigner);
-    Uni = new ethers.Contract(UniContractAddress, erc20Abi, ethers.provider);
+    USDcWhaleSigner = await ethers.getSigner(globals.USDcWhale);
+    USDc = new ethers.Contract(globals.USDcContractAddress, globals.erc20Abi, USDcWhaleSigner);
+    Uni = new ethers.Contract(globals.UniContractAddress, globals.erc20Abi, ethers.provider);
 
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
@@ -96,8 +97,8 @@ describe('Web3Packs', async ()=> {
       const swapPriceTolerance = amountOutMinimum(swapEstimation, 10) ;
 
       const ERC20SwapOrder = [{
-        inputTokenAddress: USDcContractAddress,
-        outputTokenAddress: USDtContractAddress,
+        inputTokenAddress: globals.USDcContractAddress,
+        outputTokenAddress: globals.USDtContractAddress,
         inputTokenAmount: ethers.utils.parseUnits('10', 6),
         uniSwapPoolFee: 3000,
         deadline: deadline,
@@ -108,7 +109,7 @@ describe('Web3Packs', async ()=> {
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
       await swapTransaction.wait()
 
-      const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner);
+      const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner);
       const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
 
       expect(USDtBalanceAfterSwap).to.equal(9982205);
@@ -117,8 +118,8 @@ describe('Web3Packs', async ()=> {
     it('Swap one assets with matic', async() => {
       const inputTokenAmount = ethers.utils.parseEther('10');
       const ERC20SwapOrder = [{
-        inputTokenAddress: wrapMaticContractAddress,
-        outputTokenAddress: USDcContractAddress,
+        inputTokenAddress: globals.wrapMaticContractAddress,
+        outputTokenAddress: globals.USDcContractAddress,
         uniSwapPoolFee: 500,
         inputTokenAmount,
         deadline: deadline,
@@ -142,8 +143,8 @@ describe('Web3Packs', async ()=> {
 
       const inputTokenAmount = ethers.utils.parseEther('10');
       const ERC20SwapOrder = [{
-        inputTokenAddress: wrapMaticContractAddress,
-        outputTokenAddress: USDcContractAddress,
+        inputTokenAddress: globals.wrapMaticContractAddress,
+        outputTokenAddress: globals.USDcContractAddress,
         uniSwapPoolFee: 500,
         inputTokenAmount: inputTokenAmount.div(2),
         deadline: deadline,
@@ -151,8 +152,8 @@ describe('Web3Packs', async ()=> {
         sqrtPriceLimitX96: 0,
       },
       {
-        inputTokenAddress: wrapMaticContractAddress,
-        outputTokenAddress: UniContractAddress,
+        inputTokenAddress: globals.wrapMaticContractAddress,
+        outputTokenAddress: globals.UniContractAddress,
         uniSwapPoolFee: 3000,
         inputTokenAmount: inputTokenAmount.div(2),
         deadline: deadline,
@@ -205,8 +206,8 @@ describe('Web3Packs', async ()=> {
 
     it('Bundles singled swap asset', async() => {
       const ERC20SwapOrder = [{
-        inputTokenAddress: USDcContractAddress,
-        outputTokenAddress: USDtContractAddress,
+        inputTokenAddress: globals.USDcContractAddress,
+        outputTokenAddress: globals.USDtContractAddress,
         inputTokenAmount: 10,
         uniSwapPoolFee: 3000,
         deadline: deadline,
@@ -228,7 +229,7 @@ describe('Web3Packs', async ()=> {
       ];
 
       const newTokenId = await web3packs.callStatic.bundle(
-        testAddress,
+        globals.testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
         ERC712MintOrder,
@@ -237,7 +238,7 @@ describe('Web3Packs', async ()=> {
       );
       
       const bundleTransaction = await web3packs.bundle(
-        testAddress,
+        globals.testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
         ERC712MintOrder,
@@ -257,8 +258,8 @@ describe('Web3Packs', async ()=> {
 
       const ERC20SwapOrder = [
         {
-          inputTokenAddress: USDcContractAddress,
-          outputTokenAddress: USDtContractAddress,
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.USDtContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
           deadline: deadline,
@@ -266,8 +267,8 @@ describe('Web3Packs', async ()=> {
           sqrtPriceLimitX96: 0,
         },
         {
-          inputTokenAddress: USDcContractAddress,
-          outputTokenAddress: UniContractAddress,
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.UniContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
           deadline: deadline,
@@ -285,7 +286,7 @@ describe('Web3Packs', async ()=> {
       ];
       
       const newTokenId = await web3packs.callStatic.bundle(
-        testAddress,
+        globals.testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
         [],
@@ -297,7 +298,7 @@ describe('Web3Packs', async ()=> {
       // expect(await ethers.provider.getBalance(testAddress)).to.be.eq('200000000000000000');
 
       const bundleTransaction = await web3packs.bundle(
-        testAddress,
+        globals.testAddress,
         ipfsMetadata,
         ERC20SwapOrder,
         ERC721MintOrder,
@@ -307,13 +308,13 @@ describe('Web3Packs', async ()=> {
       await bundleTransaction.wait();
 
       // // Bundle functions gives ethers to user
-      expect(await ethers.provider.getBalance(testAddress)).to.equal('9979042378600000000000');
+      expect(await ethers.provider.getBalance(globals.testAddress)).to.equal('9979042378600000000000');
       
       const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
 
-      const USDtTokenMass = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      const USDtTokenMass = await bundToken.getMass(globals.USDtContractAddress, 'generic.B');
       expect(USDtTokenMass['137']?.value).to.equal(8);
-      const UniTokenMass = await bundToken.getMass(UniContractAddress, 'generic.B');
+      const UniTokenMass = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
       const energizedNftsBeforeRelease = await bundToken.getBonds('generic.B'); 
       expect(energizedNftsBeforeRelease['137']?.value).to.eq(1);
@@ -329,11 +330,11 @@ describe('Web3Packs', async ()=> {
       ).then((tx) => tx.wait());
         
       const unBundleTransaction = await web3packs.connect(connectedWallet).unbundle(
-        testAddress,
+        globals.testAddress,
         Proton.address,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ UniContractAddress, USDtContractAddress],
+          erc20TokenAddresses: [ globals.UniContractAddress, globals.USDtContractAddress],
           nfts: [{
             tokenAddress: Proton.address, // nested in the web3 pack token
             id: 527, // Id of token bonded in web3packs
@@ -342,16 +343,16 @@ describe('Web3Packs', async ()=> {
       );
       await unBundleTransaction.wait();
 
-      const uniLeftInBundle = await bundToken.getMass(UniContractAddress, 'generic.B');
-      const USDLeftInBundle = await bundToken.getMass(USDtContractAddress, 'generic.B');
+      const uniLeftInBundle = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
+      const USDLeftInBundle = await bundToken.getMass(globals.USDtContractAddress, 'generic.B');
       expect(uniLeftInBundle['137']?.value).to.eq(0);
       expect(USDLeftInBundle['137']?.value).to.eq(0);
 
       const energizedNftsAfterUnBundle = await bundToken.getBonds('generic.B'); 
       expect(energizedNftsAfterUnBundle['137']?.value).to.eq(0);
 
-      const USDt = new ethers.Contract(USDtContractAddress, erc20Abi, USDcWhaleSigner); 
-      const balanceOfUSDtAfterRelease = await USDt.balanceOf(testAddress);
+      const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner); 
+      const balanceOfUSDtAfterRelease = await USDt.balanceOf(globals.testAddress);
 
       expect(balanceOfUSDtAfterRelease).to.eq(8);
 
