@@ -377,7 +377,7 @@ contract Web3Packs is
     int24 tickUpper = int24(_findNearestValidTick(tickSpace, false));
 
     // console.log(tickLower, tickUpper, tickLower % tickSpace, tickUpper % tickSpace);
-    console.log("Lower %s", "yyy", uint24(tickLower % 10), uint24(tickUpper %10));
+    console.log("Lower",uint24(tickLower), uint24(tickLower % 10), uint24(tickUpper %10));
 
     INonfungiblePositionManager.MintParams memory params = 
       INonfungiblePositionManager.MintParams({

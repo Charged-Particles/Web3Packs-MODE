@@ -374,6 +374,9 @@ describe('Web3Packs', async ()=> {
     it.only('Liquidity manager and pool exist', async() => {
       const positionManagerCode = await ethers.provider.getCode(POSITION_MANAGER_ADDRESS) 
       expect(positionManagerCode).to.be.not.empty
+    
+      const { deployer } = await getNamedAccounts();
+      console.log(deployer)
     });
 
     it.only('Calculates appropiate tick', async() => {
@@ -390,8 +393,8 @@ describe('Web3Packs', async ()=> {
     });
 
     it.only('Provides liquidity on univ3', async() => {
-      const amount0 = 1;
-      const amount1 = 1;
+      const amount0 = 10000000;
+      const amount1 = 1000000000;
 
       // get dai
       const inputTokenAmount = ethers.utils.parseUnits('1', 6);
