@@ -402,9 +402,17 @@ describe('Web3Packs', async ()=> {
       expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
-    it('Provides liquidity on univ3', async() => {
+    it.only('Provides liquidity on univ3', async() => {
       const amount0 = 100;
       const amount1 = 0;
+
+      // const pool = await getPoolContract(USDC_WETH_POOL);
+      // const slot0 = await pool.slot0();
+      // const tickSpacing = parseInt(await pool.tickSpacing());
+      // const nearestTick = getNearestUsableTick(parseInt(slot0.tick),tickSpacing)
+
+      // const tickLow = nearestTick - tickSpacing * 2;
+      // const tickHigh = nearestTick + tickSpacing * 2;
 
       await web3packs.depositLiquidity(
         TOKEN_0,

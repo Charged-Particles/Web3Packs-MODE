@@ -252,6 +252,30 @@
   {
     "inputs": [
       {
+        "internalType": "int256",
+        "name": "tickSpacing",
+        "type": "int256"
+      },
+      {
+        "internalType": "bool",
+        "name": "nearestToMin",
+        "type": "bool"
+      }
+    ],
+    "name": "_findNearestValidTick",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "contractAddress",
         "type": "address"

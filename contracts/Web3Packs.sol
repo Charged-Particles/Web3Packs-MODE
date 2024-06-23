@@ -33,6 +33,7 @@
 pragma solidity 0.8.17;
 pragma abicoder v2;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -45,6 +46,7 @@ import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
+
 
 contract Web3Packs is
   IWeb3Packs,
@@ -367,20 +369,23 @@ contract Web3Packs is
    private
    returns (uint256 tokenId)
   {
-    int24 MIN_TICK = -887272;
-    int24 MAX_TICK = -MIN_TICK;
-    int24 SPACE_TICK = 10;
-
     TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), amount0ToMint);
     TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), amount1ToMint);
+
+    int256 tickSpace = 10;
+    int24 tickLower = int24(_findNearestValidTick(tickSpace, true));
+    int24 tickUpper = int24(_findNearestValidTick(tickSpace, false));
+
+    // console.log(tickLower, tickUpper, tickLower % tickSpace, tickUpper % tickSpace);
+    console.log("Lower %s", "yyy", uint24(tickLower % 10), uint24(tickUpper %10));
 
     INonfungiblePositionManager.MintParams memory params = 
       INonfungiblePositionManager.MintParams({
         token0: token0,
         token1: token1,
         fee: poolFee,
-        tickLower: MIN_TICK,
-        tickUpper: (MAX_TICK - MAX_TICK % SPACE_TICK),
+        tickLower: tickLower,
+        tickUpper: tickUpper,
         amount0Desired: amount0ToMint,
         amount1Desired: amount1ToMint,
         amount0Min: 0,
@@ -454,6 +459,36 @@ contract Web3Packs is
       bytes calldata
   ) external pure returns(bytes4) {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+  }
+
+/**
+ * @dev Finds the nearest valid tick to either MIN_TICK or MAX_TICK based on the tickSpacing.
+ * This function accounts for edge cases to ensure the returned tick is within valid range.
+ * @param tickSpacing The spacing between valid ticks, must be a positive integer.
+ * @param nearestToMin If true, finds the nearest valid tick greater than or equal to MIN_TICK.
+ *                     If false, finds the nearest valid tick less than or equal to MAX_TICK.
+ * @return The nearest valid tick as an integer, ensuring it falls
+   within the valid tick range.
+ */
+  function _findNearestValidTick(int256 tickSpacing, bool nearestToMin) public pure returns (int256) {
+    require(tickSpacing > 0, "Tick spacing must be positive");
+    int256 MIN_TICK = -887272;
+    int256 MAX_TICK = -MIN_TICK;
+
+    if (nearestToMin) {
+        // Adjust to find a tick greater than or equal to MIN_TICK.
+        int256 adjustedMinTick = MIN_TICK + (tickSpacing - 1);
+        // Prevent potential overflow.
+        if (MIN_TICK < 0 && adjustedMinTick > 0) {
+            adjustedMinTick = MIN_TICK;
+        }
+        int256 adjustedTick = (adjustedMinTick / tickSpacing) * tickSpacing;
+        // Ensure the adjusted tick does not fall below MIN_TICK.
+        return (adjustedTick > MIN_TICK) ? adjustedTick - tickSpacing : adjustedTick;
+    } else {
+        // Find the nearest valid tick less than or equal to MAX_TICK, straightforward due to floor division.
+        return (MAX_TICK / tickSpacing) * tickSpacing;
+    }
   }
 
 }

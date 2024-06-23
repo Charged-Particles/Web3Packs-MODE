@@ -89,6 +89,7 @@ export declare namespace IWeb3Packs {
 export interface Web3PacksInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "_findNearestValidTick"
       | "bond"
       | "bundle"
       | "depositLiquidity"
@@ -128,6 +129,10 @@ export interface Web3PacksInterface extends Interface {
       | "WithdrawStuckEther"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "_findNearestValidTick",
+    values: [BigNumberish, boolean]
+  ): string;
   encodeFunctionData(
     functionFragment: "bond",
     values: [AddressLike, BigNumberish, string, string, AddressLike]
@@ -214,6 +219,10 @@ export interface Web3PacksInterface extends Interface {
     values: [AddressLike, BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "_findNearestValidTick",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "bond", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "bundle", data: BytesLike): Result;
   decodeFunctionResult(
@@ -505,6 +514,12 @@ export interface Web3Packs extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  _findNearestValidTick: TypedContractMethod<
+    [tickSpacing: BigNumberish, nearestToMin: boolean],
+    [bigint],
+    "view"
+  >;
+
   bond: TypedContractMethod<
     [
       contractAddress: AddressLike,
@@ -639,6 +654,13 @@ export interface Web3Packs extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "_findNearestValidTick"
+  ): TypedContractMethod<
+    [tickSpacing: BigNumberish, nearestToMin: boolean],
+    [bigint],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "bond"
   ): TypedContractMethod<
