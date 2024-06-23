@@ -6,7 +6,7 @@ import {
   chargedSettingsAbi,
   protonBAbi
 } from "@charged-particles/charged-js-sdk";
-import { Contract, Signer } from "ethers";
+import { BigNumber, Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from "../uniswap/quote";
 import { getPoolContract } from "../uniswap/quote";
@@ -136,7 +136,6 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Swap two assets with matic', async() => {
-
       // Balances before swap
       const usdcBeforeSwap = await USDc.balanceOf(web3packs.address);
       const uniBeforeSwap = await Uni.balanceOf(web3packs.address);
@@ -405,15 +404,27 @@ describe('Web3Packs', async ()=> {
 
     it.only('Provides liquidity on univ3', async() => {
       const amount0 = 100;
-      const amount1 = 0;
+      const amount1 = 100;
 
-      // const pool = await getPoolContract(USDC_WETH_POOL);
-      // const slot0 = await pool.slot0();
-      // const tickSpacing = parseInt(await pool.tickSpacing());
-      // const nearestTick = getNearestUsableTick(parseInt(slot0.tick),tickSpacing)
+      // get dai
+      const inputTokenAmount = ethers.utils.parseEther('1');
+      const ERC20SwapOrder = [
+        {
+          inputTokenAddress: globals.wrapMaticContractAddress,
+          outputTokenAddress: globals.UniContractAddress,
+          uniSwapPoolFee: 3000,
+          inputTokenAmount: inputTokenAmount,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
+        }
+      ];
 
-      // const tickLow = nearestTick - tickSpacing * 2;
-      // const tickHigh = nearestTick + tickSpacing * 2;
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: inputTokenAmount });
+      await swapTransaction.wait();
+
+      const uniAfterSwap: BigNumber = await Uni.balanceOf(web3packs.address);
+      expect(uniAfterSwap.gt(0)).be.be.eq(true);
 
       await web3packs.depositLiquidity(
         TOKEN_0,
