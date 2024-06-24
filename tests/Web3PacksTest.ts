@@ -380,6 +380,7 @@ describe('Web3Packs', async ()=> {
     it('Provides liquidity on univ3', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
+      const tickSpace = 10;
 
       // get dai
       const inputTokenAmount = ethers.utils.parseUnits('1', 6);
@@ -403,6 +404,7 @@ describe('Web3Packs', async ()=> {
         TOKEN_1,
         amount0,
         amount1,
+        tickSpace,
         POOL_FEE,
       );
 
@@ -411,6 +413,7 @@ describe('Web3Packs', async ()=> {
         TOKEN_1,
         amount0,
         amount1,
+        tickSpace,
         POOL_FEE,
       ).then(tx => tx.wait())
 

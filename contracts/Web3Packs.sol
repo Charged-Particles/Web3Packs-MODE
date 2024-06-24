@@ -93,7 +93,7 @@ contract Web3Packs is
       revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    // mint liquidity position
+    // uint256[] memory liquidityIds = _depositLiquidity();
 
     tokenId = _bundle(
       receiver,
@@ -158,6 +158,7 @@ contract Web3Packs is
     address token1,
     uint256 amount0ToMint,
     uint256 amount1ToMint,
+    int256 tickSpace,
     uint24 poolFee
   )
     external
@@ -168,6 +169,7 @@ contract Web3Packs is
       token1,
       amount0ToMint,
       amount1ToMint,
+      tickSpace,
       poolFee
     );
   }
@@ -385,6 +387,7 @@ contract Web3Packs is
     address token1,
     uint256 amount0ToMint,
     uint256 amount1ToMint,
+    int256 tickSpace,
     uint24 poolFee
   )
    private
@@ -393,7 +396,6 @@ contract Web3Packs is
     TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), amount0ToMint);
     TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), amount1ToMint);
 
-    int256 tickSpace = 10; // TODO: Remove hardcoded value
     int24 tickLower = int24(_findNearestValidTick(tickSpace, true));
     int24 tickUpper = int24(_findNearestValidTick(tickSpace, false));
 

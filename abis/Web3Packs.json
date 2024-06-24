@@ -433,6 +433,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "int256",
+        "name": "tickSpace",
+        "type": "int256"
+      },
+      {
         "internalType": "uint24",
         "name": "poolFee",
         "type": "uint24"

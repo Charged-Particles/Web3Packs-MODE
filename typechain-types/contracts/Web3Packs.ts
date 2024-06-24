@@ -152,7 +152,14 @@ export interface Web3PacksInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "depositLiquidity",
-    values: [AddressLike, AddressLike, BigNumberish, BigNumberish, BigNumberish]
+    values: [
+      AddressLike,
+      AddressLike,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "onERC721Received",
@@ -553,6 +560,7 @@ export interface Web3Packs extends BaseContract {
       token1: AddressLike,
       amount0ToMint: BigNumberish,
       amount1ToMint: BigNumberish,
+      tickSpace: BigNumberish,
       poolFee: BigNumberish
     ],
     [bigint],
@@ -698,6 +706,7 @@ export interface Web3Packs extends BaseContract {
       token1: AddressLike,
       amount0ToMint: BigNumberish,
       amount1ToMint: BigNumberish,
+      tickSpace: BigNumberish,
       poolFee: BigNumberish
     ],
     [bigint],
