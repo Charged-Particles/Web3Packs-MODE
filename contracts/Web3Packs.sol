@@ -182,13 +182,19 @@ contract Web3Packs is
    external
    returns (uint256 mintedTokenId)
   {
-    mintedTokenId = _bond(
+    mintedTokenId = _createBasicProton(
       contractAddress,
-      tokenId,
-      tokenMetadataUri,
-      basketManagerId,
-      nftTokenAddress
+      tokenMetadataUri
     );
+
+    _bond(
+    contractAddress,
+    tokenId,
+    tokenMetadataUri,
+    basketManagerId,
+    nftTokenAddress,
+    mintedTokenId
+  );
   }
 
 
@@ -259,18 +265,11 @@ contract Web3Packs is
     uint256 tokenId,
     string memory tokenMetadataUri,
     string memory basketManagerId,
-    address nftTokenAddress
+    address nftTokenAddress,
+    uint256 mintedTokenId
   )
     internal
-    returns (uint256 mintedTokenId)
   {
-    // mint
-    mintedTokenId = IBaseProton(contractAddress).createBasicProton(
-      address(this),
-      address(this),
-      tokenMetadataUri
-    );
-
     // permission
     ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
@@ -319,12 +318,18 @@ contract Web3Packs is
     }
 
     for (uint256 i; i < erc721MintOrders.length; i++) {
+      uint256 mintedTokenId = _createBasicProton(
+        erc721MintOrders[i].erc721TokenAddress,
+        erc721MintOrders[i].tokenMetadataUri
+      );
+
       _bond(
         _proton,
         tokenId,
         erc721MintOrders[i].tokenMetadataUri,
         erc721MintOrders[i].basketManagerId,
-        erc721MintOrders[i].erc721TokenAddress
+        erc721MintOrders[i].erc721TokenAddress,
+        mintedTokenId
       );
     }
   }
