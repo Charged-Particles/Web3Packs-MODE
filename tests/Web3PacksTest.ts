@@ -430,8 +430,64 @@ describe('Web3Packs', async ()=> {
       // expect(ownerOfPosition).to.be.eq();
     });
 
-    it ('Bundles an liquidity NFT', async() => {
+    it.only('Bundles an liquidity NFT', async() => {
+      const amount0 = 10000000;
+      const amount1 = 1000000000;
+      const tickSpace = 10;
 
+      // get dai
+      const inputTokenAmount = ethers.utils.parseUnits('1', 6);
+      const ERC20SwapOrder = [
+        {
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.wrapMaticContractAddress,
+          uniSwapPoolFee: 500,
+          inputTokenAmount: inputTokenAmount,
+          deadline: deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
+          forLiquidity: true,
+        }
+      ];
+
+      const liquidityMintOrder = [
+        {
+          token0: TOKEN_0,
+          token1: TOKEN_1,
+          amount0ToMint: amount0,
+          amount1ToMint: amount1,
+          tickSpace: tickSpace,
+          poolFee: POOL_FEE
+        }
+      ];
+
+      const tokenId = await web3packs.callStatic.bundle(
+        globals.testAddress,
+        ipfsMetadata,
+        ERC20SwapOrder,
+        [],
+        liquidityMintOrder,
+        ethers.utils.parseEther('.1'),
+        { value: ethers.utils.parseEther('.2') }
+      );
+
+      await web3packs.bundle(
+        globals.testAddress,
+        ipfsMetadata,
+        ERC20SwapOrder,
+        [],
+        liquidityMintOrder,
+        ethers.utils.parseEther('.01'),
+        { value: ethers.utils.parseEther('.2') }
+      ).then(tx => tx.wait())
+
+      const manager = new Contract(POSITION_MANAGER_ADDRESS, [
+        "function balanceOf(address owner) view returns (uint balance)",
+        "function ownerOf(uint256 tokenId) view returns (address owner)"
+      ], ownerSigner);
+
+      const ownerOfPosition = await manager.ownerOf(185578);
+      console.log(ownerOfPosition)
     });
   });
 });
