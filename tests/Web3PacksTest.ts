@@ -210,6 +210,7 @@ describe('Web3Packs', async ()=> {
         ipfsMetadata,
         ERC20SwapOrder,
         ERC712MintOrder,
+        [],
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
@@ -219,6 +220,7 @@ describe('Web3Packs', async ()=> {
         ipfsMetadata,
         ERC20SwapOrder,
         ERC712MintOrder,
+        [],
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
@@ -276,12 +278,13 @@ describe('Web3Packs', async ()=> {
         ipfsMetadata,
         ERC20SwapOrder,
         ERC721MintOrder,
+        [],
         ethers.utils.parseEther('.1'),
        { value: ethers.utils.parseEther('.2') }
       );
       await bundleTransaction.wait();
 
-      // // Bundle functions gives ethers to user
+      // Bundle functions gives ethers to user
       expect(await ethers.provider.getBalance(globals.testAddress)).to.equal('9979042378600000000000');
       
       const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
@@ -329,7 +332,6 @@ describe('Web3Packs', async ()=> {
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(globals.testAddress);
 
       expect(balanceOfUSDtAfterRelease).to.eq(8);
-
     });
   });
 
@@ -377,7 +379,7 @@ describe('Web3Packs', async ()=> {
       expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
-    it.only('Provides liquidity on univ3', async() => {
+    it('Provides liquidity on univ3', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
       const tickSpace = 10;
@@ -426,6 +428,10 @@ describe('Web3Packs', async ()=> {
       const ownerOfPosition = await manager.ownerOf(tokenId[0]);
       console.log(ownerOfPosition)
       // expect(ownerOfPosition).to.be.eq();
+    });
+
+    it ('Bundles an liquidity NFT', async() => {
+
     });
   });
 });

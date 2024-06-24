@@ -81,6 +81,7 @@ contract Web3Packs is
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     ERC721MintOrders[] calldata erc721MintOrders,
+    LiquidityMintOrder[] calldata liquidityMintOrders,
     uint256 fundingAmount
   )
     external
@@ -93,7 +94,9 @@ contract Web3Packs is
       revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    // uint256[] memory liquidityIds = _depositLiquidity();
+    uint256[] memory liquidityIds = _depositLiquidity(liquidityMintOrders);
+
+    console.log(liquidityIds[0]);
 
     tokenId = _bundle(
       receiver,

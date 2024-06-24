@@ -172,6 +172,7 @@ export interface Web3PacksInterface extends Interface {
       string,
       IWeb3Packs.ERC20SwapOrderStruct[],
       IWeb3Packs.ERC721MintOrdersStruct[],
+      IWeb3Packs.LiquidityMintOrderStruct[],
       BigNumberish
     ]
   ): string;
@@ -566,6 +567,7 @@ export interface Web3Packs extends BaseContract {
       tokenMetaUri: string,
       erc20SwapOrders: IWeb3Packs.ERC20SwapOrderStruct[],
       erc721MintOrders: IWeb3Packs.ERC721MintOrdersStruct[],
+      liquidityMintOrders: IWeb3Packs.LiquidityMintOrderStruct[],
       fundingAmount: BigNumberish
     ],
     [bigint],
@@ -704,6 +706,7 @@ export interface Web3Packs extends BaseContract {
       tokenMetaUri: string,
       erc20SwapOrders: IWeb3Packs.ERC20SwapOrderStruct[],
       erc721MintOrders: IWeb3Packs.ERC721MintOrdersStruct[],
+      liquidityMintOrders: IWeb3Packs.LiquidityMintOrderStruct[],
       fundingAmount: BigNumberish
     ],
     [bigint],

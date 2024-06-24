@@ -71,6 +71,7 @@ interface IWeb3Packs {
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     ERC721MintOrders[] calldata erc721MintOrders,
+    LiquidityMintOrder[] calldata liquidityMintOrders,
     uint256 unBundleGasAmount
   ) external payable returns(uint256 tokenId);
 

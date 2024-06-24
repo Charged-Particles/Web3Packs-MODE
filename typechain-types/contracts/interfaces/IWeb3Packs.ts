@@ -71,6 +71,31 @@ export declare namespace IWeb3Packs {
     tokenMetadataUri: string;
   };
 
+  export type LiquidityMintOrderStruct = {
+    token0: AddressLike;
+    token1: AddressLike;
+    amount0ToMint: BigNumberish;
+    amount1ToMint: BigNumberish;
+    tickSpace: BigNumberish;
+    poolFee: BigNumberish;
+  };
+
+  export type LiquidityMintOrderStructOutput = [
+    token0: string,
+    token1: string,
+    amount0ToMint: bigint,
+    amount1ToMint: bigint,
+    tickSpace: bigint,
+    poolFee: bigint
+  ] & {
+    token0: string;
+    token1: string;
+    amount0ToMint: bigint;
+    amount1ToMint: bigint;
+    tickSpace: bigint;
+    poolFee: bigint;
+  };
+
   export type NFTStruct = { tokenAddress: AddressLike; id: BigNumberish };
 
   export type NFTStructOutput = [tokenAddress: string, id: bigint] & {
@@ -109,6 +134,7 @@ export interface IWeb3PacksInterface extends Interface {
       string,
       IWeb3Packs.ERC20SwapOrderStruct[],
       IWeb3Packs.ERC721MintOrdersStruct[],
+      IWeb3Packs.LiquidityMintOrderStruct[],
       BigNumberish
     ]
   ): string;
@@ -249,6 +275,7 @@ export interface IWeb3Packs extends BaseContract {
       tokenMetaUri: string,
       erc20SwapOrders: IWeb3Packs.ERC20SwapOrderStruct[],
       erc721MintOrders: IWeb3Packs.ERC721MintOrdersStruct[],
+      liquidityMintOrders: IWeb3Packs.LiquidityMintOrderStruct[],
       unBundleGasAmount: BigNumberish
     ],
     [bigint],
@@ -278,6 +305,7 @@ export interface IWeb3Packs extends BaseContract {
       tokenMetaUri: string,
       erc20SwapOrders: IWeb3Packs.ERC20SwapOrderStruct[],
       erc721MintOrders: IWeb3Packs.ERC721MintOrdersStruct[],
+      liquidityMintOrders: IWeb3Packs.LiquidityMintOrderStruct[],
       unBundleGasAmount: BigNumberish
     ],
     [bigint],
