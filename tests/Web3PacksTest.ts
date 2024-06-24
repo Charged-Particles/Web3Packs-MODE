@@ -379,7 +379,7 @@ describe('Web3Packs', async ()=> {
       expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
-    it('Provides liquidity on univ3', async() => {
+    it.only('Provides liquidity on univ3', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
       const tickSpace = 10;
@@ -426,8 +426,7 @@ describe('Web3Packs', async ()=> {
       ], ownerSigner);
 
       const ownerOfPosition = await manager.ownerOf(tokenId[0]);
-      console.log(ownerOfPosition)
-      // expect(ownerOfPosition).to.be.eq();
+      expect(ownerOfPosition).to.be.eq(web3packs.address);
     });
 
     it.only('Bundles an liquidity NFT', async() => {
@@ -435,7 +434,6 @@ describe('Web3Packs', async ()=> {
       const amount1 = 1000000000;
       const tickSpace = 10;
 
-      // get dai
       const inputTokenAmount = ethers.utils.parseUnits('1', 6);
       const ERC20SwapOrder = [
         {
@@ -481,16 +479,7 @@ describe('Web3Packs', async ()=> {
         { value: ethers.utils.parseEther('.2') }
       ).then(tx => tx.wait())
 
-      const manager = new Contract(POSITION_MANAGER_ADDRESS, [
-        "function balanceOf(address owner) view returns (uint balance)",
-        "function ownerOf(uint256 tokenId) view returns (address owner)"
-      ], ownerSigner);
-
-      // const ownerOfPosition = await manager.ownerOf(185578);
-      // console.log(ownerOfPosition)
-
       const energizedProton = charged.NFT(Proton.address, tokenId.toString());
-
       const protonBondBalance = await energizedProton.getBonds('generic.B'); 
       expect(protonBondBalance['137']?.value).to.eq(1);
     });

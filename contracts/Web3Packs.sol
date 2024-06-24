@@ -96,8 +96,6 @@ contract Web3Packs is
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
     uint256[] memory liquidityIds = _depositLiquidity(liquidityMintOrders);
 
-    console.log(liquidityIds[0]);
-
     tokenId = _bundle(
       receiver,
       tokenMetaUri,
