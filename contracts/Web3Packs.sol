@@ -372,11 +372,11 @@ contract Web3Packs is
     TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), amount0ToMint);
     TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), amount1ToMint);
 
-    int256 tickSpace = 10;
+    int256 tickSpace = 10; // TODO: Remove hardcoded value
     int24 tickLower = int24(_findNearestValidTick(tickSpace, true));
     int24 tickUpper = int24(_findNearestValidTick(tickSpace, false));
 
-    // console.log(tickLower, tickUpper, tickLower % tickSpace, tickUpper % tickSpace);
+    // TODO: Remove log
     console.log("Lower",uint24(tickLower), uint24(tickLower % 10), uint24(tickUpper %10));
 
     INonfungiblePositionManager.MintParams memory params = 

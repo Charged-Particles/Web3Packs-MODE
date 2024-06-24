@@ -369,14 +369,10 @@ describe('Web3Packs', async ()=> {
     const TOKEN_1 = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
     const POOL_FEE = 500;
     const USDC_WETH_POOL = '0x45dda9cb7c25131df268515131f647d726f50608'
-    // const USDC_WMATIC_POOL = '0xA374094527e1673A86dE625aa59517c5dE346d32'
 
     it.only('Liquidity manager and pool exist', async() => {
       const positionManagerCode = await ethers.provider.getCode(POSITION_MANAGER_ADDRESS) 
       expect(positionManagerCode).to.be.not.empty
-    
-      const { deployer } = await getNamedAccounts();
-      console.log(deployer)
     });
 
     it.only('Calculates appropiate tick', async() => {
@@ -413,6 +409,14 @@ describe('Web3Packs', async ()=> {
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
       await swapTransaction.wait();
 
+      const tokenId = await web3packs.callStatic.depositLiquidity(
+        TOKEN_0,
+        TOKEN_1,
+        amount0,
+        amount1,
+        POOL_FEE,
+      );
+
       await web3packs.depositLiquidity(
         TOKEN_0,
         TOKEN_1,
@@ -420,6 +424,14 @@ describe('Web3Packs', async ()=> {
         amount1,
         POOL_FEE,
       ).then(tx => tx.wait())
+
+      const manager = new Contract(POSITION_MANAGER_ADDRESS, [
+        "function balanceOf(address owner) view returns (uint balance)",
+        "function ownerOf(uint256 tokenId) view returns (address owner)"
+      ], ownerSigner);
+      const { deployer, protocolOwner } = await getNamedAccounts();
+      const balance = await manager.ownerOf(tokenId);
+      console.log(balance, deployer, protocolOwner, await testSigner.getAddress())
     });
   });
 });
