@@ -32,6 +32,7 @@ export declare namespace IWeb3Packs {
     deadline: BigNumberish;
     amountOutMinimum: BigNumberish;
     sqrtPriceLimitX96: BigNumberish;
+    forLiquidity: boolean;
   };
 
   export type ERC20SwapOrderStructOutput = [
@@ -41,7 +42,8 @@ export declare namespace IWeb3Packs {
     uniSwapPoolFee: bigint,
     deadline: bigint,
     amountOutMinimum: bigint,
-    sqrtPriceLimitX96: bigint
+    sqrtPriceLimitX96: bigint,
+    forLiquidity: boolean
   ] & {
     inputTokenAddress: string;
     outputTokenAddress: string;
@@ -50,6 +52,7 @@ export declare namespace IWeb3Packs {
     deadline: bigint;
     amountOutMinimum: bigint;
     sqrtPriceLimitX96: bigint;
+    forLiquidity: boolean;
   };
 
   export type ERC721MintOrdersStruct = {

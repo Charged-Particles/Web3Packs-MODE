@@ -299,20 +299,23 @@ contract Web3Packs is
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      TransferHelper.safeApprove(
-        erc20SwapOrders[i].outputTokenAddress,
-        address(_chargedParticles),
-        realAmounts[i]
-      );
+      // If not for liquidity energize 
+      if (! erc20SwapOrders[i].forLiquidity) {
+        TransferHelper.safeApprove(
+          erc20SwapOrders[i].outputTokenAddress,
+          address(_chargedParticles),
+          realAmounts[i]
+        );
 
-      chargedParticles.energizeParticle(
-        _proton,
-        tokenId,
-        _cpWalletManager,
-        erc20SwapOrders[i].outputTokenAddress,
-        realAmounts[i],
-        self
-      );
+        chargedParticles.energizeParticle(
+          _proton,
+          tokenId,
+          _cpWalletManager,
+          erc20SwapOrders[i].outputTokenAddress,
+          realAmounts[i],
+          self
+        );
+      }
     }
 
     for (uint256 i; i < erc721MintOrders.length; i++) {
@@ -393,9 +396,6 @@ contract Web3Packs is
     int256 tickSpace = 10; // TODO: Remove hardcoded value
     int24 tickLower = int24(_findNearestValidTick(tickSpace, true));
     int24 tickUpper = int24(_findNearestValidTick(tickSpace, false));
-
-    // TODO: Remove log
-    console.log("Lower",uint24(tickLower), uint24(tickLower % 10), uint24(tickUpper %10));
 
     INonfungiblePositionManager.MintParams memory params = 
       INonfungiblePositionManager.MintParams({

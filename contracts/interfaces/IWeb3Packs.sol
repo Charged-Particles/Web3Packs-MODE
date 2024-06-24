@@ -38,6 +38,7 @@ interface IWeb3Packs {
     uint256 deadline;
     uint256 amountOutMinimum;
     uint160 sqrtPriceLimitX96;
+    bool forLiquidity;
   }
 
   struct ERC721MintOrders {

@@ -148,6 +148,11 @@ const _abi = [
             name: "sqrtPriceLimitX96",
             type: "uint160",
           },
+          {
+            internalType: "bool",
+            name: "forLiquidity",
+            type: "bool",
+          },
         ],
         internalType: "struct IWeb3Packs.ERC20SwapOrder[]",
         name: "erc20SwapOrders",
