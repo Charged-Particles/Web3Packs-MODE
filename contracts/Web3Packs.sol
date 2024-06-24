@@ -93,6 +93,7 @@ contract Web3Packs is
       revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
+    // mint liquidity position
 
     tokenId = _bundle(
       receiver,

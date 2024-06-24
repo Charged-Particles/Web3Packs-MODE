@@ -429,9 +429,10 @@ describe('Web3Packs', async ()=> {
         "function balanceOf(address owner) view returns (uint balance)",
         "function ownerOf(uint256 tokenId) view returns (address owner)"
       ], ownerSigner);
-      const { deployer, protocolOwner } = await getNamedAccounts();
-      const balance = await manager.ownerOf(tokenId);
-      console.log(balance, deployer, protocolOwner, await testSigner.getAddress())
+
+      const ownerOfPosition = await manager.ownerOf(tokenId);
+      expect(ownerOfPosition).to.be.eq(await web3packs.getAddress());
+
     });
   });
 });
