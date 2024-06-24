@@ -359,12 +359,12 @@ describe('Web3Packs', async ()=> {
     const POOL_FEE = 500;
     const USDC_WETH_POOL = '0x45dda9cb7c25131df268515131f647d726f50608'
 
-    it.only('Liquidity manager and pool exist', async() => {
+    it('Liquidity manager and pool exist', async() => {
       const positionManagerCode = await ethers.provider.getCode(POSITION_MANAGER_ADDRESS) 
       expect(positionManagerCode).to.be.not.empty
     });
 
-    it.only('Calculates appropiate tick', async() => {
+    it('Calculates appropiate tick', async() => {
       const pool = await getPoolContract(USDC_WETH_POOL);
       const slot0 = await pool.slot0();
       const tickSpacing = parseInt(await pool.tickSpacing());
@@ -377,7 +377,7 @@ describe('Web3Packs', async ()=> {
       expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
-    it.only('Provides liquidity on univ3', async() => {
+    it('Provides liquidity on univ3', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
 

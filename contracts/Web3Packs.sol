@@ -190,7 +190,6 @@ contract Web3Packs is
     _bond(
     contractAddress,
     tokenId,
-    tokenMetadataUri,
     basketManagerId,
     nftTokenAddress,
     mintedTokenId
@@ -263,7 +262,6 @@ contract Web3Packs is
   function _bond(
     address contractAddress,
     uint256 tokenId,
-    string memory tokenMetadataUri,
     string memory basketManagerId,
     address nftTokenAddress,
     uint256 mintedTokenId
@@ -326,7 +324,6 @@ contract Web3Packs is
       _bond(
         _proton,
         tokenId,
-        erc721MintOrders[i].tokenMetadataUri,
         erc721MintOrders[i].basketManagerId,
         erc721MintOrders[i].erc721TokenAddress,
         mintedTokenId
