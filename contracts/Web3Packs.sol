@@ -239,6 +239,21 @@ contract Web3Packs is
     amountOut = ISwapRouter(_router).exactInputSingle{value: amountIn }(params);
   }
 
+  function _createBasicProton(
+    address contractAddress,
+    string memory tokenMetadataUri
+  )
+    internal
+    returns (uint256 mintedTokenId)
+  {
+    // mint
+    mintedTokenId = IBaseProton(contractAddress).createBasicProton(
+      address(this),
+      address(this),
+      tokenMetadataUri
+    );
+  }
+
   function _bond(
     address contractAddress,
     uint256 tokenId,

@@ -6,7 +6,7 @@ import {
   chargedSettingsAbi,
   protonBAbi
 } from "@charged-particles/charged-js-sdk";
-import { BigNumber, Contract, Signer } from "ethers";
+import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
 import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from "../uniswap/quote";
 import { getPoolContract } from "../uniswap/quote";
@@ -18,17 +18,9 @@ const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
 describe('Web3Packs', async ()=> {
   // Define contracts
   let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract, Uni: Contract; 
-
+  let charged: Charged;
   // Define signers
   let USDcWhaleSigner: Signer, ownerSigner: Signer, testSigner: Signer;
-
-  let charged: Charged;
-
-  beforeEach(async () => {
-    // await deployments.fixture();
-    // web3packs = await ethers.getContract('Web3Packs');
-    // TestNFT = await ethers.getContract('ERC721Mintable');
-  });
 
   beforeEach(async () => {
     const { protocolOwner } = await getNamedAccounts();
@@ -279,9 +271,6 @@ describe('Web3Packs', async ()=> {
         { value: ethers.utils.parseEther('.2') }
       );
 
-      // User address has no amount before bundle 
-      // expect(await ethers.provider.getBalance(testAddress)).to.be.eq('200000000000000000');
-
       const bundleTransaction = await web3packs.bundle(
         globals.testAddress,
         ipfsMetadata,
@@ -432,7 +421,6 @@ describe('Web3Packs', async ()=> {
 
       const ownerOfPosition = await manager.ownerOf(tokenId);
       expect(ownerOfPosition).to.be.eq(await web3packs.getAddress());
-
     });
   });
 });
