@@ -41,6 +41,15 @@ interface IWeb3Packs {
     bool forLiquidity;
   }
 
+  struct LiquidityMintOrder {
+    address token0;
+    address token1;
+    uint256 amount0ToMint;
+    uint256 amount1ToMint;
+    int256 tickSpace;
+    uint24 poolFee;
+  }
+
   struct ERC721MintOrders {
     address erc721TokenAddress;
     string basketManagerId;

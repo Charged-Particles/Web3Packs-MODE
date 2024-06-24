@@ -71,6 +71,31 @@ export declare namespace IWeb3Packs {
     tokenMetadataUri: string;
   };
 
+  export type LiquidityMintOrderStruct = {
+    token0: AddressLike;
+    token1: AddressLike;
+    amount0ToMint: BigNumberish;
+    amount1ToMint: BigNumberish;
+    tickSpace: BigNumberish;
+    poolFee: BigNumberish;
+  };
+
+  export type LiquidityMintOrderStructOutput = [
+    token0: string,
+    token1: string,
+    amount0ToMint: bigint,
+    amount1ToMint: bigint,
+    tickSpace: bigint,
+    poolFee: bigint
+  ] & {
+    token0: string;
+    token1: string;
+    amount0ToMint: bigint;
+    amount1ToMint: bigint;
+    tickSpace: bigint;
+    poolFee: bigint;
+  };
+
   export type NFTStruct = { tokenAddress: AddressLike; id: BigNumberish };
 
   export type NFTStructOutput = [tokenAddress: string, id: bigint] & {
@@ -152,14 +177,7 @@ export interface Web3PacksInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "depositLiquidity",
-    values: [
-      AddressLike,
-      AddressLike,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ]
+    values: [IWeb3Packs.LiquidityMintOrderStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "onERC721Received",
@@ -555,15 +573,8 @@ export interface Web3Packs extends BaseContract {
   >;
 
   depositLiquidity: TypedContractMethod<
-    [
-      token0: AddressLike,
-      token1: AddressLike,
-      amount0ToMint: BigNumberish,
-      amount1ToMint: BigNumberish,
-      tickSpace: BigNumberish,
-      poolFee: BigNumberish
-    ],
-    [bigint],
+    [liquidityMintOrders: IWeb3Packs.LiquidityMintOrderStruct[]],
+    [bigint[]],
     "nonpayable"
   >;
 
@@ -701,15 +712,8 @@ export interface Web3Packs extends BaseContract {
   getFunction(
     nameOrSignature: "depositLiquidity"
   ): TypedContractMethod<
-    [
-      token0: AddressLike,
-      token1: AddressLike,
-      amount0ToMint: BigNumberish,
-      amount1ToMint: BigNumberish,
-      tickSpace: BigNumberish,
-      poolFee: BigNumberish
-    ],
-    [bigint],
+    [liquidityMintOrders: IWeb3Packs.LiquidityMintOrderStruct[]],
+    [bigint[]],
     "nonpayable"
   >;
   getFunction(

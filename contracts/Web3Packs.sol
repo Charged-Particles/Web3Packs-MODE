@@ -154,24 +154,12 @@ contract Web3Packs is
   }
 
   function depositLiquidity(
-    address token0,
-    address token1,
-    uint256 amount0ToMint,
-    uint256 amount1ToMint,
-    int256 tickSpace,
-    uint24 poolFee
+    LiquidityMintOrder[] calldata liquidityMintOrders
   )
     external
-    returns (uint256) 
+    returns (uint256[] memory) 
   {
-    return _depositLiquidity(
-      token0,
-      token1,
-      amount0ToMint,
-      amount1ToMint,
-      tickSpace,
-      poolFee
-    );
+    return _depositLiquidity(liquidityMintOrders);
   }
 
   function bond(
@@ -383,40 +371,50 @@ contract Web3Packs is
   }
 
   function _depositLiquidity(
-    address token0,
-    address token1,
-    uint256 amount0ToMint,
-    uint256 amount1ToMint,
-    int256 tickSpace,
-    uint24 poolFee
+    LiquidityMintOrder[] calldata liquidityMintOrders
   )
    private
-   returns (uint256 tokenId)
+   returns (uint256[] memory)
   {
-    TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), amount0ToMint);
-    TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), amount1ToMint);
+    uint256[] memory liquidityNfts = new uint256[](liquidityMintOrders.length);
 
-    int24 tickLower = int24(_findNearestValidTick(tickSpace, true));
-    int24 tickUpper = int24(_findNearestValidTick(tickSpace, false));
+    for (uint256 i; i < liquidityMintOrders.length; i++) {
+      TransferHelper.safeApprove(
+        liquidityMintOrders[i].token0,
+        address(_nonfungiblePositionManager),
+        liquidityMintOrders[i].amount0ToMint
+      );
 
-    INonfungiblePositionManager.MintParams memory params = 
-      INonfungiblePositionManager.MintParams({
-        token0: token0,
-        token1: token1,
-        fee: poolFee,
-        tickLower: tickLower,
-        tickUpper: tickUpper,
-        amount0Desired: amount0ToMint,
-        amount1Desired: amount1ToMint,
-        amount0Min: 0,
-        amount1Min: 0,
-        recipient: address(this),
-        deadline: block.timestamp
-      });
+      TransferHelper.safeApprove(
+        liquidityMintOrders[i].token1,
+        address(_nonfungiblePositionManager),
+        liquidityMintOrders[i].amount1ToMint
+      );
 
-      (tokenId, , , ) = INonfungiblePositionManager(
-        _nonfungiblePositionManager
-      ).mint(params);
+      int24 tickLower = int24(_findNearestValidTick(liquidityMintOrders[i].tickSpace, true));
+      int24 tickUpper = int24(_findNearestValidTick(liquidityMintOrders[i].tickSpace, false));
+
+      INonfungiblePositionManager.MintParams memory params = 
+        INonfungiblePositionManager.MintParams({
+          token0: liquidityMintOrders[i].token0,
+          token1: liquidityMintOrders[i].token1,
+          fee: liquidityMintOrders[i].poolFee,
+          tickLower: tickLower,
+          tickUpper: tickUpper,
+          amount0Desired: liquidityMintOrders[i].amount0ToMint,
+          amount1Desired: liquidityMintOrders[i].amount1ToMint,
+          amount0Min: 0,
+          amount1Min: 0,
+          recipient: address(this),
+          deadline: block.timestamp
+        });
+
+        (uint256 tokenId, , , ) = INonfungiblePositionManager(
+          _nonfungiblePositionManager
+        ).mint(params);
+
+        liquidityNfts[i] = tokenId;
+      }
   }
 
   /***********************************|

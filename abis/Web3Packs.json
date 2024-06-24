@@ -413,42 +413,49 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "token0",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token1",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount0ToMint",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount1ToMint",
-        "type": "uint256"
-      },
-      {
-        "internalType": "int256",
-        "name": "tickSpace",
-        "type": "int256"
-      },
-      {
-        "internalType": "uint24",
-        "name": "poolFee",
-        "type": "uint24"
+        "components": [
+          {
+            "internalType": "address",
+            "name": "token0",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount0ToMint",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount1ToMint",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "tickSpace",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint24",
+            "name": "poolFee",
+            "type": "uint24"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.LiquidityMintOrder[]",
+        "name": "liquidityMintOrders",
+        "type": "tuple[]"
       }
     ],
     "name": "depositLiquidity",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "uint256"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "nonpayable",
