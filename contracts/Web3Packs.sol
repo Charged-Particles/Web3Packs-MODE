@@ -415,6 +415,8 @@ contract Web3Packs is
 
         liquidityNfts[i] = tokenId;
       }
+
+      return liquidityNfts;
   }
 
   /***********************************|

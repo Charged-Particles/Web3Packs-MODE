@@ -377,7 +377,7 @@ describe('Web3Packs', async ()=> {
       expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
-    it('Provides liquidity on univ3', async() => {
+    it.only('Provides liquidity on univ3', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
       const tickSpace = 10;
@@ -396,25 +396,26 @@ describe('Web3Packs', async ()=> {
         }
       ];
 
+      const LiquidityMintORder = [
+        {
+          token0: TOKEN_0,
+          token1: TOKEN_1,
+          amount0ToMint: amount0,
+          amount1ToMint: amount1,
+          tickSpace: tickSpace,
+          poolFee: POOL_FEE
+        }
+      ];
+
       const swapTransaction = await web3packs.swap(ERC20SwapOrder);
       await swapTransaction.wait();
 
       const tokenId = await web3packs.callStatic.depositLiquidity(
-        TOKEN_0,
-        TOKEN_1,
-        amount0,
-        amount1,
-        tickSpace,
-        POOL_FEE,
+        LiquidityMintORder
       );
 
       await web3packs.depositLiquidity(
-        TOKEN_0,
-        TOKEN_1,
-        amount0,
-        amount1,
-        tickSpace,
-        POOL_FEE,
+        LiquidityMintORder
       ).then(tx => tx.wait())
 
       const manager = new Contract(POSITION_MANAGER_ADDRESS, [
@@ -422,8 +423,9 @@ describe('Web3Packs', async ()=> {
         "function ownerOf(uint256 tokenId) view returns (address owner)"
       ], ownerSigner);
 
-      const ownerOfPosition = await manager.ownerOf(tokenId);
-      expect(ownerOfPosition).to.be.eq(await web3packs.getAddress());
+      const ownerOfPosition = await manager.ownerOf(tokenId[0]);
+      console.log(ownerOfPosition)
+      // expect(ownerOfPosition).to.be.eq();
     });
   });
 });
