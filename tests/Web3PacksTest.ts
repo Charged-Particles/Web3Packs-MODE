@@ -151,8 +151,8 @@ describe('Web3Packs', async ()=> {
     it('Swaps multiple assets', async() => {
       const ERC20SwapOrder = [
         {
-          inputTokenAddress: USDcContractAddress,
-          outputTokenAddress: USDtContractAddress,
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.USDtContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
           deadline: deadline,
@@ -160,8 +160,8 @@ describe('Web3Packs', async ()=> {
           sqrtPriceLimitX96: 0,
         },
         {
-          inputTokenAddress: USDcContractAddress,
-          outputTokenAddress: UniContractAddress,
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.UniContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
           deadline: deadline,
@@ -486,8 +486,13 @@ describe('Web3Packs', async ()=> {
         "function ownerOf(uint256 tokenId) view returns (address owner)"
       ], ownerSigner);
 
-      const ownerOfPosition = await manager.ownerOf(185578);
-      console.log(ownerOfPosition)
+      // const ownerOfPosition = await manager.ownerOf(185578);
+      // console.log(ownerOfPosition)
+
+      const energizedProton = charged.NFT(Proton.address, tokenId.toString());
+
+      const protonBondBalance = await energizedProton.getBonds('generic.B'); 
+      expect(protonBondBalance['137']?.value).to.eq(1);
     });
   });
 });

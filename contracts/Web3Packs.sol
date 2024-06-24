@@ -103,7 +103,8 @@ contract Web3Packs is
       tokenMetaUri,
       erc20SwapOrders,
       erc721MintOrders,
-      realAmounts
+      realAmounts,
+      liquidityIds
     );
     _fund(receiver, fundingAmount);
 
@@ -279,7 +280,8 @@ contract Web3Packs is
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     ERC721MintOrders[] calldata erc721MintOrders,
-    uint256[] memory realAmounts
+    uint256[] memory realAmounts,
+    uint256[] memory liquidityIds
   )
     internal
     returns (uint256 tokenId)
@@ -323,6 +325,16 @@ contract Web3Packs is
         erc721MintOrders[i].basketManagerId,
         erc721MintOrders[i].erc721TokenAddress,
         mintedTokenId
+      );
+    }
+
+    for (uint256 i; i < liquidityIds.length; i++) {
+      _bond(
+        _proton,
+        tokenId,
+        _cpBasketManager,
+        _nonfungiblePositionManager,
+        liquidityIds[i] 
       );
     }
   }
