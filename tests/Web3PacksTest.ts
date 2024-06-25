@@ -3,12 +3,11 @@ import { ethers, network, getNamedAccounts } from 'hardhat';
 import {
   default as Charged,
   chargedStateAbi,
-  chargedSettingsAbi,
   protonBAbi
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
-import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from "../uniswap/quote";
+import { amountOutMinimum, getNearestUsableTick, quote } from "../uniswap/quote";
 import { getPoolContract } from "../uniswap/quote";
 import globals from "./globals";
 
@@ -68,7 +67,7 @@ describe('Web3Packs', async ()=> {
     it('Swap a single asset', async() => {
       // calculate expected amount
       const swapEstimation = await quote(USDC_USDT_SWAP);
-      const swapPriceTolerance = amountOutMinimum(swapEstimation, 10) ;
+      const swapPriceTolerance = amountOutMinimum(swapEstimation, 10);
 
       const ERC20SwapOrder = [{
         inputTokenAddress: globals.USDcContractAddress,
@@ -229,8 +228,6 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
-      const connectedWallet = testSigner.connect(ethers.provider);
-
       const ERC20SwapOrder = [
         {
           inputTokenAddress: globals.USDcContractAddress,
@@ -361,7 +358,7 @@ describe('Web3Packs', async ()=> {
       expect(positionManagerCode).to.be.not.empty
     });
 
-    it('Calculates appropiate tick', async() => {
+    it('Calculates appropriate tick', async() => {
       const pool = await getPoolContract(USDC_WETH_POOL);
       const slot0 = await pool.slot0();
       const tickSpacing = parseInt(await pool.tickSpacing());
