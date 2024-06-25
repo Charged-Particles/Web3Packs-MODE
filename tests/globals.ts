@@ -12,5 +12,5 @@ export default {
     testAddress: '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A',
     USDcWhale: '0xfa0b641678f5115ad8a8de5752016bd1359681b9',
     ipfsMetadata: 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST',
-    deadline:  Math.floor(Date.now() / 1000) + (60 * 10),
+    deadline: Math.floor(Date.now() / 1000) + (60 * 10),
 }

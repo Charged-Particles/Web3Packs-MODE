@@ -12,9 +12,6 @@ import { amountOutMinimum, getNearestUsableTick, getPoolConstants, quote } from 
 import { getPoolContract } from "../uniswap/quote";
 import globals from "./globals";
 
-const ipfsMetadata = 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST';
-const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
-
 describe('Web3Packs', async ()=> {
   // Define contracts
   let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract, Uni: Contract; 
@@ -78,7 +75,7 @@ describe('Web3Packs', async ()=> {
         outputTokenAddress: globals.USDtContractAddress,
         inputTokenAmount: ethers.utils.parseUnits('10', 6),
         uniSwapPoolFee: 3000,
-        deadline: deadline,
+        deadline: global.sdeadline,
         amountOutMinimum: swapPriceTolerance,
         sqrtPriceLimitX96: 0,
       }];
@@ -275,7 +272,7 @@ describe('Web3Packs', async ()=> {
 
       const bundleTransaction = await web3packs.bundle(
         await deployerSigner.getAddress(),
-        ipfsMetadata,
+        globals.ipfsMetadata,
         ERC20SwapOrder,
         ERC721MintOrder,
         [],
@@ -390,7 +387,7 @@ describe('Web3Packs', async ()=> {
           outputTokenAddress: globals.wrapMaticContractAddress,
           uniSwapPoolFee: 500,
           inputTokenAmount: inputTokenAmount,
-          deadline: deadline,
+          deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         }
@@ -439,7 +436,7 @@ describe('Web3Packs', async ()=> {
           outputTokenAddress: globals.wrapMaticContractAddress,
           uniSwapPoolFee: 500,
           inputTokenAmount: inputTokenAmount,
-          deadline: deadline,
+          deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
           forLiquidity: true,
@@ -459,7 +456,7 @@ describe('Web3Packs', async ()=> {
 
       const tokenId = await web3packs.callStatic.bundle(
         globals.testAddress,
-        ipfsMetadata,
+        globals.ipfsMetadata,
         ERC20SwapOrder,
         [],
         liquidityMintOrder,
@@ -469,7 +466,7 @@ describe('Web3Packs', async ()=> {
 
       await web3packs.bundle(
         globals.testAddress,
-        ipfsMetadata,
+        globals.ipfsMetadata,
         ERC20SwapOrder,
         [],
         liquidityMintOrder,
