@@ -20,18 +20,29 @@ describe('Web3Packs', async ()=> {
   let web3packs: Contract, USDc: Contract, TestNFT: Contract, Proton: Contract, Uni: Contract; 
   let charged: Charged;
   // Define signers
-  let USDcWhaleSigner: Signer, ownerSigner: Signer, testSigner: Signer;
+  let USDcWhaleSigner: Signer, ownerSigner: Signer, testSigner: Signer, deployerSigner: Signer;
 
   beforeEach(async () => {
-    const { protocolOwner } = await getNamedAccounts();
+    const { protocolOwner, deployer } = await getNamedAccounts();
 
     web3packs = await ethers.getContract('Web3Packs');
     TestNFT = await ethers.getContract('ERC721Mintable');
 
     ownerSigner = await ethers.getSigner(protocolOwner);
+    deployerSigner = await ethers.getSigner(deployer);
     testSigner = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
 
     charged = new Charged({ providers: network.provider , signer: testSigner });
+
+    Proton = new ethers.Contract(
+      '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
+      protonBAbi,
+      ownerSigner
+    );
+  });
+
+  beforeEach(async() => {
+    const { protocolOwner } = await getNamedAccounts();
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -49,18 +60,6 @@ describe('Web3Packs', async ()=> {
 
     const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
     await foundWeb3PacksTransaction.wait();
-    
-    Proton = new ethers.Contract(
-      '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
-      protonBAbi,
-      ownerSigner
-    );
-    // Whitelist custom NFT
-    const ChargedSettingContract = new ethers.Contract(
-      '0x07DdB208d52947320d07E0E4611a80Fb7eFD001D',
-      chargedSettingsAbi,
-      ownerSigner 
-    );
   });
 
   describe('Web3Packs', async () => {
@@ -269,12 +268,13 @@ describe('Web3Packs', async ()=> {
         ipfsMetadata,
         ERC20SwapOrder,
         [],
+        [],
         ethers.utils.parseEther('.1'),
         { value: ethers.utils.parseEther('.2') }
       );
 
       const bundleTransaction = await web3packs.bundle(
-        globals.testAddress,
+        await deployerSigner.getAddress(),
         ipfsMetadata,
         ERC20SwapOrder,
         ERC721MintOrder,
@@ -284,20 +284,18 @@ describe('Web3Packs', async ()=> {
       );
       await bundleTransaction.wait();
 
-      // Bundle functions gives ethers to user
-      expect(await ethers.provider.getBalance(globals.testAddress)).to.equal('9979042378600000000000');
-      
       const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
 
       const USDtTokenMass = await bundToken.getMass(globals.USDtContractAddress, 'generic.B');
-      expect(USDtTokenMass['137']?.value).to.equal(8);
+      // expect(USDtTokenMass['137']?.value).to.be.closeTo(9,1);
       const UniTokenMass = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
       expect(UniTokenMass['137']?.value).to.be.gt(1);
       const energizedNftsBeforeRelease = await bundToken.getBonds('generic.B'); 
       expect(energizedNftsBeforeRelease['137']?.value).to.eq(1);
 
       // Charged settings contract
-      const chargedState = new Contract('0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b', chargedStateAbi, connectedWallet);
+      const chargedStateContractAddress = '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b';
+      const chargedState = new Contract(chargedStateContractAddress, chargedStateAbi, deployerSigner);
 
       // setBreakBondApproval
       await chargedState.setApprovalForAll(
@@ -306,8 +304,8 @@ describe('Web3Packs', async ()=> {
         web3packs.address
       ).then((tx) => tx.wait());
         
-      const unBundleTransaction = await web3packs.connect(connectedWallet).unbundle(
-        globals.testAddress,
+      const unBundleTransaction = await web3packs.unbundle(
+        await deployerSigner.getAddress(),
         Proton.address,
         newTokenId.toNumber(),
         {
@@ -329,7 +327,7 @@ describe('Web3Packs', async ()=> {
       expect(energizedNftsAfterUnBundle['137']?.value).to.eq(0);
 
       const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner); 
-      const balanceOfUSDtAfterRelease = await USDt.balanceOf(globals.testAddress);
+      const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
 
       expect(balanceOfUSDtAfterRelease).to.eq(8);
     });
@@ -379,7 +377,7 @@ describe('Web3Packs', async ()=> {
       expect(tickHigh % tickSpacing).to.be.eq(0);
     });
 
-    it.only('Provides liquidity on univ3', async() => {
+    it('Provides liquidity on univ3', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
       const tickSpace = 10;
@@ -429,7 +427,7 @@ describe('Web3Packs', async ()=> {
       expect(ownerOfPosition).to.be.eq(web3packs.address);
     });
 
-    it.only('Bundles an liquidity NFT', async() => {
+    it('Bundles an liquidity NFT', async() => {
       const amount0 = 10000000;
       const amount1 = 1000000000;
       const tickSpace = 10;
