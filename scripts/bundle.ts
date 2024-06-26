@@ -59,8 +59,6 @@ async function main() {
     hre.ethers.utils.parseEther('.1'),
     { value: hre.ethers.utils.parseEther('.2') }
   );
-
-
 }
 
 main().catch((error) => {
