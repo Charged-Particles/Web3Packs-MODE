@@ -16,8 +16,8 @@ async function main() {
 
   const ERC20SwapOrder = [
     {
-        inputTokenAddress: globals.USDcContractAddress,
-        outputTokenAddress: globals.wrapMaticContractAddress,
+        inputTokenAddress: globals.wrapMaticContractAddress,
+        outputTokenAddress: globals.USDcContractAddress,
         uniSwapPoolFee: 500,
         inputTokenAmount: 100000,
         deadline: globals.deadline,
