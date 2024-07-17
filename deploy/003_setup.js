@@ -70,7 +70,7 @@ module.exports = async (hre) => {
     );
 
     await executeTx('1-c', 'Web3Packs: Setting Uniswap Router', async () =>
-      await web3Packs.setUniswapRouter(_ADDRESS[chainId].UniswapRouter)
+      await web3Packs.setRouter(_ADDRESS[chainId].UniswapRouter)
     );
 
     await executeTx('1-e', 'Web3Packs: Set proton address ', async () =>
