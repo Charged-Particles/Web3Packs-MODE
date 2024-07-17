@@ -106,12 +106,14 @@ contract Web3PacksMode is
     uint256[] memory liquidityIds = _depositLiquidity(liquidityMintOrders);
 
     tokenId = _bundle(
-      receiver,
+      address(this),
       tokenMetaUri,
       erc20SwapOrders,
       realAmounts,
       liquidityIds
     );
+
+    IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
 
     // emit PackBundled(tokenId, receiver);
   }
