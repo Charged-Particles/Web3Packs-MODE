@@ -42,6 +42,7 @@ import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
 import "./interfaces/IWeb3Packs.sol";
+import "./interfaces/IChargedState.sol";
 import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
@@ -113,7 +114,16 @@ contract Web3PacksMode is
       liquidityIds
     );
 
+    if(lockState.ERC20Timelock > 0) {
+      IChargedState(_chargedState).setReleaseTimelock(
+        _proton,
+        tokenId,
+        lockState.ERC20Timelock
+      );
+    }
+
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
+
 
     // emit PackBundled(tokenId, receiver);
   }
