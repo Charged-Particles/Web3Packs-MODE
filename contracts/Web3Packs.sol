@@ -82,8 +82,8 @@ contract Web3Packs is
     ERC20SwapOrder[] calldata erc20SwapOrders,
     ERC721MintOrders[] calldata erc721MintOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
-    uint256 fundingAmount
-    // LockState calldata lockState
+    uint256 fundingAmount,
+    LockState calldata lockState
   )
     external
     whenNotPaused
