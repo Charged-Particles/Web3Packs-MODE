@@ -122,9 +122,15 @@ contract Web3PacksMode is
       );
     }
 
+    if(lockState.ERC721Timelock > 0) {
+      IChargedState(_chargedState).setBreakBondTimelock(
+        _proton,
+        tokenId,
+        lockState.ERC721Timelock
+      );
+    }
+
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
-
-
     // emit PackBundled(tokenId, receiver);
   }
 
