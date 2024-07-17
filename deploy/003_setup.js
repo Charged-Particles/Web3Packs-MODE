@@ -38,6 +38,11 @@ const _ADDRESS = {
     UniswapRouter: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     Proton: '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
   },
+  34443: {
+    ChargedParticles: '0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10',
+    UniswapRouter: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+    Proton: '0x76a5df1c6F53A4B80c8c8177edf52FBbC368E825',
+  },
 };
 
 module.exports = async (hre) => {

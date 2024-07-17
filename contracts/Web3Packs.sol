@@ -179,12 +179,12 @@ contract Web3Packs is
     );
 
     _bond(
-    contractAddress,
-    tokenId,
-    basketManagerId,
-    nftTokenAddress,
-    mintedTokenId
-  );
+      contractAddress,
+      tokenId,
+      basketManagerId,
+      nftTokenAddress,
+      mintedTokenId
+    );
   }
 
 
