@@ -31,7 +31,6 @@ const {
       const { deployer, protocolOwner, user1 } = await getNamedAccounts();
       const network = await hre.network;
       const chainId = chainIdByName(network.name);
-      console.log(chainId);
       log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
       log('Charged Particles - Web3 Packs MODE - Contract Deployment');
       log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');

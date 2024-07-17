@@ -424,7 +424,7 @@ contract Web3PacksMode is
       return liquidityNfts;
   }
 
-  function _lock(
+  function _lock (
     LockState calldata lockState
   )
     private
