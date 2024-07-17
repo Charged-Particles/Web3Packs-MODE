@@ -66,13 +66,19 @@ interface IWeb3Packs {
     uint256 id;
   }
 
+  struct LockState {
+    uint256 ERC20Timelock;
+    uint256 ERC721Timelock;
+  }
+
   function bundle(
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     ERC721MintOrders[] calldata erc721MintOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
-    uint256 unBundleGasAmount
+    uint256 fundingAmount,
+    LockState calldata lockState
   ) external payable returns(uint256 tokenId);
 
   function unbundle(
