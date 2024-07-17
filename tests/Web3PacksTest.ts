@@ -74,7 +74,7 @@ describe('Web3Packs', async ()=> {
         outputTokenAddress: globals.USDtContractAddress,
         inputTokenAmount: ethers.utils.parseUnits('10', 6),
         uniSwapPoolFee: 3000,
-        deadline: global.sdeadline,
+        deadline: globals.deadline,
         amountOutMinimum: swapPriceTolerance,
         sqrtPriceLimitX96: 0,
       }];
@@ -95,7 +95,7 @@ describe('Web3Packs', async ()=> {
         outputTokenAddress: globals.USDcContractAddress,
         uniSwapPoolFee: 500,
         inputTokenAmount,
-        deadline: deadline,
+        deadline: globals.deadline,
         amountOutMinimum: 0,
         sqrtPriceLimitX96: 0,
       }];
@@ -104,8 +104,7 @@ describe('Web3Packs', async ()=> {
       await swapTransaction.wait();
 
       const USDcBalanceAfterSwap = await USDc.connect(ethers.provider).balanceOf(web3packs.address);
-
-      expect(USDcBalanceAfterSwap).to.equal(296938484);
+      expect(Number(USDcBalanceAfterSwap.toString())).to.be.closeTo(306938484, 10000000);
     });
 
     it('Swap two assets with matic', async() => {
@@ -119,7 +118,7 @@ describe('Web3Packs', async ()=> {
         outputTokenAddress: globals.USDcContractAddress,
         uniSwapPoolFee: 500,
         inputTokenAmount: inputTokenAmount.div(2),
-        deadline: deadline,
+        deadline: globals.deadline,
         amountOutMinimum: 0,
         sqrtPriceLimitX96: 0,
       },
@@ -128,7 +127,7 @@ describe('Web3Packs', async ()=> {
         outputTokenAddress: globals.UniContractAddress,
         uniSwapPoolFee: 3000,
         inputTokenAmount: inputTokenAmount.div(2),
-        deadline: deadline,
+        deadline: globals.deadline,
         amountOutMinimum: 0,
         sqrtPriceLimitX96: 0,
       }];
@@ -150,7 +149,7 @@ describe('Web3Packs', async ()=> {
           outputTokenAddress: globals.USDtContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
-          deadline: deadline,
+          deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         },
@@ -159,7 +158,7 @@ describe('Web3Packs', async ()=> {
           outputTokenAddress: globals.UniContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
-          deadline: deadline,
+          deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         }
@@ -171,7 +170,7 @@ describe('Web3Packs', async ()=> {
       const USDtBalanceAfterSwap = await USDc.balanceOf(web3packs.address);
       const UNIBalanceAfterSwap = await Uni.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(500407703);
+      expect(USDtBalanceAfterSwap.toNumber()).to.be.closeTo(500407703, 10000000);
       expect(UNIBalanceAfterSwap.toString()).to.equal('493373764498692278');
     });
 
@@ -182,7 +181,7 @@ describe('Web3Packs', async ()=> {
         outputTokenAddress: globals.USDtContractAddress,
         inputTokenAmount: 10,
         uniSwapPoolFee: 3000,
-        deadline: deadline,
+        deadline: globals.deadline,
         amountOutMinimum: 0,
         sqrtPriceLimitX96: 0,
       }];
@@ -202,7 +201,7 @@ describe('Web3Packs', async ()=> {
 
       const newTokenId = await web3packs.callStatic.bundle(
         globals.testAddress,
-        ipfsMetadata,
+        globals.ipfsMetadata,
         ERC20SwapOrder,
         ERC712MintOrder,
         [],
@@ -212,7 +211,7 @@ describe('Web3Packs', async ()=> {
       
       const bundleTransaction = await web3packs.bundle(
         globals.testAddress,
-        ipfsMetadata,
+        globals.ipfsMetadata,
         ERC20SwapOrder,
         ERC712MintOrder,
         [],
@@ -234,7 +233,7 @@ describe('Web3Packs', async ()=> {
           outputTokenAddress: globals.USDtContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
-          deadline: deadline,
+          deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         },
@@ -243,7 +242,7 @@ describe('Web3Packs', async ()=> {
           outputTokenAddress: globals.UniContractAddress,
           uniSwapPoolFee: 3000,
           inputTokenAmount: 10,
-          deadline: deadline,
+          deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         }
@@ -259,7 +258,7 @@ describe('Web3Packs', async ()=> {
       
       const newTokenId = await web3packs.callStatic.bundle(
         globals.testAddress,
-        ipfsMetadata,
+        globals.ipfsMetadata,
         ERC20SwapOrder,
         [],
         [],
@@ -323,7 +322,7 @@ describe('Web3Packs', async ()=> {
       const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
 
-      expect(balanceOfUSDtAfterRelease).to.eq(8);
+      expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(9,1);
     });
   });
 

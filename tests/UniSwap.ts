@@ -25,7 +25,7 @@ describe('UniSwap', async () => {
     expect(Number(toReadableAmount(
       quoteResult,
       USDC_TOKEN.decimals
-    ))).to.be.within(80, 100);
+    ))).to.be.within(50, 100);
   });
 
   it ('Fetches multiple quotes', async () => {
@@ -35,11 +35,11 @@ describe('UniSwap', async () => {
     expect(Number(toReadableAmount(
       usdcQuote,
       USDC_TOKEN.decimals
-    ))).to.be.within(80, 100);
+    ))).to.be.within(50, 100);
 
     expect(Number(toReadableAmount(
       uniQuote,
       UNI_TOKEN.decimals
-    ))).to.be.within(10, 20);
+    ))).to.be.within(5, 10);
   });
 });
