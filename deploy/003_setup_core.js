@@ -2,9 +2,7 @@ const { getDeployData } = require('../js-helpers/deploy');
 const { executeTx } = require('../js-helpers/executeTx');
 const {
   log,
-  toWei,
   chainNameById,
-  chainIdByName,
 } = require('../js-helpers/utils');
 
 const _ = require('lodash');

@@ -47,19 +47,18 @@ import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 
 
-contract Web3Packs is
+contract Web3PacksMode is
   IWeb3Packs,
   Ownable,
   Pausable,
   ReentrancyGuard,
   BlackholePrevention
 {
-  // @TODO: Remove hardcoded variables
-  address internal _proton = 0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC;
-  address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-  address internal _nonfungiblePositionManager = 0xC36442b4a4522E871399CD717aBDD847Ab11FE88;
-  address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
-  address internal _chargedState = 0x48974C6ae5A0A25565b0096cE3c81395f604140f;
+  address _proton;
+  address _router;
+  address _nonfungiblePositionManager;
+  address _chargedParticles;
+  address _chargedState;
 
   // Charged Particles Wallet Managers
   string internal _cpWalletManager = "generic.B";
@@ -69,7 +68,19 @@ contract Web3Packs is
   error FundingFailed();
   error NullReceiver();
 
-  constructor(){}
+  constructor(
+    address proton,
+    address router,
+    address nonfungiblePositionManager,
+    address chargedParticles,
+    address chargedState
+  ){
+    _proton = proton;
+    _router = router;
+    _nonfungiblePositionManager = nonfungiblePositionManager;
+    _chargedParticles = chargedParticles;
+    _chargedState = chargedState;
+  }
 
 
   /***********************************|
@@ -105,6 +116,7 @@ contract Web3Packs is
       realAmounts,
       liquidityIds
     );
+
     _fund(receiver, fundingAmount);
 
     emit PackBundled(tokenId, receiver);
@@ -274,7 +286,6 @@ contract Web3Packs is
     );
   }
 
-
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
@@ -294,7 +305,7 @@ contract Web3Packs is
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      // If not for liquidity energize
+      // If not for liquidity energize 
       if (! erc20SwapOrders[i].forLiquidity) {
         TransferHelper.safeApprove(
           erc20SwapOrders[i].outputTokenAddress,
@@ -334,10 +345,11 @@ contract Web3Packs is
         tokenId,
         _cpBasketManager,
         _nonfungiblePositionManager,
-        liquidityIds[i]
+        liquidityIds[i] 
       );
     }
   }
+
 
   function _unbundle(
     address receiver,
@@ -368,6 +380,20 @@ contract Web3Packs is
         web3PackOrder.nfts[i].id,
         1
       );
+    }
+  }
+
+  function _fund(
+    address payable receiver,
+    uint256 fundingAmount
+  )
+    private
+  {
+    if (address(this).balance >= fundingAmount) {
+      (bool sent, bytes memory data) = receiver.call{value: fundingAmount}("");
+      if (!sent) {
+        revert FundingFailed();
+      }
     }
   }
 
@@ -499,20 +525,6 @@ contract Web3Packs is
       bytes calldata
   ) external pure returns(bytes4) {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
-  }
-
-  function _fund(
-    address payable receiver,
-    uint256 fundingAmount
-  )
-    private
-  {
-    if (address(this).balance >= fundingAmount) {
-      (bool sent, ) = receiver.call{value: fundingAmount}("");
-      if (!sent) {
-        revert FundingFailed();
-      }
-    }
   }
 
 /**
