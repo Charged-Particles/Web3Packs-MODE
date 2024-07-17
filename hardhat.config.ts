@@ -28,13 +28,12 @@ task(
   }
 );
 
-
 const mnemonic = {
   testnet: `${process.env.TESTNET_MNEMONIC}`.replace(/_/g, ' '),
   mainnet: `${process.env.MAINNET_MNEMONIC}`.replace(/_/g, ' '),
 };
 
-const optimizerDisabled = process.env.OPTIMIZER_DISABLED
+const optimizerDisabled = process.env.OPTIMIZER_DISABLED;
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -135,6 +134,16 @@ const config: HardhatUserConfig = {
         },
         chainId: 137
     },
+    mode: {
+        url: "https://mainnet.mode.network/",
+        gasPrice: 'auto',
+        accounts: {
+            mnemonic: mnemonic.mainnet,
+            // initialIndex: 0,
+            count: 8,
+        },
+        chainId: 34443
+    }
   },
   etherscan: {
     apiKey: {
@@ -154,7 +163,6 @@ const config: HardhatUserConfig = {
     flat: true,
     only: [ 'Web3Packs' ],
   },
-
 };
 
 export default config;
