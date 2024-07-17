@@ -98,15 +98,13 @@ contract Web3Packs is
     uint256[] memory liquidityIds = _depositLiquidity(liquidityMintOrders);
 
     tokenId = _bundle(
-      address(this),
+      receiver,
       tokenMetaUri,
       erc20SwapOrders,
       erc721MintOrders,
       realAmounts,
       liquidityIds
     );
-    IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
-
     _fund(receiver, fundingAmount);
 
     emit PackBundled(tokenId, receiver);
@@ -276,6 +274,7 @@ contract Web3Packs is
     );
   }
 
+
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
@@ -295,7 +294,7 @@ contract Web3Packs is
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      // If not for liquidity energize 
+      // If not for liquidity energize
       if (! erc20SwapOrders[i].forLiquidity) {
         TransferHelper.safeApprove(
           erc20SwapOrders[i].outputTokenAddress,
@@ -335,11 +334,10 @@ contract Web3Packs is
         tokenId,
         _cpBasketManager,
         _nonfungiblePositionManager,
-        liquidityIds[i] 
+        liquidityIds[i]
       );
     }
   }
-
 
   function _unbundle(
     address receiver,
@@ -370,20 +368,6 @@ contract Web3Packs is
         web3PackOrder.nfts[i].id,
         1
       );
-    }
-  }
-
-  function _fund(
-    address payable receiver,
-    uint256 fundingAmount
-  )
-    private
-  {
-    if (address(this).balance >= fundingAmount) {
-      (bool sent, bytes memory data) = receiver.call{value: fundingAmount}("");
-      if (!sent) {
-        revert FundingFailed();
-      }
     }
   }
 
@@ -515,6 +499,20 @@ contract Web3Packs is
       bytes calldata
   ) external pure returns(bytes4) {
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+  }
+
+  function _fund(
+    address payable receiver,
+    uint256 fundingAmount
+  )
+    private
+  {
+    if (address(this).balance >= fundingAmount) {
+      (bool sent, ) = receiver.call{value: fundingAmount}("");
+      if (!sent) {
+        revert FundingFailed();
+      }
+    }
   }
 
 /**

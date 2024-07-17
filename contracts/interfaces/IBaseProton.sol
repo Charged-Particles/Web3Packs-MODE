@@ -38,4 +38,6 @@ interface IBaseProton {
     external
     payable
     returns (uint256 newTokenId);
+
+  function safeTransferFrom(address from, address to, uint256 tokenId) external;
 }

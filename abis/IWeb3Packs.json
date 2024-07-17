@@ -86,7 +86,7 @@
         "type": "address"
       }
     ],
-    "name": "UniswapRouterSet",
+    "name": "RouterSet",
     "type": "event"
   },
   {
@@ -209,8 +209,25 @@
       },
       {
         "internalType": "uint256",
-        "name": "unBundleGasAmount",
+        "name": "fundingAmount",
         "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "ERC20Timelock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ERC721Timelock",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.LockState",
+        "name": "lockState",
+        "type": "tuple"
       }
     ],
     "name": "bundle",
