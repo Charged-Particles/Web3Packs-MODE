@@ -111,6 +111,8 @@ describe('Web3Packs', async ()=> {
         }
       ];
 
+      // const currentBlock = ethers.provider.blockNumber;
+      // const timeLock = currentBlock + 100;
       
       const newTokenId = await web3packs.callStatic.bundleMode(
         globals.testAddress,
@@ -126,7 +128,7 @@ describe('Web3Packs', async ()=> {
         globals.ipfsMetadata,
         ERC20SwapOrder,
         [],
-        { ERC20Timelock:0 , ERC721Timelock: 0 },
+        { ERC20Timelock: 0, ERC721Timelock: 0 },
         { value: ethers.utils.parseEther('.2') }
       );
       await bundleTransaction.wait();
@@ -169,6 +171,65 @@ describe('Web3Packs', async ()=> {
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
 
       expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(9,1);
+    });
+
+    it('Should not allow to break pack when locked: erc20s', async() => {
+      const ERC20SwapOrder = [
+        {
+          inputTokenAddress: globals.USDcContractAddress,
+          outputTokenAddress: globals.USDtContractAddress,
+          uniSwapPoolFee: 3000,
+          inputTokenAmount: 10,
+          deadline: globals.deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
+        },
+      ];
+
+      const currentBlock = ethers.provider.blockNumber;
+      const timeLock = currentBlock + 100;
+      
+      const newTokenId = await web3packs.callStatic.bundleMode(
+        globals.testAddress,
+        globals.ipfsMetadata,
+        ERC20SwapOrder,
+        [],
+        { ERC20Timelock:0 , ERC721Timelock: 0 },
+        { value: ethers.utils.parseEther('.2') }
+      );
+
+      const bundleTransaction = await web3packs.bundleMode(
+        await deployerSigner.getAddress(),
+        globals.ipfsMetadata,
+        ERC20SwapOrder,
+        [],
+        { ERC20Timelock: timeLock, ERC721Timelock: 0 },
+        { value: ethers.utils.parseEther('.2') }
+      );
+      await bundleTransaction.wait();
+
+      const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
+
+      // Charged settings contract
+      const chargedStateContractAddress = '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b';
+      const chargedState = new Contract(chargedStateContractAddress, chargedStateAbi, deployerSigner);
+
+      // setBreakBondApproval
+      await chargedState.setApprovalForAll(
+        Proton.address,
+        newTokenId.toNumber(),
+        web3packs.address
+      ).then((tx) => tx.wait());
+        
+      await expect(web3packs.unbundle(
+        await deployerSigner.getAddress(),
+        Proton.address,
+        newTokenId.toNumber(),
+        {
+          erc20TokenAddresses: [ globals.USDtContractAddress],
+          nfts: []
+        },
+      )).to.revertedWith('CP:E-302');
     });
   })
 });
