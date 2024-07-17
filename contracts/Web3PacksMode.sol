@@ -48,7 +48,6 @@ import "./interfaces/IBaseProton.sol";
 
 
 contract Web3PacksMode is
-  IWeb3Packs,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -87,13 +86,11 @@ contract Web3PacksMode is
   |               Public              |
   |__________________________________*/
 
-  function bundle(
+  function bundleMode(
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
-    ERC721MintOrders[] calldata erc721MintOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
-    uint256 fundingAmount,
     LockState calldata lockState
   )
     external
@@ -112,14 +109,11 @@ contract Web3PacksMode is
       receiver,
       tokenMetaUri,
       erc20SwapOrders,
-      erc721MintOrders,
       realAmounts,
       liquidityIds
     );
 
-    _fund(receiver, fundingAmount);
-
-    emit PackBundled(tokenId, receiver);
+    // emit PackBundled(tokenId, receiver);
   }
 
   function unbundle(
@@ -139,7 +133,7 @@ contract Web3PacksMode is
       _cpWalletManager,
       web3PackOrder
     );
-    emit PackUnbundled(tokenId, receiver);
+    // emit PackUnbundled(tokenId, receiver);
   }
 
   function unbundleFromManager(
@@ -154,7 +148,7 @@ contract Web3PacksMode is
     nonReentrant
   {
     _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
-    emit PackUnbundled(tokenId, receiver);
+    // emit PackUnbundled(tokenId, receiver);
   }
 
   function swap(
@@ -290,7 +284,6 @@ contract Web3PacksMode is
     address receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
-    ERC721MintOrders[] calldata erc721MintOrders,
     uint256[] memory realAmounts,
     uint256[] memory liquidityIds
   )
@@ -322,21 +315,6 @@ contract Web3PacksMode is
           self
         );
       }
-    }
-
-    for (uint256 i; i < erc721MintOrders.length; i++) {
-      uint256 mintedTokenId = _createBasicProton(
-        erc721MintOrders[i].erc721TokenAddress,
-        erc721MintOrders[i].tokenMetadataUri
-      );
-
-      _bond(
-        _proton,
-        tokenId,
-        erc721MintOrders[i].basketManagerId,
-        erc721MintOrders[i].erc721TokenAddress,
-        mintedTokenId
-      );
     }
 
     for (uint256 i; i < liquidityIds.length; i++) {
@@ -469,23 +447,23 @@ contract Web3PacksMode is
   */
   function setChargedParticles(address chargedParticles) external onlyOwner {
     _chargedParticles = chargedParticles;
-    emit ChargedParticlesSet(chargedParticles);
+    // emit ChargedParticlesSet(chargedParticles);
   }
 
   function setChargedState(address chargedState) external onlyOwner {
     _chargedParticles = chargedState;
-    emit ChargedStateSet(chargedState);
+    // emit ChargedStateSet(chargedState);
   }
 
   /// @dev Setup the router
   function setRouter(address router) external onlyOwner {
     _router = router;
-    emit RouterSet(router);
+    // emit RouterSet(router);
   }
 
   function setProton(address proton) external onlyOwner {
     _proton = proton;
-    emit ProtonSet(proton);
+    // emit ProtonSet(proton);
   }
 
   function pause() public onlyOwner {

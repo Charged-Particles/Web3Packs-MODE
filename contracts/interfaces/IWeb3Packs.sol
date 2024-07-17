@@ -21,15 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 pragma solidity 0.8.17;
-
-interface IWeb3Packs {
-  event ChargedParticlesSet(address indexed chargedParticles);
-  event ChargedStateSet(address indexed chargedState);
-  event RouterSet(address indexed router);
-  event ProtonSet(address indexed proton);
-  event PackBundled(uint256 indexed tokenId, address indexed receiver);
-  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
-
   struct ERC20SwapOrder {
     address inputTokenAddress;
     address outputTokenAddress;
@@ -70,6 +61,14 @@ interface IWeb3Packs {
     uint256 ERC20Timelock;
     uint256 ERC721Timelock;
   }
+
+interface IWeb3Packs {
+  event ChargedParticlesSet(address indexed chargedParticles);
+  event ChargedStateSet(address indexed chargedState);
+  event RouterSet(address indexed router);
+  event ProtonSet(address indexed proton);
+  event PackBundled(uint256 indexed tokenId, address indexed receiver);
+  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
 
   function bundle(
     address payable receiver,
