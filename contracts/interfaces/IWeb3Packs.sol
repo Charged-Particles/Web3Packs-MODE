@@ -25,7 +25,7 @@ pragma solidity 0.8.17;
 interface IWeb3Packs {
   event ChargedParticlesSet(address indexed chargedParticles);
   event ChargedStateSet(address indexed chargedState);
-  event UniswapRouterSet(address indexed router);
+  event RouterSet(address indexed router);
   event ProtonSet(address indexed proton);
   event PackBundled(uint256 indexed tokenId, address indexed receiver);
   event PackUnbundled(uint256 indexed tokenId, address indexed receiver);

@@ -59,6 +59,7 @@ contract Web3Packs is
   address internal _router = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
   address internal _nonfungiblePositionManager = 0xC36442b4a4522E871399CD717aBDD847Ab11FE88;
   address internal _chargedParticles = 0x0288280Df6221E7e9f23c1BB398c820ae0Aa6c10;
+  address internal _chargedState = 0x48974C6ae5A0A25565b0096cE3c81395f604140f;
 
   // Charged Particles Wallet Managers
   string internal _cpWalletManager = "generic.B";
@@ -432,6 +433,20 @@ contract Web3Packs is
       return liquidityNfts;
   }
 
+  function _lock(
+    LockState calldata lockState
+  )
+    private
+  {
+    if (lockState.ERC20Timelock > 0) {
+
+    }
+
+    if (lockState.ERC721Timelock > 0) {
+
+    }
+  }
+
   /***********************************|
   |          Only Admin/DAO           |
   |__________________________________*/
@@ -440,14 +455,19 @@ contract Web3Packs is
     * @dev Setup the ChargedParticles Interface
   */
   function setChargedParticles(address chargedParticles) external onlyOwner {
-    emit ChargedParticlesSet(chargedParticles);
     _chargedParticles = chargedParticles;
+    emit ChargedParticlesSet(chargedParticles);
   }
 
-  /// @dev Setup the Uniswap Router
-  function setUniswapRouter(address router) external onlyOwner {
+  function setChargedState(address chargedState) external onlyOwner {
+    _chargedParticles = chargedState;
+    emit ChargedStateSet(chargedState);
+  }
+
+  /// @dev Setup the router
+  function setRouter(address router) external onlyOwner {
     _router = router;
-    emit UniswapRouterSet(router);
+    emit RouterSet(router);
   }
 
   function setProton(address proton) external onlyOwner {
