@@ -33,7 +33,7 @@ const chainIdByName = (chainName) => {
     case 'kovan': return 42;
     case 'polygon': return 137;
     case 'mumbai': return 80001;
-    case 'hardhat': return 31337;
+    case 'hardhat': return 137;
     case 'coverage': return 31337;
     default: return 0;
   }
