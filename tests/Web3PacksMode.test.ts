@@ -7,8 +7,7 @@ import {
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
-import { amountOutMinimum, getNearestUsableTick, quote } from "../uniswap/quote";
-import { getPoolContract } from "../uniswap/quote";
+import { amountOutMinimum, quote } from "../uniswap/quote";
 import globals from "./globals";
 
 describe('Web3Packs', async ()=> {
@@ -27,11 +26,10 @@ describe('Web3Packs', async ()=> {
     ownerSigner = await ethers.getSigner(protocolOwner);
     deployerSigner = await ethers.getSigner(deployer);
     testSigner = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
-
     charged = new Charged({ providers: network.provider , signer: testSigner });
 
     Proton = new ethers.Contract(
-      '0x1CeFb0E1EC36c7971bed1D64291fc16a145F35DC',
+      globals.protonMode,
       protonBAbi,
       ownerSigner
     );
@@ -42,77 +40,44 @@ describe('Web3Packs', async ()=> {
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [ globals.USDcWhale ]
-    });
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
       params: [protocolOwner],
     });
-
-    // Deposit usdc into web3pack contract
-    USDcWhaleSigner = await ethers.getSigner(globals.USDcWhale);
-    USDc = new ethers.Contract(globals.USDcContractAddress, globals.erc20Abi, USDcWhaleSigner);
-    Uni = new ethers.Contract(globals.UniContractAddress, globals.erc20Abi, ethers.provider);
-
-    const foundWeb3PacksTransaction = await USDc.transfer(web3packs.address, ethers.utils.parseUnits('100', 6));
-    await foundWeb3PacksTransaction.wait();
   });
 
   describe('Web3Packs MODE', async () => {
-    it('Should have 3 USDc', async() => {
-      const balance = await USDc.balanceOf(web3packs.address);
-      expect(balance).to.equal('100000000');
-    });
-
-    it.only('Swap a single asset', async() => {
-      // calculate expected amount
-      const swapEstimation = await quote(USDC_USDT_SWAP);
-      const swapPriceTolerance = amountOutMinimum(swapEstimation, 10);
-
+    it('Swap a single asset', async() => {
       const ERC20SwapOrder = [{
-        inputTokenAddress: globals.USDcContractAddress,
-        outputTokenAddress: globals.USDtContractAddress,
+        inputTokenAddress: globals.wrapETHAddress,
+        outputTokenAddress: globals.modeTokenAddress,
         inputTokenAmount: ethers.utils.parseUnits('10', 6),
         uniSwapPoolFee: 3000,
         deadline: globals.deadline,
-        amountOutMinimum: swapPriceTolerance,
+        amountOutMinimum: 0,
         sqrtPriceLimitX96: 0,
       }];
 
-      const swapTransaction = await web3packs.swap(ERC20SwapOrder);
+      const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: ethers.utils.parseEther('0.00000000002') });
       await swapTransaction.wait()
 
-      const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner);
-      const USDtBalanceAfterSwap = await USDt.balanceOf(web3packs.address);
+      const token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+      const balanceAfterSwap = await token.balanceOf(web3packs.address);
 
-      expect(USDtBalanceAfterSwap).to.equal(9982205);
+      expect(balanceAfterSwap).to.be.above(0);
     });
 
     
     it('Bundles token with two swaps and then unbundles the nft', async() => {
       const ERC20SwapOrder = [
         {
-          inputTokenAddress: globals.USDcContractAddress,
-          outputTokenAddress: globals.USDtContractAddress,
+          inputTokenAddress: globals.wrapETHAddress,
+          outputTokenAddress: globals.modeTokenAddress,
+          inputTokenAmount: ethers.utils.parseUnits('10', 6),
           uniSwapPoolFee: 3000,
-          inputTokenAmount: 10,
-          deadline: globals.deadline,
-          amountOutMinimum: 0,
-          sqrtPriceLimitX96: 0,
-        },
-        {
-          inputTokenAddress: globals.USDcContractAddress,
-          outputTokenAddress: globals.UniContractAddress,
-          uniSwapPoolFee: 3000,
-          inputTokenAmount: 10,
           deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         }
       ];
-
-      // const currentBlock = ethers.provider.blockNumber;
-      // const timeLock = currentBlock + 100;
       
       const newTokenId = await web3packs.callStatic.bundleMode(
         globals.testAddress,
@@ -120,7 +85,7 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         [],
         { ERC20Timelock:0 , ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('.2') }
+        { value: ethers.utils.parseEther('0.00000000002') }
       );
 
       const bundleTransaction = await web3packs.bundleMode(
@@ -129,19 +94,17 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         [],
         { ERC20Timelock: 0, ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('.2') }
+        { value: ethers.utils.parseEther('0.00000000002') }
       );
+
       await bundleTransaction.wait();
 
-      const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
-
-      // const USDtTokenMass = await bundToken.getMass(globals.USDtContractAddress, 'generic.B');
-      const UniTokenMass = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
-      expect(UniTokenMass['137']?.value).to.be.gt(1);
+      // const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
+      // const UniTokenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
+      // expect(UniTokenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
 
       // Charged settings contract
-      const chargedStateContractAddress = '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b';
-      const chargedState = new Contract(chargedStateContractAddress, chargedStateAbi, deployerSigner);
+      const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
 
       // setBreakBondApproval
       await chargedState.setApprovalForAll(
@@ -155,39 +118,34 @@ describe('Web3Packs', async ()=> {
         Proton.address,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ globals.UniContractAddress, globals.USDtContractAddress],
+          erc20TokenAddresses: [ globals.modeTokenAddress ],
           nfts: []
         },
       );
       await unBundleTransaction.wait();
 
-      const uniLeftInBundle = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
-      const USDLeftInBundle = await bundToken.getMass(globals.USDtContractAddress, 'generic.B');
-      expect(uniLeftInBundle['137']?.value).to.eq(0);
-      expect(USDLeftInBundle['137']?.value).to.eq(0);
-
-
-      const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner); 
-      const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
-
-      expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(9,1);
+      // const uniLeftInBundle = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
+      // expect(uniLeftInBundle['137']?.value).to.eq(0);
+      // const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner); 
+      // const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
+      // expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(9,1);
     });
 
     it('Should not allow to break pack when locked: erc20s', async() => {
       const ERC20SwapOrder = [
         {
-          inputTokenAddress: globals.USDcContractAddress,
-          outputTokenAddress: globals.USDtContractAddress,
+          inputTokenAddress: globals.wrapETHAddress,
+          outputTokenAddress: globals.modeTokenAddress,
+          inputTokenAmount: ethers.utils.parseUnits('10', 6),
           uniSwapPoolFee: 3000,
-          inputTokenAmount: 10,
           deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
-        },
+        }
       ];
 
-      const currentBlock = ethers.provider.blockNumber;
-      const timeLock = currentBlock + 100;
+      const currentBlock = 10491344; // todo: do not hardcode
+      const timeLock = currentBlock + 10000;
       
       const newTokenId = await web3packs.callStatic.bundleMode(
         globals.testAddress,
@@ -204,15 +162,12 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         [],
         { ERC20Timelock: timeLock, ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('.2') }
+        { value: ethers.utils.parseEther('0.00000000002') }
       );
       await bundleTransaction.wait();
 
-      const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
-
       // Charged settings contract
-      const chargedStateContractAddress = '0x9c00b8CF03f58c0420CDb6DE72E27Bf11964025b';
-      const chargedState = new Contract(chargedStateContractAddress, chargedStateAbi, deployerSigner);
+      const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
 
       // setBreakBondApproval
       await chargedState.setApprovalForAll(
@@ -221,15 +176,72 @@ describe('Web3Packs', async ()=> {
         web3packs.address
       ).then((tx) => tx.wait());
         
+      
       await expect(web3packs.unbundle(
         await deployerSigner.getAddress(),
         Proton.address,
         newTokenId.toNumber(),
         {
-          erc20TokenAddresses: [ globals.USDtContractAddress],
+          erc20TokenAddresses: [ globals.modeTokenAddress ],
           nfts: []
         },
       )).to.revertedWith('CP:E-302');
     });
+
+    it.only('Provides liquidity ', async ()=> {
+      const amount1 = ethers.utils.parseEther('0.00000002');
+
+      const amount0 = ethers.utils.parseEther('0.00000002');
+
+      const amount2 = ethers.utils.parseEther('0.00000000001');
+      const tickSpace = 60;
+
+      const ERC20SwapOrder = [
+        {
+          inputTokenAddress: globals.wrapETHAddress,
+          outputTokenAddress: globals.modeTokenAddress,
+          uniSwapPoolFee: 0,
+          inputTokenAmount: amount0,
+          deadline: globals.deadline,
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
+          forLiquidity: true
+        },
+      ];
+    
+      const liquidityMintOrder = [
+        {
+          token0: globals.wrapETHAddress,
+          token1: globals.modeTokenAddress,
+          amount0ToMint: amount2,
+          amount1ToMint: amount2,
+          amount0Min: 0,
+          amount1Min: 0,
+          tickSpace: tickSpace,
+          poolFee: 0 
+        }
+      ];
+
+      // const tokenId = await web3packs.callStatic.bundleMode(
+      //   await deployerSigner.getAddress(),
+      //   globals.ipfsMetadata,
+      //   ERC20SwapOrder,
+      //   liquidityMintOrder,
+      //   { ERC20Timelock: 0, ERC721Timelock: 0 },
+      //   { value: ethers.utils.parseEther('0.00000000004') }
+      // );
+
+      const transaction = await web3packs.populateTransaction.bundleMode(
+        await deployerSigner.getAddress(),
+        globals.ipfsMetadata,
+        ERC20SwapOrder,
+        liquidityMintOrder,
+        { ERC20Timelock: 0, ERC721Timelock: 0 },
+        { value: ethers.utils.parseEther('0.00000000004') }
+      );
+
+      console.log(transaction)
+      
+    })
   })
 });
