@@ -1,8 +1,9 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
+import "@nomicfoundation/hardhat-verify";
 import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
+// import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-ethers'
 import '@typechain/hardhat'
 import 'hardhat-gas-reporter'
@@ -85,7 +86,7 @@ const config: HardhatUserConfig = {
       gasPrice: 100e9,
       forking: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        blockNumber: 30784049 //
+        blockNumber: 30784049 
       },
       accounts: {
         mnemonic: mnemonic.testnet,
@@ -114,7 +115,6 @@ const config: HardhatUserConfig = {
         }
     },
     mumbai: {
-        // url: `https://matic-mumbai.chainstacklabs.com/`,
         url: 'https://rpc-mumbai.maticvigil.com',
         gasPrice: 10e9,
         accounts: {
@@ -136,7 +136,6 @@ const config: HardhatUserConfig = {
     },
     mode: {
         url: "https://mainnet.mode.network/",
-        gasPrice: 'auto',
         accounts: {
             mnemonic: mnemonic.mainnet,
             // initialIndex: 0,
@@ -149,6 +148,17 @@ const config: HardhatUserConfig = {
     apiKey: {
       polygon: process.env.POLYGONSCAN_APIKEY,
       polygonMumbai: process.env.POLYGONSCAN_APIKEY,
+      // mode: process.env.ETHERSCAN_APIKEY,
+      // customChains: [
+      //   {
+      //     network: "mode",
+      //     chainId: 34443,
+      //     urls: {
+      //       apiURL: 'https://explorer.mode.network/api\?',
+      //       browserURL: 'https://explorer.mode.network',
+      //     },
+      //   }
+      // ]
     }
   },
   gasReporter: {
@@ -163,6 +173,7 @@ const config: HardhatUserConfig = {
     flat: true,
     only: [ 'Web3Packs' ],
   },
+  sourcify: { enabled: true },
 };
 
 export default config;

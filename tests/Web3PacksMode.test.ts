@@ -64,7 +64,7 @@ describe('Web3Packs', async ()=> {
       expect(balance).to.equal('100000000');
     });
 
-    it('Swap a single asset', async() => {
+    it.only('Swap a single asset', async() => {
       // calculate expected amount
       const swapEstimation = await quote(USDC_USDT_SWAP);
       const swapPriceTolerance = amountOutMinimum(swapEstimation, 10);

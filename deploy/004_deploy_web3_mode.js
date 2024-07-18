@@ -45,14 +45,6 @@ const {
       //
       // Deploy Contracts
       //
-      console.log(
-        _ADDRESS[chainId].Proton,
-        _ADDRESS[chainId].UniswapRouter,
-        _ADDRESS[chainId].NonfungibleTokenPositionDescriptor,
-        _ADDRESS[chainId].ChargedParticles,
-        _ADDRESS[chainId].ChargedState
-      );
-
       log('  Deploying Web3PacksMode...');
   
       await deploy('Web3PacksMode', {

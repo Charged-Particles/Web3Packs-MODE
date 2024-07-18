@@ -13,8 +13,8 @@ async function main() {
   const TOKEN_1 = '0xDfc7C877a950e49D2610114102175A06C2e3167a';
   const POOL_FEE = 5900;
   const amount0 = 10000000;
-  // const amount1 = 1000000000;
-  // const tickSpace = 10;
+  const amount1 = 0;
+  const tickSpace = 60;
 
   const ERC20SwapOrder = [
     {
@@ -29,8 +29,18 @@ async function main() {
     }
   ];
 
-  // const pk = await deployer.getPrivateKey()
-  console.log(ERC20SwapOrder)
+  const liquidityMintOrder = [
+    {
+      token0: TOKEN_0,
+      token1: TOKEN_1,
+      amount0ToMint: amount0,
+      amount1ToMint: amount1,
+      amount0Min: 0,
+      amount1Min: 0,
+      tickSpace: tickSpace,
+      poolFee: POOL_FEE
+    }
+  ];
 
   // const wallet = Wallet.fromMnemonic(process.env.MAINNET_MNEMONIC ?? '');
   // const pk = wallet.privateKey
@@ -38,22 +48,12 @@ async function main() {
     await deployer.getAddress(),
     globals.ipfsMetadata,
     ERC20SwapOrder,
-    [],
+    liquidityMintOrder,
     { ERC20Timelock: 0, ERC721Timelock: 0 },
-    { value: hre.ethers.utils.parseEther('0.00000000001') }
+    { value: hre.ethers.utils.parseEther('0.00000000002') }
   );
   
   console.log(tokenId.toString());
-
-  await web3Packs.bundleMode(
-    await deployer.getAddress(),
-    globals.ipfsMetadata,
-    ERC20SwapOrder,
-    [],
-    { ERC20Timelock: 0, ERC721Timelock: 0 },
-    { value: hre.ethers.utils.parseEther('0.00000000001') }
-  );
-
 }
 
 main().catch((error) => {

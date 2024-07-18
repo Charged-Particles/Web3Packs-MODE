@@ -70,7 +70,6 @@ struct MintParams {
   uint256 deadline;
 }
 
-
 interface IKimRouter {
   function exactInputSingle(
       ExactInputSingleParams calldata params
@@ -87,6 +86,7 @@ interface IKimNonfungiblePositionManager {
 }
 
 contract Web3PacksMode is
+  IWeb3PacksMode,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -152,25 +152,10 @@ contract Web3PacksMode is
       liquidityIds
     );
 
-    if(lockState.ERC20Timelock > 0) {
-      IChargedState(_chargedState).setReleaseTimelock(
-        _proton,
-        tokenId,
-        lockState.ERC20Timelock
-      );
-    }
-
-    if(lockState.ERC721Timelock > 0) {
-      IChargedState(_chargedState).setBreakBondTimelock(
-        _proton,
-        tokenId,
-        lockState.ERC721Timelock
-      );
-    }
+    _lock(lockState, tokenId);
 
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
-
-    // emit PackBundled(tokenId, receiver);
+    emit PackBundled(tokenId, receiver);
   }
 
   function unbundle(
@@ -190,7 +175,7 @@ contract Web3PacksMode is
       _cpWalletManager,
       web3PackOrder
     );
-    // emit PackUnbundled(tokenId, receiver);
+    emit PackUnbundled(tokenId, receiver);
   }
 
   function unbundleFromManager(
@@ -205,7 +190,7 @@ contract Web3PacksMode is
     nonReentrant
   {
     _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
-    // emit PackUnbundled(tokenId, receiver);
+    emit PackUnbundled(tokenId, receiver);
   }
 
   function swap(
@@ -424,7 +409,7 @@ contract Web3PacksMode is
     private
   {
     if (address(this).balance >= fundingAmount) {
-      (bool sent, bytes memory data) = receiver.call{value: fundingAmount}("");
+      (bool sent, ) = receiver.call{value: fundingAmount}("");
       if (!sent) {
         revert FundingFailed();
       }
@@ -480,16 +465,26 @@ contract Web3PacksMode is
   }
 
   function _lock (
-    LockState calldata lockState
+    LockState calldata lockState,
+    uint256 tokenId
   )
     private
   {
-    if (lockState.ERC20Timelock > 0) {
 
+    if(lockState.ERC20Timelock > 0) {
+      IChargedState(_chargedState).setReleaseTimelock(
+        _proton,
+        tokenId,
+        lockState.ERC20Timelock
+      );
     }
 
-    if (lockState.ERC721Timelock > 0) {
-
+    if(lockState.ERC721Timelock > 0) {
+      IChargedState(_chargedState).setBreakBondTimelock(
+        _proton,
+        tokenId,
+        lockState.ERC721Timelock
+      );
     }
   }
 
@@ -502,23 +497,23 @@ contract Web3PacksMode is
   */
   function setChargedParticles(address chargedParticles) external onlyOwner {
     _chargedParticles = chargedParticles;
-    // emit ChargedParticlesSet(chargedParticles);
+    emit ChargedParticlesSet(chargedParticles);
   }
 
   function setChargedState(address chargedState) external onlyOwner {
     _chargedParticles = chargedState;
-    // emit ChargedStateSet(chargedState);
+    emit ChargedStateSet(chargedState);
   }
 
   /// @dev Setup the router
   function setRouter(address router) external onlyOwner {
     _router = router;
-    // emit RouterSet(router);
+    emit RouterSet(router);
   }
 
   function setProton(address proton) external onlyOwner {
     _proton = proton;
-    // emit ProtonSet(proton);
+    emit ProtonSet(proton);
   }
 
   function pause() public onlyOwner {
@@ -589,5 +584,4 @@ contract Web3PacksMode is
         return (MAX_TICK / tickSpacing) * tickSpacing;
     }
   }
-
 }

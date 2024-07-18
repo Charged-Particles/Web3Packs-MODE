@@ -89,3 +89,28 @@ interface IWeb3Packs {
     Web3PackOrder calldata web3PackOrder
   ) external;
 }
+
+interface IWeb3PacksMode {
+  event ChargedParticlesSet(address indexed chargedParticles);
+  event ChargedStateSet(address indexed chargedState);
+  event RouterSet(address indexed router);
+  event ProtonSet(address indexed proton);
+  event PackBundled(uint256 indexed tokenId, address indexed receiver);
+  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
+
+  function bundleMode(
+    address payable receiver,
+    string calldata tokenMetaUri,
+    ERC20SwapOrder[] calldata erc20SwapOrders,
+    LiquidityMintOrder[] calldata liquidityMintOrders,
+    LockState calldata lockState
+  ) external payable returns(uint256 tokenId);
+
+  function unbundle(
+    address receiver,
+    address contractAddress,
+    uint256 tokenId,
+    Web3PackOrder calldata web3PackOrder
+  ) external;
+}
+
