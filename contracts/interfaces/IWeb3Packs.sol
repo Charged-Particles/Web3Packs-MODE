@@ -37,6 +37,8 @@ pragma solidity 0.8.17;
     address token1;
     uint256 amount0ToMint;
     uint256 amount1ToMint;
+    uint256 amount0Min;
+    uint256 amount1Min;
     int256 tickSpace;
     uint24 poolFee;
   }

@@ -47,6 +47,44 @@ import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 
+struct ExactInputSingleParams {
+  address tokenIn;
+  address tokenOut;
+  address recipient;
+  uint256 deadline;
+  uint256 amountIn;
+  uint256 amountOutMinimum;
+  uint160 limitSqrtPrice;
+}
+
+struct MintParams {
+  address token0;
+  address token1;
+  int24 tickLower;
+  int24 tickUpper;
+  uint256 amount0Desired;
+  uint256 amount1Desired;
+  uint256 amount0Min;
+  uint256 amount1Min;
+  address recipient;
+  uint256 deadline;
+}
+
+
+interface IKimRouter {
+  function exactInputSingle(
+      ExactInputSingleParams calldata params
+  ) external payable returns (uint256 amountOut);
+}
+
+interface IKimNonfungiblePositionManager {
+  function mint(
+    MintParams calldata params
+  )
+    external
+    payable
+    returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+}
 
 contract Web3PacksMode is
   Ownable,
@@ -131,6 +169,7 @@ contract Web3PacksMode is
     }
 
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
+
     // emit PackBundled(tokenId, receiver);
   }
 
@@ -243,22 +282,21 @@ contract Web3PacksMode is
     // Approve the router to spend ERC20.
     TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
 
-    ISwapRouter.ExactInputSingleParams memory params =
-      ISwapRouter.ExactInputSingleParams({
+    ExactInputSingleParams memory params =
+      ExactInputSingleParams({
         tokenIn: erc20SwapOrder.inputTokenAddress,
         tokenOut: erc20SwapOrder.outputTokenAddress,
-        fee: erc20SwapOrder.uniSwapPoolFee,
         recipient: address(this),
         deadline: erc20SwapOrder.deadline,
         amountIn: erc20SwapOrder.inputTokenAmount,
         amountOutMinimum: erc20SwapOrder.amountOutMinimum,
-        sqrtPriceLimitX96: erc20SwapOrder.sqrtPriceLimitX96
+        limitSqrtPrice: erc20SwapOrder.sqrtPriceLimitX96
       });
 
     // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
     uint256 amountIn = (msg.value > 0 ? erc20SwapOrder.inputTokenAmount : 0);
 
-    amountOut = ISwapRouter(_router).exactInputSingle{value: amountIn }(params);
+    amountOut = IKimRouter(_router).exactInputSingle{value: amountIn }(params);
   }
 
   function _createBasicProton(
@@ -417,22 +455,21 @@ contract Web3PacksMode is
       int24 tickLower = int24(_findNearestValidTick(liquidityMintOrders[i].tickSpace, true));
       int24 tickUpper = int24(_findNearestValidTick(liquidityMintOrders[i].tickSpace, false));
 
-      INonfungiblePositionManager.MintParams memory params = 
-        INonfungiblePositionManager.MintParams({
+      MintParams memory params = 
+        MintParams({
           token0: liquidityMintOrders[i].token0,
           token1: liquidityMintOrders[i].token1,
-          fee: liquidityMintOrders[i].poolFee,
           tickLower: tickLower,
           tickUpper: tickUpper,
           amount0Desired: liquidityMintOrders[i].amount0ToMint,
           amount1Desired: liquidityMintOrders[i].amount1ToMint,
-          amount0Min: 0,
-          amount1Min: 0,
+          amount0Min: liquidityMintOrders[i].amount0Min,
+          amount1Min: liquidityMintOrders[i].amount1Min,
           recipient: address(this),
           deadline: block.timestamp
         });
 
-        (uint256 tokenId, , , ) = INonfungiblePositionManager(
+        (uint256 tokenId, , , ) = IKimNonfungiblePositionManager(
           _nonfungiblePositionManager
         ).mint(params);
 

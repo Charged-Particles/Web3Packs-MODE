@@ -35,6 +35,7 @@ const chainIdByName = (chainName) => {
     case 'mumbai': return 80001;
     case 'hardhat': return 137;
     case 'coverage': return 31337;
+    case 'mode': return 34443;
     default: return 0;
   }
 };
