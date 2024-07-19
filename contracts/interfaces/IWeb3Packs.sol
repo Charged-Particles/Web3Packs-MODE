@@ -21,6 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 pragma solidity 0.8.17;
+
+interface IWeb3Packs {
+  event ChargedParticlesSet(address indexed chargedParticles);
+  event ChargedStateSet(address indexed chargedState);
+  event RouterSet(address indexed router);
+  event ProtonSet(address indexed proton);
+  event PackBundled(uint256 indexed tokenId, address indexed receiver);
+  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
+
   struct ERC20SwapOrder {
     address inputTokenAddress;
     address outputTokenAddress;
@@ -64,47 +73,16 @@ pragma solidity 0.8.17;
     uint256 ERC721Timelock;
   }
 
-interface IWeb3Packs {
-  event ChargedParticlesSet(address indexed chargedParticles);
-  event ChargedStateSet(address indexed chargedState);
-  event RouterSet(address indexed router);
-  event ProtonSet(address indexed proton);
-  event PackBundled(uint256 indexed tokenId, address indexed receiver);
-  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
-
-  function bundle(
-    address payable receiver,
-    string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
-    ERC721MintOrders[] calldata erc721MintOrders,
-    LiquidityMintOrder[] calldata liquidityMintOrders,
-    uint256 fundingAmount,
-    LockState calldata lockState
-  ) external payable returns(uint256 tokenId);
-
-  function unbundle(
-    address receiver,
-    address contractAddress,
-    uint256 tokenId,
-    Web3PackOrder calldata web3PackOrder
-  ) external;
-}
-
-interface IWeb3PacksMode {
-  event ChargedParticlesSet(address indexed chargedParticles);
-  event ChargedStateSet(address indexed chargedState);
-  event RouterSet(address indexed router);
-  event ProtonSet(address indexed proton);
-  event PackBundled(uint256 indexed tokenId, address indexed receiver);
-  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
-
   function bundleMode(
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
     LockState calldata lockState
-  ) external payable returns(uint256 tokenId);
+  )
+    external
+    payable
+    returns(uint256 tokenId);
 
   function unbundle(
     address receiver,
@@ -113,4 +91,3 @@ interface IWeb3PacksMode {
     Web3PackOrder calldata web3PackOrder
   ) external;
 }
-

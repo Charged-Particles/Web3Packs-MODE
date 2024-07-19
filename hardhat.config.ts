@@ -3,7 +3,6 @@ dotenv.config()
 
 import "@nomicfoundation/hardhat-verify";
 import '@nomiclabs/hardhat-waffle'
-// import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-ethers'
 import '@typechain/hardhat'
 import 'hardhat-gas-reporter'
@@ -96,16 +95,6 @@ const config: HardhatUserConfig = {
         count: 10,
       },
     },
-    goerli: {
-        url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-        gasPrice: 'auto',
-        // blockGasLimit: 12400000,
-        accounts: {
-            mnemonic: mnemonic.testnet,
-            initialIndex: 0,
-            count: 10,
-        }
-    },
     mainnet: {
         url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
         gasPrice: 'auto',
@@ -115,16 +104,6 @@ const config: HardhatUserConfig = {
             initialIndex: 0,
             count: 10,
         }
-    },
-    mumbai: {
-        url: 'https://rpc-mumbai.maticvigil.com',
-        gasPrice: 10e9,
-        accounts: {
-            mnemonic: mnemonic.testnet,
-            initialIndex: 0,
-            count: 10,
-        },
-        chainId: 80001
     },
     polygon: {
         url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
@@ -140,16 +119,15 @@ const config: HardhatUserConfig = {
         url: "https://mainnet.mode.network/",
         accounts: {
             mnemonic: mnemonic.mainnet,
-            // initialIndex: 0,
             count: 8,
         },
         chainId: 34443
     }
   },
-  etherscan: {
-    apiKey: {
-      polygon: process.env.POLYGONSCAN_APIKEY,
-      polygonMumbai: process.env.POLYGONSCAN_APIKEY,
+  // etherscan: {
+  //   apiKey: {
+      // polygon: process.env.POLYGONSCAN_APIKEY,
+      // polygonMumbai: process.env.POLYGONSCAN_APIKEY,
       // mode: process.env.ETHERSCAN_APIKEY,
       // customChains: [
       //   {
@@ -161,8 +139,8 @@ const config: HardhatUserConfig = {
       //     },
       //   }
       // ]
-    }
-  },
+    // }
+  // },
   gasReporter: {
       currency: 'USD',
       gasPrice: 1,

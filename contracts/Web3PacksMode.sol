@@ -86,7 +86,7 @@ interface IKimNonfungiblePositionManager {
 }
 
 contract Web3PacksMode is
-  IWeb3PacksMode,
+  IWeb3Packs,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -456,7 +456,7 @@ contract Web3PacksMode is
 
         (uint256 tokenId, , , ) = IKimNonfungiblePositionManager(
           _nonfungiblePositionManager
-        ).mint(params);
+        ).mint{ value: liquidityMintOrders[i].amount0ToMint }(params);
 
         liquidityNfts[i] = tokenId;
       }

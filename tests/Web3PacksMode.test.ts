@@ -49,7 +49,7 @@ describe('Web3Packs', async ()=> {
       const ERC20SwapOrder = [{
         inputTokenAddress: globals.wrapETHAddress,
         outputTokenAddress: globals.modeTokenAddress,
-        inputTokenAmount: ethers.utils.parseUnits('10', 6),
+        inputTokenAmount: ethers.utils.parseEther('0.00000001'),
         uniSwapPoolFee: 3000,
         deadline: globals.deadline,
         amountOutMinimum: 0,
@@ -61,6 +61,8 @@ describe('Web3Packs', async ()=> {
 
       const token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
       const balanceAfterSwap = await token.balanceOf(web3packs.address);
+
+      console.log(balanceAfterSwap.toString());
 
       expect(balanceAfterSwap).to.be.above(0);
     });
@@ -190,10 +192,9 @@ describe('Web3Packs', async ()=> {
 
     it.only('Provides liquidity ', async ()=> {
       const amount1 = ethers.utils.parseEther('0.00000002');
+      const amount0 = ethers.utils.parseEther('0.00000001');
+      const amount2 = ethers.utils.parseEther('0.000000000001');
 
-      const amount0 = ethers.utils.parseEther('0.00000002');
-
-      const amount2 = ethers.utils.parseEther('0.00000000001');
       const tickSpace = 60;
 
       const ERC20SwapOrder = [
@@ -201,7 +202,7 @@ describe('Web3Packs', async ()=> {
           inputTokenAddress: globals.wrapETHAddress,
           outputTokenAddress: globals.modeTokenAddress,
           uniSwapPoolFee: 0,
-          inputTokenAmount: amount0,
+          inputTokenAmount: amount2,
           deadline: globals.deadline,
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
@@ -213,8 +214,8 @@ describe('Web3Packs', async ()=> {
         {
           token0: globals.wrapETHAddress,
           token1: globals.modeTokenAddress,
-          amount0ToMint: amount2,
-          amount1ToMint: amount2,
+          amount0ToMint: 1000000,
+          amount1ToMint: 1000000,
           amount0Min: 0,
           amount1Min: 0,
           tickSpace: tickSpace,
@@ -222,16 +223,7 @@ describe('Web3Packs', async ()=> {
         }
       ];
 
-      // const tokenId = await web3packs.callStatic.bundleMode(
-      //   await deployerSigner.getAddress(),
-      //   globals.ipfsMetadata,
-      //   ERC20SwapOrder,
-      //   liquidityMintOrder,
-      //   { ERC20Timelock: 0, ERC721Timelock: 0 },
-      //   { value: ethers.utils.parseEther('0.00000000004') }
-      // );
-
-      const transaction = await web3packs.populateTransaction.bundleMode(
+      const tokenId = await web3packs.callStatic.bundleMode(
         await deployerSigner.getAddress(),
         globals.ipfsMetadata,
         ERC20SwapOrder,
@@ -240,7 +232,16 @@ describe('Web3Packs', async ()=> {
         { value: ethers.utils.parseEther('0.00000000004') }
       );
 
-      console.log(transaction)
+      // const transaction = await web3packs.populateTransaction.bundleMode(
+      //   await deployerSigner.getAddress(),
+      //   globals.ipfsMetadata,
+      //   ERC20SwapOrder,
+      //   liquidityMintOrder,
+      //   { ERC20Timelock: 0, ERC721Timelock: 0 },
+      //   { value: ethers.utils.parseEther('0.0000000004') }
+      // );
+
+      console.log(tokenId)
       
     })
   })
