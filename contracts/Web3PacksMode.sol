@@ -70,6 +70,13 @@ struct MintParams {
   uint256 deadline;
 }
 
+struct MintResponse {
+  uint256 tokenId;
+  uint128 liquidity;
+  uint256 amount0;
+  uint256 amount1;
+}
+
 interface IKimRouter {
   function exactInputSingle(
       ExactInputSingleParams calldata params
@@ -142,14 +149,14 @@ contract Web3PacksMode is
       revert NullReceiver();
 
     uint256[] memory realAmounts = _swap(erc20SwapOrders);
-    uint256[] memory liquidityIds = _depositLiquidity(liquidityMintOrders);
+    MintResponse[] memory liquidity = _depositLiquidity(liquidityMintOrders);
 
     tokenId = _bundle(
       address(this),
       tokenMetaUri,
       erc20SwapOrders,
       realAmounts,
-      liquidityIds
+      liquidity
     );
 
     _lock(lockState, tokenId);
@@ -208,7 +215,8 @@ contract Web3PacksMode is
     LiquidityMintOrder[] calldata liquidityMintOrders
   )
     external
-    returns (uint256[] memory) 
+    payable
+    returns (MintResponse[] memory) 
   {
     return _depositLiquidity(liquidityMintOrders);
   }
@@ -326,7 +334,7 @@ contract Web3PacksMode is
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
     uint256[] memory realAmounts,
-    uint256[] memory liquidityIds
+    MintResponse[] memory liquidity
   )
     internal
     returns (uint256 tokenId)
@@ -358,13 +366,13 @@ contract Web3PacksMode is
       }
     }
 
-    for (uint256 i; i < liquidityIds.length; i++) {
+    for (uint256 i; i < liquidity.length; i++) {
       _bond(
         _proton,
         tokenId,
         _cpBasketManager,
         _nonfungiblePositionManager,
-        liquidityIds[i] 
+        liquidity[i].tokenId
       );
     }
   }
@@ -420,9 +428,9 @@ contract Web3PacksMode is
     LiquidityMintOrder[] calldata liquidityMintOrders
   )
    private
-   returns (uint256[] memory)
+   returns (MintResponse[] memory)
   {
-    uint256[] memory liquidityNfts = new uint256[](liquidityMintOrders.length);
+    MintResponse[] memory liquidityNfts = new MintResponse[](liquidityMintOrders.length);
 
     for (uint256 i; i < liquidityMintOrders.length; i++) {
       TransferHelper.safeApprove(
@@ -454,11 +462,11 @@ contract Web3PacksMode is
           deadline: block.timestamp
         });
 
-        (uint256 tokenId, , , ) = IKimNonfungiblePositionManager(
+        (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1) = IKimNonfungiblePositionManager(
           _nonfungiblePositionManager
         ).mint{ value: liquidityMintOrders[i].amount0ToMint }(params);
 
-        liquidityNfts[i] = tokenId;
+        liquidityNfts[i] = MintResponse(tokenId, liquidity, amount0, amount1);
       }
 
       return liquidityNfts;
