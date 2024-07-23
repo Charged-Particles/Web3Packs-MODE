@@ -212,12 +212,14 @@ contract Web3PacksMode is
   }
 
   function depositLiquidity(
-    LiquidityMintOrder[] calldata liquidityMintOrders
+    LiquidityMintOrder[] calldata liquidityMintOrders,
+    ERC20SwapOrder[] calldata erc20SwapOrders
   )
     external
     payable
     returns (MintResponse[] memory) 
   {
+    _swap(erc20SwapOrders);
     return _depositLiquidity(liquidityMintOrders);
   }
 

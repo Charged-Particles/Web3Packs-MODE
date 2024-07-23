@@ -9,7 +9,6 @@ async function main() {
   const web3Packs: Web3PacksMode = await hre.ethers.getContract('Web3PacksMode');
 
   // pool https://explorer.mode.network/address/0x8cfE2A02dfBAbC56aE7e573170E35f88A38BeA55?tab=read_contract
-  const TOKEN_0 = '0x4200000000000000000000000000000000000006';
   const amount2 = hre.ethers.utils.parseEther('0.000000000001');
 
   const tickSpace = 60;
@@ -25,6 +24,16 @@ async function main() {
       sqrtPriceLimitX96: 0,
       forLiquidity: true
     },
+    {
+      inputTokenAddress: globals.wrapETHAddress,
+      outputTokenAddress: globals.modeTokenAddress,
+      uniSwapPoolFee: 0,
+      inputTokenAmount: amount2,
+      deadline: globals.deadline,
+      amountOutMinimum: 0,
+      sqrtPriceLimitX96: 0,
+      forLiquidity: false
+    },
   ];
 
   const liquidityMintOrder = [
@@ -39,8 +48,7 @@ async function main() {
       poolFee: 0 
     }
   ];
-  // const wallet = Wallet.fromMnemonic(process.env.MAINNET_MNEMONIC ?? '');
-  // const pk = wallet.privateKey
+
   const tokenId = await web3Packs.callStatic.bundleMode(
     await deployer.getAddress(),
     globals.ipfsMetadata,
@@ -49,17 +57,17 @@ async function main() {
     { ERC20Timelock: 0, ERC721Timelock: 0 },
     { value: hre.ethers.utils.parseEther('0.0000000004') }
   );
+  console.log(tokenId);
 
-   await web3Packs.bundleMode(
-    await deployer.getAddress(),
-    globals.ipfsMetadata,
-    ERC20SwapOrder,
-    liquidityMintOrder,
-    { ERC20Timelock: 0, ERC721Timelock: 0 },
-    { value: hre.ethers.utils.parseEther('0.0000000004') }
-  );
-  
-  console.log(tokenId.toString());
+  //  await web3Packs.bundleMode(
+  //   await deployer.getAddress(),
+  //   globals.ipfsMetadata,
+  //   ERC20SwapOrder,
+  //   liquidityMintOrder,
+  //   { ERC20Timelock: 0, ERC721Timelock: 0 },
+  //   { value: hre.ethers.utils.parseEther('0.0000000004') }
+  // );
+  // console.log(tokenId.toString());
 }
 
 main().catch((error) => {
