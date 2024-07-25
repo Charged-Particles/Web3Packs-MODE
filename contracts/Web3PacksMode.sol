@@ -92,6 +92,10 @@ interface IKimNonfungiblePositionManager {
     returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 }
 
+interface ERC20 {
+  function balanceOf(address account) external view returns (uint256);
+}
+
 contract Web3PacksMode is
   IWeb3Packs,
   Ownable,
@@ -148,14 +152,16 @@ contract Web3PacksMode is
     if (receiver == address(0x0))
       revert NullReceiver();
 
-    uint256[] memory realAmounts = _swap(erc20SwapOrders);
+    _swap(erc20SwapOrders); // todo we dont need realamount, we can just use balance of
+
+    // This might return erc20 or nfts...
+    // we need a way to energize or bond depending on the case
     MintResponse[] memory liquidity = _depositLiquidity(liquidityMintOrders);
 
     tokenId = _bundle(
       address(this),
       tokenMetaUri,
       erc20SwapOrders,
-      realAmounts,
       liquidity
     );
 
@@ -331,41 +337,48 @@ contract Web3PacksMode is
     );
   }
 
+  function _energize(
+    uint256 tokenId,
+    address tokenAddress,
+    bool forLiqudity
+  )
+   internal
+  {
+      if (! forLiqudity) {
+        uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
+
+        TransferHelper.safeApprove(
+          tokenAddress,
+          address(_chargedParticles),
+          balance
+        );
+
+        IChargedParticles(_chargedParticles).energizeParticle(
+          _proton,
+          tokenId,
+          _cpWalletManager,
+          tokenAddress,
+          balance,
+          address(this)
+        );
+      }
+  }
+
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrder[] calldata erc20SwapOrders,
-    uint256[] memory realAmounts,
     MintResponse[] memory liquidity
   )
     internal
     returns (uint256 tokenId)
   {
-    address self = address(this);
-    IChargedParticles chargedParticles = IChargedParticles(_chargedParticles);
-
     // Mint Web3Pack NFT to Receiver
-    tokenId = IBaseProton(_proton).createBasicProton(self, receiver, tokenMetaUri);
+    tokenId = IBaseProton(_proton).createBasicProton(address(this), receiver, tokenMetaUri);
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      // If not for liquidity energize 
-      if (! erc20SwapOrders[i].forLiquidity) {
-        TransferHelper.safeApprove(
-          erc20SwapOrders[i].outputTokenAddress,
-          address(_chargedParticles),
-          realAmounts[i]
-        );
-
-        chargedParticles.energizeParticle(
-          _proton,
-          tokenId,
-          _cpWalletManager,
-          erc20SwapOrders[i].outputTokenAddress,
-          realAmounts[i],
-          self
-        );
-      }
+      _energize(tokenId, erc20SwapOrders[i].outputTokenAddress, erc20SwapOrders[i].forLiquidity);
     }
 
     for (uint256 i; i < liquidity.length; i++) {
