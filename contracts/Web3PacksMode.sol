@@ -212,9 +212,8 @@ contract Web3PacksMode is
     external
     payable
     virtual
-    returns (uint256[] memory)
   {
-    return _swap(erc20SwapOrders);
+    _swap(erc20SwapOrders);
   }
 
   function depositLiquidity(
@@ -263,28 +262,26 @@ contract Web3PacksMode is
   )
     internal
     virtual
-    returns (uint256[] memory)
   {
-    uint256[] memory amountsOut = new uint256[](erc20SwapOrders.length);
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      amountsOut[i] = _singleSwap(
+      _singleSwap(
         erc20SwapOrders[i]
       );
     }
-    return amountsOut;
   }
 
   function _singleSwap(
     ERC20SwapOrder calldata erc20SwapOrder
   )
    internal
-   returns (uint256 amountOut)
   {
     // Approve the router to spend ERC20.
     TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
 
     ExactInputSingleParams memory params =
       ExactInputSingleParams({
+        // router
+        // calldata
         tokenIn: erc20SwapOrder.inputTokenAddress,
         tokenOut: erc20SwapOrder.outputTokenAddress,
         recipient: address(this),
@@ -297,7 +294,11 @@ contract Web3PacksMode is
     // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
     uint256 amountIn = (msg.value > 0 ? erc20SwapOrder.inputTokenAmount : 0);
 
-    amountOut = IKimRouter(_router).exactInputSingle{value: amountIn }(params);
+    // (success, returnData) = _router.callTo.call(
+    //   currentSwap.callData
+    // );
+
+    IKimRouter(_router).exactInputSingle{value: amountIn }(params);
   }
 
   function _createBasicProton(
@@ -382,6 +383,9 @@ contract Web3PacksMode is
     }
 
     for (uint256 i; i < liquidity.length; i++) {
+      // if mint response.type == v2 -> energize 
+      // if mint response.type == v3 -> bond
+
       _bond(
         _proton,
         tokenId,
