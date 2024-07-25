@@ -100,8 +100,7 @@ describe('Web3Packs', async ()=> {
 
       const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
       const UniTokenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
-      console.log(UniTokenMass)
-      // expect(UniTokenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
+      expect(UniTokenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
 
       // Charged settings contract
       const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
@@ -124,11 +123,13 @@ describe('Web3Packs', async ()=> {
       );
       await unBundleTransaction.wait();
 
-      // const uniLeftInBundle = await bundToken.getMass(globals.UniContractAddress, 'generic.B');
-      // expect(uniLeftInBundle['137']?.value).to.eq(0);
-      // const USDt = new ethers.Contract(globals.USDtContractAddress, globals.erc20Abi, USDcWhaleSigner); 
-      // const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
-      // expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(9,1);
+      const uniLeftInBundle = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(uniLeftInBundle[network.config.chainId ?? '']?.value).to.eq(0);
+
+      const USDt = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner); 
+      const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
+
+      expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(1311275020845,100);
     });
 
     it('Should not allow to break pack when locked: erc20s', async() => {
@@ -238,9 +239,7 @@ describe('Web3Packs', async ()=> {
       //   { ERC20Timelock: 0, ERC721Timelock: 0 },
       //   { value: ethers.utils.parseEther('0.0000000004') }
       // );
-
       console.log(tokenId)
-      
     })
   })
 });
