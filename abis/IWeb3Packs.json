@@ -152,28 +152,6 @@
         "components": [
           {
             "internalType": "address",
-            "name": "erc721TokenAddress",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "basketManagerId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "tokenMetadataUri",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.ERC721MintOrders[]",
-        "name": "erc721MintOrders",
-        "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
             "name": "token0",
             "type": "address"
           },
@@ -193,6 +171,16 @@
             "type": "uint256"
           },
           {
+            "internalType": "uint256",
+            "name": "amount0Min",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount1Min",
+            "type": "uint256"
+          },
+          {
             "internalType": "int256",
             "name": "tickSpace",
             "type": "int256"
@@ -206,11 +194,6 @@
         "internalType": "struct IWeb3Packs.LiquidityMintOrder[]",
         "name": "liquidityMintOrders",
         "type": "tuple[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fundingAmount",
-        "type": "uint256"
       },
       {
         "components": [
@@ -230,7 +213,7 @@
         "type": "tuple"
       }
     ],
-    "name": "bundle",
+    "name": "bundleMode",
     "outputs": [
       {
         "internalType": "uint256",
