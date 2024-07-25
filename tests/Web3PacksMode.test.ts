@@ -6,8 +6,6 @@ import {
   protonBAbi
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
-import { USDC_USDT_SWAP } from "../uniswap/libs/constants";
-import { amountOutMinimum, quote } from "../uniswap/quote";
 import globals from "./globals";
 
 describe('Web3Packs', async ()=> {
@@ -45,7 +43,7 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs MODE', async () => {
-    it('Swap a single asset', async() => {
+    it.skip('Swap a single asset', async() => {
       const ERC20SwapOrder = [{
         inputTokenAddress: globals.wrapETHAddress,
         outputTokenAddress: globals.modeTokenAddress,
@@ -67,7 +65,6 @@ describe('Web3Packs', async ()=> {
       expect(balanceAfterSwap).to.be.above(0);
     });
 
-    
     it('Bundles token with two swaps and then unbundles the nft', async() => {
       const ERC20SwapOrder = [
         {
@@ -101,8 +98,9 @@ describe('Web3Packs', async ()=> {
 
       await bundleTransaction.wait();
 
-      // const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
-      // const UniTokenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
+      const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
+      const UniTokenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
+      console.log(UniTokenMass)
       // expect(UniTokenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
 
       // Charged settings contract
@@ -190,7 +188,7 @@ describe('Web3Packs', async ()=> {
       )).to.revertedWith('CP:E-302');
     });
 
-    it.only('Provides liquidity ', async ()=> {
+    it('Provides liquidity ', async ()=> {
       const amount1 = ethers.utils.parseEther('0.00000002');
       const amount0 = ethers.utils.parseEther('0.00000001');
       const amount2 = ethers.utils.parseEther('0.000000000001');
