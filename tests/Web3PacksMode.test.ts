@@ -46,7 +46,7 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs MODE', async () => {
-    it.only('Swap a single asset', async() => {
+    it('Swap a single asset', async() => {
       const amountIn = ethers.utils.parseUnits('10', 6);
 
       const callDataParams = {
@@ -77,7 +77,41 @@ describe('Web3Packs', async ()=> {
 
       const token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
       const balanceAfterSwap = await token.balanceOf(web3packs.address);
-      console.log(balanceAfterSwap.toString());
+      expect(balanceAfterSwap).to.be.above(0);
+    });
+
+    it.only('Swaps to different AMM', async() => {
+      const amountIn = ethers.utils.parseUnits('10', 6);
+
+      // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
+      const veloroneParams = {
+        amountIn: amountIn,
+        amountOutMin: 0,
+        routes: [ ['0x18470019bf0e94611f15852f7e93cf5d65bc34ca', globals.wrapETHAddress, false] ],
+        to: web3packs.address,
+        deadline: globals.deadline
+      };
+
+      const inter = new ethers.utils.Interface(['function swapExactTokensForTokens(uint256 amountOutMin, uint256 amountIn, (address,address,bool)[] routes, address to, uint256 deadline)']);
+      const calldata = inter.encodeFunctionData('swapExactTokensForTokens', Object.values(veloroneParams));
+
+      const ERC20SwapOrder = {
+        callData: <string>calldata,
+        router: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
+        inputTokenAddress: globals.wrapETHAddress,
+        inputTokenAmount: amountIn,
+        outputTokenAddress: '0x66eEd5FF1701E6ed8470DC391F05e27B1d0657eb',
+        forLiquidity: false, 
+      }
+
+      console.log(calldata);
+
+      const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
+      await swapTransaction.wait();
+
+      const token = new ethers.Contract('0x18470019bf0e94611f15852f7e93cf5d65bc34ca', globals.erc20Abi, deployerSigner);
+      const balanceAfterSwap = await token.balanceOf(web3packs.address);
+      console.log(balanceAfterSwap)
       expect(balanceAfterSwap).to.be.above(0);
     });
 
