@@ -30,18 +30,18 @@ interface IWeb3Packs {
   event PackBundled(uint256 indexed tokenId, address indexed receiver);
   event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
 
-  // struct ERC20SwapOrder {
-  //   address inputTokenAddress;
-  //   address outputTokenAddress;
-  //   uint256 inputTokenAmount;
-  //   uint24 uniSwapPoolFee;
-  //   uint256 deadline;
-  //   uint256 amountOutMinimum;
-  //   uint160 sqrtPriceLimitX96;
-  //   bool forLiquidity;
-  // }
-
   struct ERC20SwapOrder {
+    address inputTokenAddress;
+    address outputTokenAddress;
+    uint256 inputTokenAmount;
+    uint24 uniSwapPoolFee;
+    uint256 deadline;
+    uint256 amountOutMinimum;
+    uint160 sqrtPriceLimitX96;
+    bool forLiquidity;
+  }
+
+  struct ERC20SwapOrderGeneric {
     bytes callData;
     address router;
     address inputTokenAddress;

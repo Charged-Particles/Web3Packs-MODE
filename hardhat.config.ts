@@ -1,17 +1,18 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
+import '@nomiclabs/hardhat-ethers'
+import '@nomiclabs/hardhat-waffle'
 import "@nomicfoundation/hardhat-verify";
 import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-ethers'
 import '@typechain/hardhat'
-import 'hardhat-gas-reporter'
 import 'hardhat-abi-exporter'
 import 'solidity-coverage'
 
 import 'hardhat-deploy-ethers'
 import 'hardhat-deploy'
 import 'hardhat-watcher'
+
 
 import { HardhatUserConfig, task } from "hardhat/config";
 import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
