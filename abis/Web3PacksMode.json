@@ -353,13 +353,18 @@
       {
         "components": [
           {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
             "internalType": "address",
-            "name": "inputTokenAddress",
+            "name": "router",
             "type": "address"
           },
           {
             "internalType": "address",
-            "name": "outputTokenAddress",
+            "name": "inputTokenAddress",
             "type": "address"
           },
           {
@@ -368,24 +373,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint24",
-            "name": "uniSwapPoolFee",
-            "type": "uint24"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deadline",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountOutMinimum",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint160",
-            "name": "sqrtPriceLimitX96",
-            "type": "uint160"
+            "internalType": "address",
+            "name": "outputTokenAddress",
+            "type": "address"
           },
           {
             "internalType": "bool",
@@ -525,13 +515,18 @@
       {
         "components": [
           {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
             "internalType": "address",
-            "name": "inputTokenAddress",
+            "name": "router",
             "type": "address"
           },
           {
             "internalType": "address",
-            "name": "outputTokenAddress",
+            "name": "inputTokenAddress",
             "type": "address"
           },
           {
@@ -540,24 +535,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint24",
-            "name": "uniSwapPoolFee",
-            "type": "uint24"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deadline",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountOutMinimum",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint160",
-            "name": "sqrtPriceLimitX96",
-            "type": "uint160"
+            "internalType": "address",
+            "name": "outputTokenAddress",
+            "type": "address"
           },
           {
             "internalType": "bool",
@@ -734,13 +714,18 @@
       {
         "components": [
           {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
             "internalType": "address",
-            "name": "inputTokenAddress",
+            "name": "router",
             "type": "address"
           },
           {
             "internalType": "address",
-            "name": "outputTokenAddress",
+            "name": "inputTokenAddress",
             "type": "address"
           },
           {
@@ -749,24 +734,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint24",
-            "name": "uniSwapPoolFee",
-            "type": "uint24"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deadline",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountOutMinimum",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint160",
-            "name": "sqrtPriceLimitX96",
-            "type": "uint160"
+            "internalType": "address",
+            "name": "outputTokenAddress",
+            "type": "address"
           },
           {
             "internalType": "bool",

@@ -43,15 +43,14 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs MODE', async () => {
-    it.skip('Swap a single asset', async() => {
+    it.only('Swap a single asset', async() => {
       const ERC20SwapOrder = [{
+        calldata: '',
+        router: '',
         inputTokenAddress: globals.wrapETHAddress,
-        outputTokenAddress: globals.modeTokenAddress,
         inputTokenAmount: ethers.utils.parseEther('0.00000001'),
-        uniSwapPoolFee: 3000,
-        deadline: globals.deadline,
-        amountOutMinimum: 0,
-        sqrtPriceLimitX96: 0,
+        outputTokenAddress: globals.modeTokenAddress,
+        forLiquidity: false
       }];
 
       const swapTransaction = await web3packs.swap(ERC20SwapOrder, { value: ethers.utils.parseEther('0.00000000002') });
