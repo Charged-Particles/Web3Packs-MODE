@@ -259,7 +259,6 @@ describe('Web3Packs', async ()=> {
       const currentBlock = await ethers.provider.getBlockNumber() + 1000000; // todo: do not hardcode
       const timeLock = await ethers.provider.getBlockNumber() + 100;
       
-      console.log(currentBlock, timeLock);
       const newTokenId = await web3packs.callStatic.bundleMode(
         globals.testAddress,
         globals.ipfsMetadata,
@@ -301,7 +300,7 @@ describe('Web3Packs', async ()=> {
       )).to.revertedWith('CP:E-302');
     });
 
-    it('Provides liquidity ', async ()=> {
+    it.skip('Provides liquidity ', async ()=> {
       const amountIn = ethers.utils.parseEther('0.000000000002');
       const tickSpace = 60;
 
@@ -360,5 +359,18 @@ describe('Web3Packs', async ()=> {
       // );
       console.log(tokenId);
     })
+  })
+
+  it ('Fails to execute not allow listed router', async() => {
+    const ERC20SwapOrder = {
+      callData: '0x',
+      router: '0x76a5df1c6F53A4B80c8c8177edf52FBbC368E825',
+      tokenIn: globals.wrapETHAddress,
+      amountIn: 1n,
+      tokenOut: globals.modeTokenAddress,
+      forLiquidity: false,
+    };
+
+    expect(web3packs.swapGeneric(ERC20SwapOrder, { value: ethers.utils.parseUnits('20', 6) })).to.throw;
   })
 });

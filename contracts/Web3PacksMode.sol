@@ -82,7 +82,6 @@ interface ERC20 {
 
 contract Web3PacksMode is
   IWeb3Packs,
-  LibAllowList,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -97,20 +96,29 @@ contract Web3PacksMode is
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
 
+  mapping (address => bool) allowlisted;
+
   // Custom Errors
   error FundingFailed();
   error NullReceiver();
+  error ContractNotAllowed();
+  error UnsucessfulSwap();
 
   constructor(
     address proton,
     address nonfungiblePositionManager,
     address chargedParticles,
-    address chargedState
+    address chargedState,
+    address kimRouter,
+    address velodromeRouter
   ){
     _proton = proton;
     _nonfungiblePositionManager = nonfungiblePositionManager;
     _chargedParticles = chargedParticles;
     _chargedState = chargedState;
+
+    allowlisted[kimRouter] = true;
+    allowlisted[velodromeRouter] = true;
   }
 
 
@@ -233,13 +241,15 @@ contract Web3PacksMode is
   }
 
   function swapGeneric(ERC20SwapOrderGeneric calldata swapOrder) public payable {
+    if (!allowlisted[swapOrder.router]) revert ContractNotAllowed();
+
     TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
 
-    // filter by address
-    // filger by method
-    (bool success, bytes memory res) = swapOrder.router.call{ value: msg.value }(
+    (bool success, ) = swapOrder.router.call{ value: msg.value }(
         swapOrder.callData
     ); 
+
+    if(!success) revert UnsucessfulSwap();
   }
 
 
