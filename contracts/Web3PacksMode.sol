@@ -48,16 +48,6 @@ import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 
-struct ExactInputSingleParams {
-  address tokenIn;
-  address tokenOut;
-  address recipient;
-  uint256 deadline;
-  uint256 amountIn;
-  uint256 amountOutMinimum;
-  uint160 limitSqrtPrice;
-}
-
 struct MintParams {
   address token0;
   address token1;
@@ -76,12 +66,6 @@ struct MintResponse {
   uint128 liquidity;
   uint256 amount0;
   uint256 amount1;
-}
-
-interface IKimRouter {
-  function exactInputSingle(
-      ExactInputSingleParams calldata params
-  ) external payable returns (uint256 amountOut);
 }
 
 interface IKimNonfungiblePositionManager {
