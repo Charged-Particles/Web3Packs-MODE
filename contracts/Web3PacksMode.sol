@@ -37,7 +37,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
@@ -90,7 +89,6 @@ contract Web3PacksMode is
   BlackholePrevention
 {
   address _proton;
-  address _router;
   address _nonfungiblePositionManager;
   address _chargedParticles;
   address _chargedState;
@@ -105,13 +103,11 @@ contract Web3PacksMode is
 
   constructor(
     address proton,
-    address router,
     address nonfungiblePositionManager,
     address chargedParticles,
     address chargedState
   ){
     _proton = proton;
-    _router = router;
     _nonfungiblePositionManager = nonfungiblePositionManager;
     _chargedParticles = chargedParticles;
     _chargedState = chargedState;
@@ -492,12 +488,6 @@ contract Web3PacksMode is
   function setChargedState(address chargedState) external onlyOwner {
     _chargedParticles = chargedState;
     emit ChargedStateSet(chargedState);
-  }
-
-  /// @dev Setup the router
-  function setRouter(address router) external onlyOwner {
-    _router = router;
-    emit RouterSet(router);
   }
 
   function setProton(address proton) external onlyOwner {
