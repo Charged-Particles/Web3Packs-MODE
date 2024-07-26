@@ -79,38 +79,74 @@ describe('Web3Packs', async ()=> {
       const balanceAfterSwap = await token.balanceOf(web3packs.address);
       expect(balanceAfterSwap).to.be.above(0);
     });
+    describe('Velodrome', async() => {
+      it('Swaps to single path route', async() => {
+        const amountIn = ethers.utils.parseUnits('10', 6);
 
-    it('Swaps to different AMM', async() => {
-      const amountIn = ethers.utils.parseUnits('10', 6);
+        // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
+        const velodromeParams = {
+          // amountIn: amountIn,
+          amountOutMin: 0,
+          routes: [ [globals.wrapETHAddress, '0x18470019bf0e94611f15852f7e93cf5d65bc34ca', false] ],
+          to: web3packs.address,
+          deadline: globals.deadline
+        };
 
-      // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
-      const velodromeParams = {
-        // amountIn: amountIn,
-        amountOutMin: 0,
-        routes: [ [globals.wrapETHAddress, '0x18470019bf0e94611f15852f7e93cf5d65bc34ca', false] ],
-        to: web3packs.address,
-        deadline: globals.deadline
-      };
+        const inter = new ethers.utils.Interface(['function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)']);
+        const calldata = inter.encodeFunctionData('swapExactETHForTokens', Object.values(velodromeParams));
 
-      const inter = new ethers.utils.Interface(['function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)']);
-      const calldata = inter.encodeFunctionData('swapExactETHForTokens', Object.values(velodromeParams));
+        const ERC20SwapOrder = {
+          callData: <string>calldata,
+          router: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
+          tokenIn: globals.wrapETHAddress,
+          amountIn: amountIn,
+          tokenOut: '0x18470019bf0e94611f15852f7e93cf5d65bc34ca',
+          forLiquidity: false, 
+        }
 
-      const ERC20SwapOrder = {
-        callData: <string>calldata,
-        router: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
-        tokenIn: globals.wrapETHAddress,
-        amountIn: amountIn,
-        tokenOut: '0x18470019bf0e94611f15852f7e93cf5d65bc34ca',
-        forLiquidity: false, 
-      }
+        const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
+        await swapTransaction.wait();
 
-      const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
-      await swapTransaction.wait();
+        const token = new ethers.Contract('0x18470019bf0e94611f15852f7e93cf5d65bc34ca', globals.erc20Abi, deployerSigner);
+        const balanceAfterSwap = await token.balanceOf(web3packs.address);
+        expect(balanceAfterSwap).to.be.above(0);
+      });
 
-      const token = new ethers.Contract('0x18470019bf0e94611f15852f7e93cf5d65bc34ca', globals.erc20Abi, deployerSigner);
-      const balanceAfterSwap = await token.balanceOf(web3packs.address);
-      console.log(balanceAfterSwap)
-      expect(balanceAfterSwap).to.be.above(0);
+      it('Swaps multiple path route', async() => {
+        const amountIn = ethers.utils.parseUnits('11', 6);
+        const outToken = '0x95177295a394f2b9b04545fff58f4af0673e839d';
+
+        // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
+        const velodromeParams = {
+          // amountIn: amountIn,
+          amountOutMin: 0,
+          routes: [
+            [globals.wrapETHAddress, globals.modeTokenAddress, false],
+            [globals.modeTokenAddress, outToken, false],
+          ],
+          to: web3packs.address,
+          deadline: globals.deadline
+        };
+
+        const inter = new ethers.utils.Interface(['function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)']);
+        const calldata = inter.encodeFunctionData('swapExactETHForTokens', Object.values(velodromeParams));
+
+        const ERC20SwapOrder = {
+          callData: <string>calldata,
+          router: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
+          tokenIn: globals.wrapETHAddress,
+          amountIn: amountIn,
+          tokenOut: outToken,
+          forLiquidity: false, 
+        }
+
+        const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
+        await swapTransaction.wait();
+
+        const token = new ethers.Contract(outToken, globals.erc20Abi, deployerSigner);
+        const balanceAfterSwap = await token.balanceOf(web3packs.address);
+        expect(balanceAfterSwap).to.be.above(0);
+      });
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {

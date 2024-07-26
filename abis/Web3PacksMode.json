@@ -37,6 +37,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NullReceiver",
     "type": "error"
   },
@@ -800,17 +805,17 @@
           },
           {
             "internalType": "address",
-            "name": "inputTokenAddress",
+            "name": "tokenIn",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "inputTokenAmount",
+            "name": "amountIn",
             "type": "uint256"
           },
           {
             "internalType": "address",
-            "name": "outputTokenAddress",
+            "name": "tokenOut",
             "type": "address"
           },
           {
