@@ -254,6 +254,9 @@ contract Web3PacksMode is
 
   function swapGeneric(ERC20SwapOrderGeneric calldata swapOrder) public payable {
     TransferHelper.safeApprove(swapOrder.inputTokenAddress, address(swapOrder.router), swapOrder.inputTokenAmount);
+
+    // filter by address
+    // filger by method
     (bool success, bytes memory res) = swapOrder.router.call{ value: msg.value }(
         swapOrder.callData
     ); 

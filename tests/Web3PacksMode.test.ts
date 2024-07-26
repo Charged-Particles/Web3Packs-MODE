@@ -46,7 +46,7 @@ describe('Web3Packs', async ()=> {
   });
 
   describe('Web3Packs MODE', async () => {
-    it('Swap a single asset', async() => {
+    it('Swap a single asset KIM', async() => {
       const amountIn = ethers.utils.parseUnits('10', 6);
 
       const callDataParams = {
@@ -80,31 +80,31 @@ describe('Web3Packs', async ()=> {
       expect(balanceAfterSwap).to.be.above(0);
     });
 
-    it.only('Swaps to different AMM', async() => {
+    it('Swaps to different AMM', async() => {
       const amountIn = ethers.utils.parseUnits('10', 6);
 
       // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
-      const veloroneParams = {
-        amountIn: amountIn,
+      const velodromeParams = {
+        // amountIn: amountIn,
         amountOutMin: 0,
-        routes: [ ['0x18470019bf0e94611f15852f7e93cf5d65bc34ca', globals.wrapETHAddress, false] ],
+        routes: [ [globals.wrapETHAddress, '0x18470019bf0e94611f15852f7e93cf5d65bc34ca', false] ],
         to: web3packs.address,
         deadline: globals.deadline
       };
 
-      const inter = new ethers.utils.Interface(['function swapExactTokensForTokens(uint256 amountOutMin, uint256 amountIn, (address,address,bool)[] routes, address to, uint256 deadline)']);
-      const calldata = inter.encodeFunctionData('swapExactTokensForTokens', Object.values(veloroneParams));
+      const inter = new ethers.utils.Interface(['function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)']);
+      const calldata = inter.encodeFunctionData('swapExactETHForTokens', Object.values(velodromeParams));
+
+      console.log(calldata)
 
       const ERC20SwapOrder = {
         callData: <string>calldata,
         router: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
         inputTokenAddress: globals.wrapETHAddress,
         inputTokenAmount: amountIn,
-        outputTokenAddress: '0x66eEd5FF1701E6ed8470DC391F05e27B1d0657eb',
+        outputTokenAddress: '0x18470019bf0e94611f15852f7e93cf5d65bc34ca',
         forLiquidity: false, 
       }
-
-      console.log(calldata);
 
       const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
       await swapTransaction.wait();
