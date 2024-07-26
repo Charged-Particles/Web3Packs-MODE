@@ -41,6 +41,7 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
+import "./lib/AllowList.sol";
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IChargedState.sol";
 import "./interfaces/INonfungiblePositionManager.sol";
@@ -98,6 +99,7 @@ interface ERC20 {
 
 contract Web3PacksMode is
   IWeb3Packs,
+  LibAllowList,
   Ownable,
   Pausable,
   ReentrancyGuard,
@@ -253,7 +255,7 @@ contract Web3PacksMode is
   }
 
   function swapGeneric(ERC20SwapOrderGeneric calldata swapOrder) public payable {
-    TransferHelper.safeApprove(swapOrder.inputTokenAddress, address(swapOrder.router), swapOrder.inputTokenAmount);
+    TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
 
     // filter by address
     // filger by method

@@ -66,9 +66,9 @@ describe('Web3Packs', async ()=> {
       const ERC20SwapOrder = {
         callData: <string>calldata.data,
         router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
-        inputTokenAddress: globals.wrapETHAddress,
-        inputTokenAmount: amountIn,
-        outputTokenAddress: globals.modeTokenAddress,
+        tokenIn: globals.wrapETHAddress,
+        amountIn: amountIn,
+        tokenOut: globals.modeTokenAddress,
         forLiquidity: false,
       };
 
@@ -95,14 +95,12 @@ describe('Web3Packs', async ()=> {
       const inter = new ethers.utils.Interface(['function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)']);
       const calldata = inter.encodeFunctionData('swapExactETHForTokens', Object.values(velodromeParams));
 
-      console.log(calldata)
-
       const ERC20SwapOrder = {
         callData: <string>calldata,
         router: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
-        inputTokenAddress: globals.wrapETHAddress,
-        inputTokenAmount: amountIn,
-        outputTokenAddress: '0x18470019bf0e94611f15852f7e93cf5d65bc34ca',
+        tokenIn: globals.wrapETHAddress,
+        amountIn: amountIn,
+        tokenOut: '0x18470019bf0e94611f15852f7e93cf5d65bc34ca',
         forLiquidity: false, 
       }
 

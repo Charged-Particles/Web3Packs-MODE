@@ -44,9 +44,9 @@ interface IWeb3Packs {
   struct ERC20SwapOrderGeneric {
     bytes callData;
     address router;
-    address inputTokenAddress;
-    uint256 inputTokenAmount;
-    address outputTokenAddress;
+    address tokenIn;
+    uint256 amountIn;
+    address tokenOut;
     bool forLiquidity;
   }
 
