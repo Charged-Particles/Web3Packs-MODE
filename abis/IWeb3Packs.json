@@ -104,39 +104,29 @@
       {
         "components": [
           {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
             "internalType": "address",
-            "name": "inputTokenAddress",
+            "name": "router",
             "type": "address"
           },
           {
             "internalType": "address",
-            "name": "outputTokenAddress",
+            "name": "tokenIn",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "inputTokenAmount",
+            "name": "amountIn",
             "type": "uint256"
           },
           {
-            "internalType": "uint24",
-            "name": "uniSwapPoolFee",
-            "type": "uint24"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deadline",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountOutMinimum",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint160",
-            "name": "sqrtPriceLimitX96",
-            "type": "uint160"
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
           },
           {
             "internalType": "bool",
@@ -144,7 +134,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct IWeb3Packs.ERC20SwapOrder[]",
+        "internalType": "struct IWeb3Packs.ERC20SwapOrderGeneric[]",
         "name": "erc20SwapOrders",
         "type": "tuple[]"
       },

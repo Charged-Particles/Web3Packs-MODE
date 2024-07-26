@@ -7,7 +7,8 @@ import {
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
 import globals from "./globals";
-import { Web3PacksMode, IKimRouter } from '../typechain-types/contracts/Web3PacksMode.sol'
+import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
+
 import IkimRouterABI from '../build/contracts/contracts/IKimRouter.sol/IKimRouter.json'
 
 
@@ -150,17 +151,30 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Bundles token with two swaps and then unbundles the nft', async() => {
-      const ERC20SwapOrder = [
-        {
-          inputTokenAddress: globals.wrapETHAddress,
-          outputTokenAddress: globals.modeTokenAddress,
-          inputTokenAmount: ethers.utils.parseUnits('10', 6),
-          uniSwapPoolFee: 3000,
-          deadline: globals.deadline,
-          amountOutMinimum: 0,
-          sqrtPriceLimitX96: 0,
-        }
-      ];
+      const amountIn = ethers.utils.parseUnits('10', 6);
+
+      const callDataParams = {
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        recipient: web3packs.address,
+        deadline: globals.deadline,
+        amountIn: amountIn,
+        amountOutMinimum: 0n,
+        limitSqrtPrice: 0n 
+      };
+
+      const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
+      const kimContract = new Contract('0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8', KimRouterInter, deployerSigner);
+      const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
+
+      const ERC20SwapOrder = [{
+        callData: <string>calldata.data,
+        router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+        tokenIn: globals.wrapETHAddress,
+        amountIn: amountIn,
+        tokenOut: globals.modeTokenAddress,
+        forLiquidity: false,
+      }];
       
       const newTokenId = await web3packs.callStatic.bundleMode(
         globals.testAddress,
@@ -168,7 +182,7 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         [],
         { ERC20Timelock:0 , ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('0.00000000002') }
+        { value: amountIn }
       );
 
       const bundleTransaction = await web3packs.bundleMode(
@@ -177,7 +191,7 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         [],
         { ERC20Timelock: 0, ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('0.00000000002') }
+        { value: amountIn }
       );
 
       await bundleTransaction.wait();
@@ -213,32 +227,46 @@ describe('Web3Packs', async ()=> {
       const USDt = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner); 
       const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
 
-      expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(1311275020845,100);
+      expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(2622550041690,100);
     });
 
     it('Should not allow to break pack when locked: erc20s', async() => {
-      const ERC20SwapOrder = [
-        {
-          inputTokenAddress: globals.wrapETHAddress,
-          outputTokenAddress: globals.modeTokenAddress,
-          inputTokenAmount: ethers.utils.parseUnits('10', 6),
-          uniSwapPoolFee: 3000,
-          deadline: globals.deadline,
-          amountOutMinimum: 0,
-          sqrtPriceLimitX96: 0,
-        }
-      ];
+      const amountIn = ethers.utils.parseUnits('10', 6);
 
-      const currentBlock = 10491344; // todo: do not hardcode
-      const timeLock = currentBlock + 10000;
+      const callDataParams = {
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        recipient: web3packs.address,
+        deadline: globals.deadline,
+        amountIn: amountIn,
+        amountOutMinimum: 0n,
+        limitSqrtPrice: 0n 
+      };
+
+      const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
+      const kimContract = new Contract('0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8', KimRouterInter, deployerSigner);
+      const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
+
+      const ERC20SwapOrder = [{
+        callData: <string>calldata.data,
+        router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+        tokenIn: globals.wrapETHAddress,
+        amountIn: amountIn,
+        tokenOut: globals.modeTokenAddress,
+        forLiquidity: false,
+      }];
+
+      const currentBlock = await ethers.provider.getBlockNumber() + 1000000; // todo: do not hardcode
+      const timeLock = await ethers.provider.getBlockNumber() + 100;
       
+      console.log(currentBlock, timeLock);
       const newTokenId = await web3packs.callStatic.bundleMode(
         globals.testAddress,
         globals.ipfsMetadata,
         ERC20SwapOrder,
         [],
         { ERC20Timelock:0 , ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('.2') }
+        { value: amountIn }
       );
 
       const bundleTransaction = await web3packs.bundleMode(
@@ -247,7 +275,7 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         [],
         { ERC20Timelock: timeLock, ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('0.00000000002') }
+        { value: amountIn }
       );
       await bundleTransaction.wait();
 
@@ -274,25 +302,32 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Provides liquidity ', async ()=> {
-      const amount1 = ethers.utils.parseEther('0.00000002');
-      const amount0 = ethers.utils.parseEther('0.00000001');
-      const amount2 = ethers.utils.parseEther('0.000000000001');
-
+      const amountIn = ethers.utils.parseEther('0.000000000002');
       const tickSpace = 60;
 
-      const ERC20SwapOrder = [
-        {
-          inputTokenAddress: globals.wrapETHAddress,
-          outputTokenAddress: globals.modeTokenAddress,
-          uniSwapPoolFee: 0,
-          inputTokenAmount: amount2,
-          deadline: globals.deadline,
-          amountOutMinimum: 0,
-          sqrtPriceLimitX96: 0,
-          forLiquidity: true
-        },
-      ];
-    
+      const callDataParams = {
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        recipient: web3packs.address,
+        deadline: globals.deadline,
+        amountIn: amountIn,
+        amountOutMinimum: 0n,
+        limitSqrtPrice: 0n 
+      };
+
+      const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
+      const kimContract = new Contract('0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8', KimRouterInter, deployerSigner);
+      const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
+
+      const ERC20SwapOrder = [{
+        callData: <string>calldata.data,
+        router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+        tokenIn: globals.wrapETHAddress,
+        amountIn: amountIn,
+        tokenOut: globals.modeTokenAddress,
+        forLiquidity: true,
+      }];
+
       const liquidityMintOrder = [
         {
           token0: globals.wrapETHAddress,
@@ -312,7 +347,7 @@ describe('Web3Packs', async ()=> {
         ERC20SwapOrder,
         liquidityMintOrder,
         { ERC20Timelock: 0, ERC721Timelock: 0 },
-        { value: ethers.utils.parseEther('0.00000000004') }
+        { value: ethers.utils.parseEther('0.0000000004') }
       );
 
       // const transaction = await web3packs.populateTransaction.bundleMode(
@@ -323,7 +358,7 @@ describe('Web3Packs', async ()=> {
       //   { ERC20Timelock: 0, ERC721Timelock: 0 },
       //   { value: ethers.utils.parseEther('0.0000000004') }
       // );
-      console.log(tokenId)
+      console.log(tokenId);
     })
   })
 });

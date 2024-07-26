@@ -85,7 +85,7 @@ interface IWeb3Packs {
   function bundleMode(
     address payable receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
     LockState calldata lockState
   )

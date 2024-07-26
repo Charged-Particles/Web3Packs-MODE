@@ -141,7 +141,7 @@ contract Web3PacksMode is
   function bundleMode(
     address payable receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
     LockState calldata lockState
   )
@@ -154,10 +154,8 @@ contract Web3PacksMode is
     if (receiver == address(0x0))
       revert NullReceiver();
 
-    _swap(erc20SwapOrders); // todo we dont need realamount, we can just use balance of
+    _swap(erc20SwapOrders);
 
-    // This might return erc20 or nfts...
-    // we need a way to energize or bond depending on the case
     MintResponse[] memory liquidity = _depositLiquidity(liquidityMintOrders);
 
     tokenId = _bundle(
@@ -209,7 +207,7 @@ contract Web3PacksMode is
   }
 
   function swap(
-    ERC20SwapOrder[] calldata erc20SwapOrders
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
   )
     external
     payable
@@ -220,7 +218,7 @@ contract Web3PacksMode is
 
   function depositLiquidity(
     LiquidityMintOrder[] calldata liquidityMintOrders,
-    ERC20SwapOrder[] calldata erc20SwapOrders
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
   )
     external
     payable
@@ -270,43 +268,16 @@ contract Web3PacksMode is
   |__________________________________*/
 
   function _swap(
-    ERC20SwapOrder[] calldata erc20SwapOrders
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
   )
     internal
     virtual
   {
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      _singleSwap(
+      swapGeneric(
         erc20SwapOrders[i]
       );
     }
-  }
-
-  function _singleSwap(
-    ERC20SwapOrder calldata erc20SwapOrder
-  )
-   internal
-  {
-    // Approve the router to spend ERC20.
-    TransferHelper.safeApprove(erc20SwapOrder.inputTokenAddress, address(_router), erc20SwapOrder.inputTokenAmount);
-
-    ExactInputSingleParams memory params =
-      ExactInputSingleParams({
-        // router
-        // calldata
-        tokenIn: erc20SwapOrder.inputTokenAddress,
-        tokenOut: erc20SwapOrder.outputTokenAddress,
-        recipient: address(this),
-        deadline: erc20SwapOrder.deadline,
-        amountIn: erc20SwapOrder.inputTokenAmount,
-        amountOutMinimum: erc20SwapOrder.amountOutMinimum,
-        limitSqrtPrice: erc20SwapOrder.sqrtPriceLimitX96
-      });
-
-    // Executes the swap returning the amountIn needed to spend to receive the desired amountOut.
-    uint256 amountIn = (msg.value > 0 ? erc20SwapOrder.inputTokenAmount : 0);
-
-    IKimRouter(_router).exactInputSingle{value: amountIn }(params);
   }
 
   function _createBasicProton(
@@ -353,30 +324,30 @@ contract Web3PacksMode is
   )
    internal
   {
-      if (! forLiqudity) {
-        uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
+    if (! forLiqudity) {
+      uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
 
-        TransferHelper.safeApprove(
-          tokenAddress,
-          address(_chargedParticles),
-          balance
-        );
+      TransferHelper.safeApprove(
+        tokenAddress,
+        address(_chargedParticles),
+        balance
+      );
 
-        IChargedParticles(_chargedParticles).energizeParticle(
-          _proton,
-          tokenId,
-          _cpWalletManager,
-          tokenAddress,
-          balance,
-          address(this)
-        );
-      }
+      IChargedParticles(_chargedParticles).energizeParticle(
+        _proton,
+        tokenId,
+        _cpWalletManager,
+        tokenAddress,
+        balance,
+        address(this)
+      );
+    }
   }
 
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrder[] calldata erc20SwapOrders,
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     MintResponse[] memory liquidity
   )
     internal
@@ -387,7 +358,7 @@ contract Web3PacksMode is
 
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      _energize(tokenId, erc20SwapOrders[i].outputTokenAddress, erc20SwapOrders[i].forLiquidity);
+      _energize(tokenId, erc20SwapOrders[i].tokenOut, erc20SwapOrders[i].forLiquidity);
     }
 
     for (uint256 i; i < liquidity.length; i++) {
@@ -403,7 +374,6 @@ contract Web3PacksMode is
       );
     }
   }
-
 
   function _unbundle(
     address receiver,
@@ -481,8 +451,8 @@ contract Web3PacksMode is
           token1: liquidityMintOrders[i].token1,
           tickLower: tickLower,
           tickUpper: tickUpper,
-          amount0Desired: liquidityMintOrders[i].amount0ToMint,
-          amount1Desired: liquidityMintOrders[i].amount1ToMint,
+          amount0Desired: ERC20(liquidityMintOrders[i].token0).balanceOf(address(this)),
+          amount1Desired: ERC20(liquidityMintOrders[i].token1).balanceOf(address(this)),
           amount0Min: liquidityMintOrders[i].amount0Min,
           amount1Min: liquidityMintOrders[i].amount1Min,
           recipient: address(this),
