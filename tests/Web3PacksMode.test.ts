@@ -363,8 +363,14 @@ describe('Web3Packs', async ()=> {
     const packsContractBalanceAfterSwap = await provider.getBalance(web3packsAddress);
     expect(packsContractBalanceAfterSwap).to.be.eq(0n);
 
-    // const signerBalanceAfterSwap = await deployerSigner.getBalance();
-    // const difference = signerBalanceAfterSwap.add(amountInSwap).add(bundleTransaction.cumulativeGasUsed);
+    console.log(bundleTransaction)
+    const signerBalanceAfterSwap = await deployerSigner.getBalance();
+    const gasUsed = bundleTransaction.gasUsed; // Amount of gas used
+    const gasPrice = bundleTransaction.effectiveGasPrice; // Price per unit of gas
+    const totalCost = gasUsed.mul(gasPrice);
+
+    const difference = signerBalanceAfterSwap.add(amountInSwap).add(totalCost);
+    expect(signerBalanceBeforeSwap).to.be.eq(difference);
   });
   it ('Fails to execute not allow listed router', async() => {
     const ERC20SwapOrder = {
