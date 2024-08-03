@@ -183,7 +183,6 @@ describe('Web3Packs', async ()=> {
       globals.testAddress,
       globals.ipfsMetadata,
       ERC20SwapOrder,
-      [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
       fee, 
       { value: amountIn }
@@ -193,7 +192,6 @@ describe('Web3Packs', async ()=> {
       await deployerSigner.getAddress(),
       globals.ipfsMetadata,
       ERC20SwapOrder,
-      [],
       { ERC20Timelock: 0, ERC721Timelock: 0 },
       fee,
       { value: amountIn }
@@ -269,7 +267,6 @@ describe('Web3Packs', async ()=> {
       globals.testAddress,
       globals.ipfsMetadata,
       ERC20SwapOrder,
-      [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
       fee,
       { value: amountIn }
@@ -279,7 +276,6 @@ describe('Web3Packs', async ()=> {
       await deployerSigner.getAddress(),
       globals.ipfsMetadata,
       ERC20SwapOrder,
-      [],
       { ERC20Timelock: timeLock, ERC721Timelock: 0 },
       fee,
       { value: amountIn }
@@ -349,7 +345,6 @@ describe('Web3Packs', async ()=> {
       globals.testAddress,
       globals.ipfsMetadata,
       ERC20SwapOrder,
-      [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
       fee,
       { value: amountInContract }
@@ -359,7 +354,6 @@ describe('Web3Packs', async ()=> {
       await deployerSigner.getAddress(),
       globals.ipfsMetadata,
       ERC20SwapOrder,
-      [],
       { ERC20Timelock: 0, ERC721Timelock: 0 },
       fee,
       { value: amountInContract }
