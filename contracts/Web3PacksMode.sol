@@ -46,8 +46,6 @@ import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 
-import "hardhat/console.sol";
-
 
 interface ERC20 {
   function balanceOf(address account) external view returns (uint256);
