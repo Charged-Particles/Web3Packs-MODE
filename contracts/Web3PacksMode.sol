@@ -102,7 +102,8 @@ contract Web3PacksMode is
   error FundingFailed();
   error NullReceiver();
   error ContractNotAllowed();
-  error UnsucessfulSwap();
+  error NativeAssetTransferFailed();
+  error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
 
   constructor(
     address proton,
@@ -156,6 +157,8 @@ contract Web3PacksMode is
     _lock(lockState, tokenId);
 
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
+    _returnPositiveSlippageNative(receiver);
+
     emit PackBundled(tokenId, receiver);
   }
 
@@ -245,11 +248,17 @@ contract Web3PacksMode is
 
     TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
 
-    (bool success, ) = swapOrder.router.call{ value: msg.value }(
+    (bool success, bytes memory data ) = swapOrder.router.call{ value: swapOrder.amountIn }(
         swapOrder.callData
     ); 
 
-    if(!success) revert UnsucessfulSwap();
+    if (!success) {
+      assembly {
+        let dataSize := mload(data) // Load the size of the data
+        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+        revert(dataPtr, dataSize) // Revert with the given data
+      }
+    }
   }
 
 
@@ -352,9 +361,6 @@ contract Web3PacksMode is
     }
 
     for (uint256 i; i < liquidity.length; i++) {
-      // if mint response.type == v2 -> energize 
-      // if mint response.type == v3 -> bond
-
       _bond(
         _proton,
         tokenId,
@@ -573,4 +579,16 @@ contract Web3PacksMode is
         return (MAX_TICK / tickSpacing) * tickSpacing;
     }
   }
+
+  function _returnPositiveSlippageNative(address receiver) private {
+    // if a native balance exists in sendingAsset, it must be positive slippage
+    uint256 nativeBalance = address(this).balance;
+
+    if (nativeBalance > 0) {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = receiver.call{ value: nativeBalance }("");
+        if (!success) revert NativeAssetTransferFailed();
+    }
+  }
+
 }
