@@ -46,6 +46,8 @@ import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 
+import "hardhat/console.sol";
+
 
 interface ERC20 {
   function balanceOf(address account) external view returns (uint256);
@@ -74,7 +76,7 @@ contract Web3PacksMode is
   error ContractNotAllowed();
   error NativeAssetTransferFailed();
   error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
-  error FeeNotPayed();
+  error InsufficientForFee();
 
   constructor(
     address proton,
@@ -445,8 +447,12 @@ contract Web3PacksMode is
   }
 
   function _returnPositiveSlippageNative(address receiver, uint256 fee) private {
-    // if a native balance exists in sendingAsset, it must be positive slippage
     uint256 nativeBalance = address(this).balance;
+
+    if (fee > nativeBalance) {
+      revert InsufficientForFee();
+    }
+
     uint256 amountToReturn = nativeBalance - fee;
 
     if (amountToReturn > 0) {
@@ -455,5 +461,4 @@ contract Web3PacksMode is
         if (!success) revert NativeAssetTransferFailed();
     }
   }
-
 }

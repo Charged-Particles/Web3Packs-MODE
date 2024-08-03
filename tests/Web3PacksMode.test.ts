@@ -5,7 +5,7 @@ import {
   chargedStateAbi,
   protonBAbi
 } from "@charged-particles/charged-js-sdk";
-import { Contract, Signer } from "ethers";
+import { Contract, providers, Signer } from "ethers";
 import globals from "./globals";
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 
@@ -374,6 +374,58 @@ describe('Web3Packs', async ()=> {
     const difference = signerBalanceAfterSwap.add(amountInSwap).add(totalCost);
     expect(signerBalanceBeforeSwap).to.be.eq(difference);
   });
+
+  it('Test fee', async () => {
+    const provider = ownerSigner.provider!;
+    const amountInSwap = ethers.utils.parseUnits('1', 8);
+    const amountInContract = ethers.utils.parseUnits('11', 8);
+    const fee = BigInt(100);
+
+    const callDataParams = {
+      tokenIn: globals.wrapETHAddress,
+      tokenOut: globals.modeTokenAddress,
+      recipient: web3packs.address,
+      deadline: globals.deadline,
+      amountIn: amountInSwap,
+      amountOutMinimum: 0n,
+      limitSqrtPrice: 0n 
+    };
+
+    const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
+    const kimContract = new Contract('0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8', KimRouterInter, deployerSigner);
+    const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
+
+    const ERC20SwapOrder = [{
+      callData: <string>calldata.data,
+      router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+      tokenIn: globals.wrapETHAddress,
+      amountIn: amountInSwap,
+      tokenOut: globals.modeTokenAddress,
+      forLiquidity: false,
+    }];
+
+    await expect(web3packs.callStatic.bundleMode(
+      globals.testAddress,
+      globals.ipfsMetadata,
+      ERC20SwapOrder,
+      { ERC20Timelock:0 , ERC721Timelock: 0 },
+      BigInt(10000000000),
+      { value: amountInContract }
+    )).to.revertedWith('InsufficientForFee');
+
+    await web3packs.bundleMode(
+      globals.testAddress,
+      globals.ipfsMetadata,
+      ERC20SwapOrder,
+      { ERC20Timelock:0 , ERC721Timelock: 0 },
+      fee,
+      { value: amountInContract }
+    ).then(tx => tx.wait());
+
+    const packBalance = await provider.getBalance(web3packs.address);
+    expect(packBalance).to.be.eq(fee);
+  });
+
   it ('Fails to execute not allow listed router', async() => {
     const ERC20SwapOrder = {
       callData: '0x',
