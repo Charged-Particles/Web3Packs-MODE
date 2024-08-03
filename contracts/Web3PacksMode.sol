@@ -102,6 +102,7 @@ contract Web3PacksMode is
   error ContractNotAllowed();
   error NativeAssetTransferFailed();
   error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
+  error FeeNotPayed();
 
   constructor(
     address proton,
@@ -130,7 +131,8 @@ contract Web3PacksMode is
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityMintOrder[] calldata liquidityMintOrders,
-    LockState calldata lockState
+    LockState calldata lockState,
+    uint256 fee
   )
     external
     whenNotPaused
@@ -154,7 +156,7 @@ contract Web3PacksMode is
     _lock(lockState, tokenId);
 
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
-    _returnPositiveSlippageNative(receiver);
+    _returnPositiveSlippageNative(receiver, fee);
 
     emit PackBundled(tokenId, receiver);
   }
@@ -575,13 +577,14 @@ contract Web3PacksMode is
     }
   }
 
-  function _returnPositiveSlippageNative(address receiver) private {
+  function _returnPositiveSlippageNative(address receiver, uint256 fee) private {
     // if a native balance exists in sendingAsset, it must be positive slippage
     uint256 nativeBalance = address(this).balance;
+    uint256 amountToReturn = nativeBalance - fee;
 
-    if (nativeBalance > 0) {
+    if (amountToReturn > 0) {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = receiver.call{ value: nativeBalance }("");
+        (bool success, ) = receiver.call{ value: amountToReturn }("");
         if (!success) revert NativeAssetTransferFailed();
     }
   }

@@ -154,6 +154,7 @@ describe('Web3Packs', async ()=> {
 
   it('Bundles token with two swaps and then unbundles the nft', async() => {
     const amountIn = ethers.utils.parseUnits('10', 6);
+    const fee = BigInt(0);
 
     const callDataParams = {
       tokenIn: globals.wrapETHAddress,
@@ -184,6 +185,7 @@ describe('Web3Packs', async ()=> {
       ERC20SwapOrder,
       [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
+      fee, 
       { value: amountIn }
     );
 
@@ -193,6 +195,7 @@ describe('Web3Packs', async ()=> {
       ERC20SwapOrder,
       [],
       { ERC20Timelock: 0, ERC721Timelock: 0 },
+      fee,
       { value: amountIn }
     );
 
@@ -234,6 +237,7 @@ describe('Web3Packs', async ()=> {
 
   it('Should not allow to break pack when locked: erc20s', async() => {
     const amountIn = ethers.utils.parseUnits('10', 6);
+    const fee = BigInt(0);
 
     const callDataParams = {
       tokenIn: globals.wrapETHAddress,
@@ -267,6 +271,7 @@ describe('Web3Packs', async ()=> {
       ERC20SwapOrder,
       [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
+      fee,
       { value: amountIn }
     );
 
@@ -276,6 +281,7 @@ describe('Web3Packs', async ()=> {
       ERC20SwapOrder,
       [],
       { ERC20Timelock: timeLock, ERC721Timelock: 0 },
+      fee,
       { value: amountIn }
     );
     await bundleTransaction.wait();
@@ -305,6 +311,7 @@ describe('Web3Packs', async ()=> {
   it('Check _returnPositiveSlippageNative', async() => {
     const web3packsAddress = web3packs.address;
     const provider = deployerSigner.provider!;
+    const fee = BigInt(0);
 
     const packsContractBalanceBeforeSwap = await provider.getBalance(web3packsAddress);
     expect(packsContractBalanceBeforeSwap).to.be.eq(0n);
@@ -344,6 +351,7 @@ describe('Web3Packs', async ()=> {
       ERC20SwapOrder,
       [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
+      fee,
       { value: amountInContract }
     );
 
@@ -353,6 +361,7 @@ describe('Web3Packs', async ()=> {
       ERC20SwapOrder,
       [],
       { ERC20Timelock: 0, ERC721Timelock: 0 },
+      fee,
       { value: amountInContract }
     ).then(tx => tx.wait());
 
