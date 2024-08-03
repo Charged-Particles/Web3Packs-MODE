@@ -302,7 +302,7 @@ describe('Web3Packs', async ()=> {
     )).to.revertedWith('CP:E-302');
   });
 
-  it.only('Check _returnPositiveSlippageNative', async() => {
+  it('Check _returnPositiveSlippageNative', async() => {
     const web3packsAddress = web3packs.address;
     const provider = deployerSigner.provider!;
 
@@ -363,7 +363,6 @@ describe('Web3Packs', async ()=> {
     const packsContractBalanceAfterSwap = await provider.getBalance(web3packsAddress);
     expect(packsContractBalanceAfterSwap).to.be.eq(0n);
 
-    console.log(bundleTransaction)
     const signerBalanceAfterSwap = await deployerSigner.getBalance();
     const gasUsed = bundleTransaction.gasUsed; // Amount of gas used
     const gasPrice = bundleTransaction.effectiveGasPrice; // Price per unit of gas

@@ -36,7 +36,6 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
@@ -84,7 +83,6 @@ contract Web3PacksMode is
   IWeb3Packs,
   Ownable,
   Pausable,
-  ReentrancyGuard,
   BlackholePrevention
 {
   address _proton;
@@ -136,7 +134,6 @@ contract Web3PacksMode is
   )
     external
     whenNotPaused
-    nonReentrant
     payable
     returns(uint256 tokenId)
   {
@@ -170,7 +167,6 @@ contract Web3PacksMode is
   )
     external
     whenNotPaused
-    nonReentrant
   {
     _unbundle(
       receiver,
@@ -191,7 +187,6 @@ contract Web3PacksMode is
   )
     external
     whenNotPaused
-    nonReentrant
   {
     _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
