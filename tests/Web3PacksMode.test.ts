@@ -199,8 +199,8 @@ describe('Web3Packs', async ()=> {
     await bundleTransaction.wait();
 
     const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
-    const UniTokenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
-    expect(UniTokenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
+    const tkenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
+    expect(tkenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
 
     // Charged settings contract
     const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
@@ -304,10 +304,67 @@ describe('Web3Packs', async ()=> {
 
   it.only('Check _returnPositiveSlippageNative', async() => {
     const web3packsAddress = web3packs.address;
-    const provider = ownerSigner.provider!;
+    const provider = deployerSigner.provider!;
 
     const packsContractBalanceBeforeSwap = await provider.getBalance(web3packsAddress);
     expect(packsContractBalanceBeforeSwap).to.be.eq(0n);
+
+    const signerBalanceBeforeSwap = await deployerSigner.getBalance();
+
+    // swap
+    const amountInSwap = ethers.utils.parseUnits('10', 6);
+    const amountInContract = ethers.utils.parseUnits('20', 6);
+    const returnedAmount = amountInContract - amountInSwap;
+
+    const callDataParams = {
+      tokenIn: globals.wrapETHAddress,
+      tokenOut: globals.modeTokenAddress,
+      recipient: web3packs.address,
+      deadline: globals.deadline,
+      amountIn: amountInSwap,
+      amountOutMinimum: 0n,
+      limitSqrtPrice: 0n 
+    };
+
+    const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
+    const kimContract = new Contract('0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8', KimRouterInter, deployerSigner);
+    const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
+
+    const ERC20SwapOrder = [{
+      callData: <string>calldata.data,
+      router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+      tokenIn: globals.wrapETHAddress,
+      amountIn: amountInSwap,
+      tokenOut: globals.modeTokenAddress,
+      forLiquidity: false,
+    }];
+    const newTokenId = await web3packs.callStatic.bundleMode(
+      globals.testAddress,
+      globals.ipfsMetadata,
+      ERC20SwapOrder,
+      [],
+      { ERC20Timelock:0 , ERC721Timelock: 0 },
+      { value: amountInContract }
+    );
+
+    const bundleTransaction = await web3packs.bundleMode(
+      await deployerSigner.getAddress(),
+      globals.ipfsMetadata,
+      ERC20SwapOrder,
+      [],
+      { ERC20Timelock: 0, ERC721Timelock: 0 },
+      { value: amountInContract }
+    ).then(tx => tx.wait());
+
+    const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
+    const tkenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
+    expect(tkenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
+
+    const packsContractBalanceAfterSwap = await provider.getBalance(web3packsAddress);
+    expect(packsContractBalanceAfterSwap).to.be.eq(0n);
+
+    // const signerBalanceAfterSwap = await deployerSigner.getBalance();
+    // const difference = signerBalanceAfterSwap.add(amountInSwap).add(bundleTransaction.cumulativeGasUsed);
   });
   it ('Fails to execute not allow listed router', async() => {
     const ERC20SwapOrder = {
