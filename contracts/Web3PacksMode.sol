@@ -136,6 +136,7 @@ contract Web3PacksMode is
     Web3PackOrder calldata web3PackOrder
   )
     external
+    payable
     whenNotPaused
   {
     _unbundle(

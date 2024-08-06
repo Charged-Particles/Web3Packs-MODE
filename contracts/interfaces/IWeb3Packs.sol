@@ -98,5 +98,5 @@ interface IWeb3Packs {
     address contractAddress,
     uint256 tokenId,
     Web3PackOrder calldata web3PackOrder
-  ) external;
+  ) external payable;
 }
