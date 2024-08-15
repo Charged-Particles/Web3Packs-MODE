@@ -20,10 +20,25 @@
         "internalType": "address",
         "name": "chargedState",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "kimRouter",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "velodromeRouter",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "ContractNotAllowed",
+    "type": "error"
   },
   {
     "inputs": [],
@@ -32,12 +47,38 @@
   },
   {
     "inputs": [],
-    "name": "InvalidContract",
+    "name": "InsufficientForFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NativeAssetTransferFailed",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "NullReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "router",
+        "type": "address"
+      }
+    ],
+    "name": "UnsucessfulSwap",
     "type": "error"
   },
   {
@@ -278,30 +319,6 @@
   {
     "inputs": [
       {
-        "internalType": "int256",
-        "name": "tickSpacing",
-        "type": "int256"
-      },
-      {
-        "internalType": "bool",
-        "name": "nearestToMin",
-        "type": "bool"
-      }
-    ],
-    "name": "_findNearestValidTick",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "",
-        "type": "int256"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "contractAddress",
         "type": "address"
@@ -390,53 +407,6 @@
       {
         "components": [
           {
-            "internalType": "address",
-            "name": "token0",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "token1",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0ToMint",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1ToMint",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0Min",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1Min",
-            "type": "uint256"
-          },
-          {
-            "internalType": "int256",
-            "name": "tickSpace",
-            "type": "int256"
-          },
-          {
-            "internalType": "uint24",
-            "name": "poolFee",
-            "type": "uint24"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.LiquidityMintOrder[]",
-        "name": "liquidityMintOrders",
-        "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
             "internalType": "uint256",
             "name": "ERC20Timelock",
             "type": "uint256"
@@ -450,6 +420,11 @@
         "internalType": "struct IWeb3Packs.LockState",
         "name": "lockState",
         "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
       }
     ],
     "name": "bundleMode",
@@ -458,126 +433,6 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "token0",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "token1",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0ToMint",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1ToMint",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0Min",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1Min",
-            "type": "uint256"
-          },
-          {
-            "internalType": "int256",
-            "name": "tickSpace",
-            "type": "int256"
-          },
-          {
-            "internalType": "uint24",
-            "name": "poolFee",
-            "type": "uint24"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.LiquidityMintOrder[]",
-        "name": "liquidityMintOrders",
-        "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
-            "internalType": "bytes",
-            "name": "callData",
-            "type": "bytes"
-          },
-          {
-            "internalType": "address",
-            "name": "router",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountIn",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOut",
-            "type": "address"
-          },
-          {
-            "internalType": "bool",
-            "name": "forLiquidity",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.ERC20SwapOrderGeneric[]",
-        "name": "erc20SwapOrders",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "depositLiquidity",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint128",
-            "name": "liquidity",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct MintResponse[]",
-        "name": "",
-        "type": "tuple[]"
       }
     ],
     "stateMutability": "payable",
@@ -848,7 +703,7 @@
     ],
     "name": "unbundle",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {

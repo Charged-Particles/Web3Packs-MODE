@@ -141,53 +141,6 @@
       {
         "components": [
           {
-            "internalType": "address",
-            "name": "token0",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "token1",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0ToMint",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1ToMint",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount0Min",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount1Min",
-            "type": "uint256"
-          },
-          {
-            "internalType": "int256",
-            "name": "tickSpace",
-            "type": "int256"
-          },
-          {
-            "internalType": "uint24",
-            "name": "poolFee",
-            "type": "uint24"
-          }
-        ],
-        "internalType": "struct IWeb3Packs.LiquidityMintOrder[]",
-        "name": "liquidityMintOrders",
-        "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
             "internalType": "uint256",
             "name": "ERC20Timelock",
             "type": "uint256"
@@ -201,6 +154,11 @@
         "internalType": "struct IWeb3Packs.LockState",
         "name": "lockState",
         "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
       }
     ],
     "name": "bundleMode",
@@ -263,7 +221,7 @@
     ],
     "name": "unbundle",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   }
 ]
