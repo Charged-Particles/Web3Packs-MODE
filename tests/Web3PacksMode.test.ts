@@ -22,7 +22,7 @@ describe('Web3Packs', async ()=> {
   beforeEach(async () => {
     const { protocolOwner, deployer } = await getNamedAccounts();
 
-    web3packs = await ethers.getContract('Web3PacksMode');
+    web3packs = await ethers.getContract('Web3PacksMode') as Web3PacksMode;
     TestNFT = await ethers.getContract('ERC721Mintable');
 
     ownerSigner = await ethers.getSigner(protocolOwner);
@@ -61,12 +61,12 @@ describe('Web3Packs', async ()=> {
       };
   
       const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
-      const kimContract = new Contract('0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8', KimRouterInter, deployerSigner);
+      const kimContract = new Contract(globals.kimRouterMode, KimRouterInter, deployerSigner);
       const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
       
       const ERC20SwapOrder = {
         callData: <string>calldata.data,
-        router: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+        router: globals.kimRouterMode,
         tokenIn: globals.wrapETHAddress,
         amountIn: amountIn,
         tokenOut: globals.modeTokenAddress,
@@ -80,15 +80,18 @@ describe('Web3Packs', async ()=> {
       const balanceAfterSwap = await token.balanceOf(web3packs.address);
       expect(balanceAfterSwap).to.be.above(0);
     });
+
+    it('Provides liquidity', async() => {
+      // Create swap for the token liquidity
+      // Add liquidity 
+    });
   });
 
   describe('Velodrome', async() => {
     it('Swaps to single path route', async() => {
       const amountIn = ethers.utils.parseUnits('10', 6);
 
-      // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
       const velodromeParams = {
-        // amountIn: amountIn,
         amountOutMin: 0,
         routes: [ [globals.wrapETHAddress, '0x18470019bf0e94611f15852f7e93cf5d65bc34ca', false] ],
         to: web3packs.address,
@@ -119,7 +122,6 @@ describe('Web3Packs', async ()=> {
       const amountIn = ethers.utils.parseUnits('11', 6);
       const outToken = '0x95177295a394f2b9b04545fff58f4af0673e839d';
 
-      // swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)
       const velodromeParams = {
         // amountIn: amountIn,
         amountOutMin: 0,
@@ -438,5 +440,4 @@ describe('Web3Packs', async ()=> {
 
     expect(web3packs.swapGeneric(ERC20SwapOrder, { value: ethers.utils.parseUnits('20', 6) })).to.throw;
   });
-
 });

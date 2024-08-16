@@ -17,5 +17,6 @@ export default {
     wrapETHAddress: '0x4200000000000000000000000000000000000006',
     modeTokenAddress: '0xDfc7C877a950e49D2610114102175A06C2e3167a',
     chargedStateContractAddress: '0x2691B4f4251408bA4b8bf9530B6961b9D0C1231F',
+    kimRouterMode: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
     deadline: Math.floor(Date.now() / 1000) + (60 * 10),
 }
