@@ -102,6 +102,7 @@ contract Web3PacksMode is
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
+    LiquidityOrderGeneric[] calldata liquidityOrders,
     LockState calldata lockState,
     uint256 fee
   )
@@ -114,6 +115,7 @@ contract Web3PacksMode is
       revert NullReceiver();
 
     _swap(erc20SwapOrders);
+    // TODO: _depositLiquidity()
 
     tokenId = _bundle(
       address(this),
@@ -213,6 +215,9 @@ contract Web3PacksMode is
         revert(dataPtr, dataSize) // Revert with the given data
       }
     }
+  }
+
+  function depositLiquidity(LiquidityOrderGeneric calldata order) public payable {
   }
 
 

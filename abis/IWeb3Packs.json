@@ -141,6 +141,38 @@
       {
         "components": [
           {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "router",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          },
+          {
+            "internalType": "enum IWeb3Packs.SwapVersion",
+            "name": "version",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.LiquidityOrderGeneric[]",
+        "name": "liquidityOrders",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
             "internalType": "uint256",
             "name": "ERC20Timelock",
             "type": "uint256"

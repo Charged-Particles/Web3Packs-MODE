@@ -30,17 +30,6 @@ interface IWeb3Packs {
   event PackBundled(uint256 indexed tokenId, address indexed receiver);
   event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
 
-  struct ERC20SwapOrder {
-    address inputTokenAddress;
-    address outputTokenAddress;
-    uint256 inputTokenAmount;
-    uint24 uniSwapPoolFee;
-    uint256 deadline;
-    uint256 amountOutMinimum;
-    uint160 sqrtPriceLimitX96;
-    bool forLiquidity;
-  }
-
   struct ERC20SwapOrderGeneric {
     bytes callData;
     address router;
@@ -50,21 +39,17 @@ interface IWeb3Packs {
     bool forLiquidity;
   }
 
-  struct LiquidityMintOrder {
-    address token0;
-    address token1;
-    uint256 amount0ToMint;
-    uint256 amount1ToMint;
-    uint256 amount0Min;
-    uint256 amount1Min;
-    int256 tickSpace;
-    uint24 poolFee;
+  enum SwapVersion {
+    V2,
+    V3 
   }
 
-  struct ERC721MintOrders {
-    address erc721TokenAddress;
-    string basketManagerId;
-    string tokenMetadataUri;
+  struct LiquidityOrderGeneric {
+    bytes callData;
+    address router;
+    address tokenA;
+    address tokenB;
+    SwapVersion version;
   }
 
   struct Web3PackOrder {
@@ -86,6 +71,7 @@ interface IWeb3Packs {
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
+    LiquidityOrderGeneric[] calldata liquidityOrders,
     LockState calldata lockState,
     uint256 fee
   )
