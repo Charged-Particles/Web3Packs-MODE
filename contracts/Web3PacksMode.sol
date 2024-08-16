@@ -115,7 +115,7 @@ contract Web3PacksMode is
       revert NullReceiver();
 
     _swap(erc20SwapOrders);
-    // TODO: _depositLiquidity()
+    _depositLiquidity(liquidityOrders);
 
     tokenId = _bundle(
       address(this),
@@ -217,7 +217,14 @@ contract Web3PacksMode is
     }
   }
 
-  function depositLiquidity(LiquidityOrderGeneric calldata order) public payable {
+  function depositLiquidity(
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
+    LiquidityOrderGeneric[] calldata liquidityOrders
+  )
+    public
+    payable
+  {
+
   }
 
 
@@ -236,6 +243,15 @@ contract Web3PacksMode is
         erc20SwapOrders[i]
       );
     }
+  }
+
+  function _depositLiquidity(
+   LiquidityOrderGeneric[] calldata orders
+  )
+    internal
+    virtual
+  {
+
   }
 
   function _createBasicProton(

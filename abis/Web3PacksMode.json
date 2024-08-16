@@ -486,6 +486,43 @@
           },
           {
             "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "forLiquidity",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.ERC20SwapOrderGeneric[]",
+        "name": "erc20SwapOrders",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "router",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
             "name": "tokenA",
             "type": "address"
           },
@@ -500,9 +537,9 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct IWeb3Packs.LiquidityOrderGeneric",
-        "name": "order",
-        "type": "tuple"
+        "internalType": "struct IWeb3Packs.LiquidityOrderGeneric[]",
+        "name": "liquidityOrders",
+        "type": "tuple[]"
       }
     ],
     "name": "depositLiquidity",
