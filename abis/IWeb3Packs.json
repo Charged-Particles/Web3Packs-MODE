@@ -152,13 +152,23 @@
           },
           {
             "internalType": "address",
-            "name": "tokenA",
+            "name": "token0",
             "type": "address"
           },
           {
             "internalType": "address",
-            "name": "tokenB",
+            "name": "token1",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount0ToMint",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount1ToMint",
+            "type": "uint256"
           },
           {
             "internalType": "uint256",

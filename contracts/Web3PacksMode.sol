@@ -225,7 +225,7 @@ contract Web3PacksMode is
     public
     payable
   {
-    _swap(erc20SwapOrders);
+    // _swap(erc20SwapOrders);
     _depositLiquidity(liquidityOrders);
   }
 
