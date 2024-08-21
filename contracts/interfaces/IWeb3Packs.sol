@@ -47,8 +47,11 @@ interface IWeb3Packs {
   struct LiquidityOrderGeneric {
     bytes callData;
     address router;
-    address tokenA;
-    address tokenB;
+    address token0;
+    address token1;
+    uint256 amount0ToMint;
+    uint256 amount1ToMint;
+    uint256 amountIn;
     SwapVersion version;
   }
 

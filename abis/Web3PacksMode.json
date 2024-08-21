@@ -427,6 +427,11 @@
             "type": "address"
           },
           {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
             "internalType": "enum IWeb3Packs.SwapVersion",
             "name": "version",
             "type": "uint8"
@@ -530,6 +535,11 @@
             "internalType": "address",
             "name": "tokenB",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
           },
           {
             "internalType": "enum IWeb3Packs.SwapVersion",

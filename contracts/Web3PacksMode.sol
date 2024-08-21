@@ -91,6 +91,7 @@ contract Web3PacksMode is
 
     allowlisted[kimRouter] = true;
     allowlisted[velodromeRouter] = true;
+    allowlisted[nonfungiblePositionManager] = true;
   }
 
 
@@ -224,7 +225,8 @@ contract Web3PacksMode is
     public
     payable
   {
-
+    _swap(erc20SwapOrders);
+    _depositLiquidity(liquidityOrders);
   }
 
 
@@ -251,7 +253,34 @@ contract Web3PacksMode is
     internal
     virtual
   {
+    for (uint256 i; i < orders.length; i++) {
+      LiquidityOrderGeneric calldata order = orders[i];
+      if (!allowlisted[order.router]) revert ContractNotAllowed(); 
 
+      TransferHelper.safeApprove(
+        order.token0,
+        address(order.router),
+        order.amount0ToMint
+      );
+
+      TransferHelper.safeApprove(
+        order.token1,
+        address(order.router),
+        order.amount1ToMint
+      );
+
+      (bool success, bytes memory data ) = order.router.call{ value: order.amountIn }(
+          order.callData
+      ); 
+
+      if (!success) {
+        assembly {
+          let dataSize := mload(data) // Load the size of the data
+          let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+          revert(dataPtr, dataSize) // Revert with the given data
+        }
+      }
+    }
   }
 
   function _createBasicProton(
