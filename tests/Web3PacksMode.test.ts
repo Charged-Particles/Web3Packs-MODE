@@ -9,7 +9,7 @@ import { Contract, Signer } from "ethers";
 import globals from "./globals";
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
-import IKimPositionManager from '../build/contracts/contracts/interfaces/IKimPositionManager.sol/IKimPositionManager.json'
+import IKimPositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/IKimPositionManager.json'
 
 describe('Web3Packs', async ()=> {
   // Define contracts
@@ -86,6 +86,8 @@ describe('Web3Packs', async ()=> {
 
     it('Provides liquidity', async() => {
       // Create swap for the token liquidity
+      const KimManager = new ethers.utils.Interface(IKimPositionManager.abi);
+      const KimManagerContract = new Contract(globals.KimNonfungibleTokenPosition, KimManager, deployerSigner);
       // Add liquidity 
       // craft call data
     });

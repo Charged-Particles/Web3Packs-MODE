@@ -18,6 +18,6 @@ export default {
     modeTokenAddress: '0xDfc7C877a950e49D2610114102175A06C2e3167a',
     chargedStateContractAddress: '0x2691B4f4251408bA4b8bf9530B6961b9D0C1231F',
     kimRouterMode: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
-    KimNonfungibleTokenPositionDescriptor: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
+    KimNonfungibleTokenPosition: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
     deadline: Math.floor(Date.now() / 1000) + (60 * 10),
 }
