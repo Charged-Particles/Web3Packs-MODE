@@ -10,6 +10,7 @@ import globals from "./globals";
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
 import IKimPositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/IKimPositionManager.json'
+import { _findNearestValidTick } from "./utils";
 
 describe('Web3Packs', async ()=> {
   // Define contracts
@@ -84,10 +85,28 @@ describe('Web3Packs', async ()=> {
       expect(balanceAfterSwap).to.be.above(0);
     });
 
-    it('Provides liquidity', async() => {
+    it.only('Provides liquidity', async() => {
       // Create swap for the token liquidity
+      await swapKimModeToken();
+
       const KimManager = new ethers.utils.Interface(IKimPositionManager.abi);
       const KimManagerContract = new Contract(globals.KimNonfungibleTokenPosition, KimManager, deployerSigner);
+
+      const calldataParams = {
+          token0: globals.wrapETHAddress,
+          token1: globals.modeTokenAddress,
+          tickLower: (_findNearestValidTick(60, true)),
+          tickUpper: (_findNearestValidTick(60)),
+          amount0Desired: 0n,
+          amount1Desired: 0n,
+          amount0Min: 1000000n,
+          amount1Min: 1000000n,
+          recipient: web3packs.address,
+          deadline: globals.deadline
+      }
+
+      const calldata = await KimManagerContract.populateTransaction.mint(calldataParams);
+      console.log(calldata)
       // Add liquidity 
       // craft call data
     });
