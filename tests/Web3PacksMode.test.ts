@@ -8,7 +8,7 @@ import {
 import { Contract, Signer } from "ethers";
 import globals from "./globals";
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
-import IkimRouterABI from '../build/contracts/contracts/IKimRouter.sol/IKimRouter.json'
+import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
 
 describe('Web3Packs', async ()=> {
   // Define contracts
