@@ -36,7 +36,6 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
@@ -47,34 +46,6 @@ import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
 
-struct MintParams {
-  address token0;
-  address token1;
-  int24 tickLower;
-  int24 tickUpper;
-  uint256 amount0Desired;
-  uint256 amount1Desired;
-  uint256 amount0Min;
-  uint256 amount1Min;
-  address recipient;
-  uint256 deadline;
-}
-
-struct MintResponse {
-  uint256 tokenId;
-  uint128 liquidity;
-  uint256 amount0;
-  uint256 amount1;
-}
-
-interface IKimNonfungiblePositionManager {
-  function mint(
-    MintParams calldata params
-  )
-    external
-    payable
-    returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
-}
 
 interface ERC20 {
   function balanceOf(address account) external view returns (uint256);
@@ -82,10 +53,8 @@ interface ERC20 {
 
 contract Web3PacksMode is
   IWeb3Packs,
-  LibAllowList,
   Ownable,
   Pausable,
-  ReentrancyGuard,
   BlackholePrevention
 {
   address _proton;
@@ -97,20 +66,31 @@ contract Web3PacksMode is
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
 
+  mapping (address => bool) allowlisted;
+
   // Custom Errors
   error FundingFailed();
   error NullReceiver();
+  error ContractNotAllowed();
+  error NativeAssetTransferFailed();
+  error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
+  error InsufficientForFee();
 
   constructor(
     address proton,
     address nonfungiblePositionManager,
     address chargedParticles,
-    address chargedState
+    address chargedState,
+    address kimRouter,
+    address velodromeRouter
   ){
     _proton = proton;
     _nonfungiblePositionManager = nonfungiblePositionManager;
     _chargedParticles = chargedParticles;
     _chargedState = chargedState;
+
+    allowlisted[kimRouter] = true;
+    allowlisted[velodromeRouter] = true;
   }
 
 
@@ -122,12 +102,11 @@ contract Web3PacksMode is
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    LiquidityMintOrder[] calldata liquidityMintOrders,
-    LockState calldata lockState
+    LockState calldata lockState,
+    uint256 fee
   )
     external
     whenNotPaused
-    nonReentrant
     payable
     returns(uint256 tokenId)
   {
@@ -136,18 +115,17 @@ contract Web3PacksMode is
 
     _swap(erc20SwapOrders);
 
-    MintResponse[] memory liquidity = _depositLiquidity(liquidityMintOrders);
-
     tokenId = _bundle(
       address(this),
       tokenMetaUri,
-      erc20SwapOrders,
-      liquidity
+      erc20SwapOrders
     );
 
     _lock(lockState, tokenId);
 
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
+    _returnPositiveSlippageNative(receiver, fee);
+
     emit PackBundled(tokenId, receiver);
   }
 
@@ -158,8 +136,8 @@ contract Web3PacksMode is
     Web3PackOrder calldata web3PackOrder
   )
     external
+    payable
     whenNotPaused
-    nonReentrant
   {
     _unbundle(
       receiver,
@@ -180,7 +158,6 @@ contract Web3PacksMode is
   )
     external
     whenNotPaused
-    nonReentrant
   {
     _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
@@ -194,18 +171,6 @@ contract Web3PacksMode is
     virtual
   {
     _swap(erc20SwapOrders);
-  }
-
-  function depositLiquidity(
-    LiquidityMintOrder[] calldata liquidityMintOrders,
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
-  )
-    external
-    payable
-    returns (MintResponse[] memory) 
-  {
-    _swap(erc20SwapOrders);
-    return _depositLiquidity(liquidityMintOrders);
   }
 
   function bond(
@@ -233,13 +198,21 @@ contract Web3PacksMode is
   }
 
   function swapGeneric(ERC20SwapOrderGeneric calldata swapOrder) public payable {
+    if (!allowlisted[swapOrder.router]) revert ContractNotAllowed();
+
     TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
 
-    // filter by address
-    // filger by method
-    (bool success, bytes memory res) = swapOrder.router.call{ value: msg.value }(
+    (bool success, bytes memory data ) = swapOrder.router.call{ value: swapOrder.amountIn }(
         swapOrder.callData
     ); 
+
+    if (!success) {
+      assembly {
+        let dataSize := mload(data) // Load the size of the data
+        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+        revert(dataPtr, dataSize) // Revert with the given data
+      }
+    }
   }
 
 
@@ -327,8 +300,7 @@ contract Web3PacksMode is
   function _bundle(
     address receiver,
     string calldata tokenMetaUri,
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    MintResponse[] memory liquidity
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
   )
     internal
     returns (uint256 tokenId)
@@ -339,19 +311,6 @@ contract Web3PacksMode is
     // Bundle Assets into NFT
     for (uint256 i; i < erc20SwapOrders.length; i++) {
       _energize(tokenId, erc20SwapOrders[i].tokenOut, erc20SwapOrders[i].forLiquidity);
-    }
-
-    for (uint256 i; i < liquidity.length; i++) {
-      // if mint response.type == v2 -> energize 
-      // if mint response.type == v3 -> bond
-
-      _bond(
-        _proton,
-        tokenId,
-        _cpBasketManager,
-        _nonfungiblePositionManager,
-        liquidity[i].tokenId
-      );
     }
   }
 
@@ -399,54 +358,6 @@ contract Web3PacksMode is
         revert FundingFailed();
       }
     }
-  }
-
-  function _depositLiquidity(
-    LiquidityMintOrder[] calldata liquidityMintOrders
-  )
-   private
-   returns (MintResponse[] memory)
-  {
-    MintResponse[] memory liquidityNfts = new MintResponse[](liquidityMintOrders.length);
-
-    for (uint256 i; i < liquidityMintOrders.length; i++) {
-      TransferHelper.safeApprove(
-        liquidityMintOrders[i].token0,
-        address(_nonfungiblePositionManager),
-        liquidityMintOrders[i].amount0ToMint
-      );
-
-      TransferHelper.safeApprove(
-        liquidityMintOrders[i].token1,
-        address(_nonfungiblePositionManager),
-        liquidityMintOrders[i].amount1ToMint
-      );
-
-      int24 tickLower = int24(_findNearestValidTick(liquidityMintOrders[i].tickSpace, true));
-      int24 tickUpper = int24(_findNearestValidTick(liquidityMintOrders[i].tickSpace, false));
-
-      MintParams memory params = 
-        MintParams({
-          token0: liquidityMintOrders[i].token0,
-          token1: liquidityMintOrders[i].token1,
-          tickLower: tickLower,
-          tickUpper: tickUpper,
-          amount0Desired: ERC20(liquidityMintOrders[i].token0).balanceOf(address(this)),
-          amount1Desired: ERC20(liquidityMintOrders[i].token1).balanceOf(address(this)),
-          amount0Min: liquidityMintOrders[i].amount0Min,
-          amount1Min: liquidityMintOrders[i].amount1Min,
-          recipient: address(this),
-          deadline: block.timestamp
-        });
-
-        (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1) = IKimNonfungiblePositionManager(
-          _nonfungiblePositionManager
-        ).mint{ value: liquidityMintOrders[i].amount0ToMint }(params);
-
-        liquidityNfts[i] = MintResponse(tokenId, liquidity, amount0, amount1);
-      }
-
-      return liquidityNfts;
   }
 
   function _lock (
@@ -534,33 +445,19 @@ contract Web3PacksMode is
       return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
   }
 
-/**
- * @dev Finds the nearest valid tick to either MIN_TICK or MAX_TICK based on the tickSpacing.
- * This function accounts for edge cases to ensure the returned tick is within valid range.
- * @param tickSpacing The spacing between valid ticks, must be a positive integer.
- * @param nearestToMin If true, finds the nearest valid tick greater than or equal to MIN_TICK.
- *                     If false, finds the nearest valid tick less than or equal to MAX_TICK.
- * @return The nearest valid tick as an integer, ensuring it falls
-   within the valid tick range.
- */
-  function _findNearestValidTick(int256 tickSpacing, bool nearestToMin) public pure returns (int256) {
-    require(tickSpacing > 0, "Tick spacing must be positive");
-    int256 MIN_TICK = -887272;
-    int256 MAX_TICK = -MIN_TICK;
+  function _returnPositiveSlippageNative(address receiver, uint256 fee) private {
+    uint256 nativeBalance = address(this).balance;
 
-    if (nearestToMin) {
-        // Adjust to find a tick greater than or equal to MIN_TICK.
-        int256 adjustedMinTick = MIN_TICK + (tickSpacing - 1);
-        // Prevent potential overflow.
-        if (MIN_TICK < 0 && adjustedMinTick > 0) {
-            adjustedMinTick = MIN_TICK;
-        }
-        int256 adjustedTick = (adjustedMinTick / tickSpacing) * tickSpacing;
-        // Ensure the adjusted tick does not fall below MIN_TICK.
-        return (adjustedTick > MIN_TICK) ? adjustedTick - tickSpacing : adjustedTick;
-    } else {
-        // Find the nearest valid tick less than or equal to MAX_TICK, straightforward due to floor division.
-        return (MAX_TICK / tickSpacing) * tickSpacing;
+    if (fee > nativeBalance) {
+      revert InsufficientForFee();
+    }
+
+    uint256 amountToReturn = nativeBalance - fee;
+
+    if (amountToReturn > 0) {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = receiver.call{ value: amountToReturn }("");
+        if (!success) revert NativeAssetTransferFailed();
     }
   }
 }

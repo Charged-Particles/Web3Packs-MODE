@@ -20,6 +20,8 @@ const {
       ChargedState: '0x2691B4f4251408bA4b8bf9530B6961b9D0C1231F',
       Proton: '0x76a5df1c6F53A4B80c8c8177edf52FBbC368E825',
       NonfungibleTokenPositionDescriptor: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
+      kimRouter: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
+      VelodromeRouter: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
     },
   };
   
@@ -51,7 +53,9 @@ const {
           _ADDRESS[chainId].Proton,
           _ADDRESS[chainId].NonfungibleTokenPositionDescriptor,
           _ADDRESS[chainId].ChargedParticles,
-          _ADDRESS[chainId].ChargedState
+          _ADDRESS[chainId].ChargedState,
+          _ADDRESS[chainId].kimRouter,
+          _ADDRESS[chainId].VelodromeRouter
         ],
         log: true,
       });
