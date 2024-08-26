@@ -52,7 +52,7 @@ interface IWeb3Packs {
     uint256 amount0ToMint;
     uint256 amount1ToMint;
     uint256 amountIn;
-    SwapVersion version;
+    // SwapVersion version;
   }
 
   struct Web3PackOrder {

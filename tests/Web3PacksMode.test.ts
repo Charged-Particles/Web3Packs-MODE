@@ -47,7 +47,7 @@ describe('Web3Packs', async ()=> {
   });
 
   const swapKimModeToken = async () => {
-    const amountIn = ethers.utils.parseUnits('10', 6);
+    const amountIn = ethers.utils.parseUnits('10', 9);
   
     const callDataParams = {
       tokenIn: globals.wrapETHAddress,
@@ -72,7 +72,7 @@ describe('Web3Packs', async ()=> {
       forLiquidity: false,
     };
 
-    const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: ethers.utils.parseUnits('20', 6) });
+    const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: ethers.utils.parseUnits('20', 9) });
     await swapTransaction.wait(); 
   }
 
@@ -95,18 +95,40 @@ describe('Web3Packs', async ()=> {
       const calldataParams = {
           token0: globals.wrapETHAddress,
           token1: globals.modeTokenAddress,
-          tickLower: (_findNearestValidTick(60, true)),
-          tickUpper: (_findNearestValidTick(60)),
-          amount0Desired: 0n,
-          amount1Desired: 0n,
-          amount0Min: 1000000n,
-          amount1Min: 1000000n,
+          tickLower: BigInt(_findNearestValidTick(60, true)),
+          tickUpper: BigInt(_findNearestValidTick(60, false)),
+          amount0Desired: 100n,
+          amount1Desired: 100n,
+          amount0Min: 10000000000n,
+          amount1Min: 10000000000n,
           recipient: web3packs.address,
-          deadline: globals.deadline
+          deadline: globals.deadline,
+          // fee: 0n, 
       }
 
       const calldata = await KimManagerContract.populateTransaction.mint(calldataParams);
       console.log(calldata)
+
+      const mintOrder = {
+        callData: calldata.data,
+        router: globals.KimNonfungibleTokenPosition,
+        token0: globals.wrapETHAddress,
+        token1: globals.modeTokenAddress,
+        amount0ToMint: calldataParams.amount0Min,
+        amount1ToMint: calldataParams.amount1Min,
+        amountIn: calldataParams.amount0Min,
+        // version: 0n,
+      }
+
+      const mintTx = await web3packs.depositLiquidity(
+        [],
+        [mintOrder],
+        {
+          value: ethers.utils.parseEther('0.04')
+        }
+      );
+
+
       // Add liquidity 
       // craft call data
     });
