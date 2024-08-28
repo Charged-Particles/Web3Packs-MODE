@@ -207,7 +207,7 @@ contract Web3PacksMode is
 
     (bool success, bytes memory data ) = swapOrder.router.call{ value: swapOrder.amountIn }(
       swapOrder.callData
-    ); 
+    );
 
     if (!success) {
       assembly {
@@ -225,7 +225,7 @@ contract Web3PacksMode is
     public
     payable
   {
-    // _swap(erc20SwapOrders);
+    _swap(erc20SwapOrders);
     _depositLiquidity(liquidityOrders);
   }
 
@@ -255,7 +255,10 @@ contract Web3PacksMode is
   {
     for (uint256 i; i < orders.length; i++) {
       LiquidityOrderGeneric calldata order = orders[i];
-      if (!allowlisted[order.router]) revert ContractNotAllowed(); 
+      if (!allowlisted[order.router]) revert ContractNotAllowed();
+
+      TransferHelper.safeTransferFrom(order.token0, _msgSender(), address(this), order.amount0ToMint);
+      TransferHelper.safeTransferFrom(order.token1, _msgSender(), address(this), order.amount1ToMint);
 
       TransferHelper.safeApprove(
         order.token0,
@@ -271,7 +274,7 @@ contract Web3PacksMode is
 
       (bool success, bytes memory data ) = order.router.call{ value: order.amountIn }(
         order.callData
-      ); 
+      );
 
       if (!success) {
         assembly {

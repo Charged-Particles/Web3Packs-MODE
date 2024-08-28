@@ -1,4 +1,4 @@
-import { expect } from "chai"; 
+import { expect } from "chai";
 import { ethers, network, getNamedAccounts } from 'hardhat';
 import {
   default as Charged,
@@ -14,7 +14,7 @@ import { _findNearestValidTick } from "./utils";
 
 describe('Web3Packs', async ()=> {
   // Define contracts
-  let web3packs: Web3PacksMode, Proton: Contract, TestNFT: Contract; 
+  let web3packs: Web3PacksMode, Proton: Contract, TestNFT: Contract;
   let charged: Charged;
   // Define signers
   let ownerSigner: Signer, testSigner: Signer, deployerSigner: Signer;
@@ -27,7 +27,7 @@ describe('Web3Packs', async ()=> {
 
     ownerSigner = await ethers.getSigner(protocolOwner);
     deployerSigner = await ethers.getSigner(deployer);
-    testSigner = ethers.Wallet.fromMnemonic(process.env.TESTNET_MNEMONIC ?? '');
+    testSigner = ethers.Wallet.fromMnemonic(`${process.env.TESTNET_MNEMONIC}`.replace(/_/g, ' '));
     charged = new Charged({ providers: network.provider , signer: testSigner });
 
     Proton = new ethers.Contract(
@@ -48,7 +48,7 @@ describe('Web3Packs', async ()=> {
 
   const swapKimModeToken = async () => {
     const amountIn = ethers.utils.parseUnits('10', 9);
-  
+
     const callDataParams = {
       tokenIn: globals.wrapETHAddress,
       tokenOut: globals.modeTokenAddress,
@@ -56,13 +56,13 @@ describe('Web3Packs', async ()=> {
       deadline: globals.deadline,
       amountIn: amountIn,
       amountOutMinimum: 0n,
-      limitSqrtPrice: 0n 
+      limitSqrtPrice: 0n
     };
 
     const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
     const kimContract = new Contract(globals.kimRouterMode, KimRouterInter, deployerSigner);
     const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
-    
+
     const ERC20SwapOrder = {
       callData: <string>calldata.data,
       router: globals.kimRouterMode,
@@ -73,19 +73,19 @@ describe('Web3Packs', async ()=> {
     };
 
     const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: ethers.utils.parseUnits('20', 9) });
-    await swapTransaction.wait(); 
+    await swapTransaction.wait();
   }
 
   describe('KIM', () => {
     it('Swap a single asset KIM', async() => {
       await swapKimModeToken();
-  
+
       const token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
       const balanceAfterSwap = await token.balanceOf(web3packs.address);
       expect(balanceAfterSwap).to.be.above(0);
     });
 
-    it.only('Provides liquidity', async() => {
+    it('Provides liquidity', async() => {
       // Create swap for the token liquidity
       await swapKimModeToken();
 
@@ -97,29 +97,44 @@ describe('Web3Packs', async ()=> {
           token1: globals.modeTokenAddress,
           tickLower: BigInt(_findNearestValidTick(60, true)),
           tickUpper: BigInt(_findNearestValidTick(60, false)),
-          amount0Desired: 100n,
-          amount1Desired: 100n,
-          amount0Min: 10000000000n,
-          amount1Min: 10000000000n,
+          amount0Desired: ethers.utils.parseUnits('0.01', 18),
+          amount1Desired: ethers.utils.parseUnits('1000.0', 18),
+          amount0Min: 0n,
+          amount1Min: 0n,
           recipient: web3packs.address,
           deadline: globals.deadline,
-          // fee: 0n, 
+      }
+      const token0 = new ethers.Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+      const balanceToken0 = await token0.balanceOf(await deployerSigner.getAddress());
+      console.log(`balanceToken0  = ${balanceToken0.toString()}`)
+      console.log(`amount0Desired = ${calldataParams.amount0Desired.toString()}`)
+
+      const token1 = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+      const balanceToken1 = await token1.balanceOf(await deployerSigner.getAddress());
+      console.log(`balanceToken1  = ${balanceToken1.toString()}`)
+      console.log(`amount1Desired = ${calldataParams.amount1Desired.toString()}`)
+
+      // Set Approvals
+      if (await token0.approve(web3packs.address, calldataParams.amount0Desired)) {
+        console.log('Token 0 Approved for Transfer..')
+      }
+      if (await token1.approve(web3packs.address, calldataParams.amount1Desired)) {
+        console.log('Token 1 Approved for Transfer..')
       }
 
+      // craft call data
       const calldata = await KimManagerContract.populateTransaction.mint(calldataParams);
-      console.log(calldata)
-
       const mintOrder = {
         callData: calldata.data,
         router: globals.KimNonfungibleTokenPosition,
         token0: globals.wrapETHAddress,
         token1: globals.modeTokenAddress,
-        amount0ToMint: calldataParams.amount0Min,
-        amount1ToMint: calldataParams.amount1Min,
-        amountIn: calldataParams.amount0Min,
-        // version: 0n,
+        amount0ToMint: calldataParams.amount0Desired,
+        amount1ToMint: calldataParams.amount1Desired,
+        amountIn: 0n,
       }
 
+      // Add liquidity
       const mintTx = await web3packs.depositLiquidity(
         [],
         [mintOrder],
@@ -127,10 +142,6 @@ describe('Web3Packs', async ()=> {
           value: ethers.utils.parseEther('0.04')
         }
       );
-
-
-      // Add liquidity 
-      // craft call data
     });
   });
 
@@ -154,7 +165,7 @@ describe('Web3Packs', async ()=> {
         tokenIn: globals.wrapETHAddress,
         amountIn: amountIn,
         tokenOut: '0x18470019bf0e94611f15852f7e93cf5d65bc34ca',
-        forLiquidity: false, 
+        forLiquidity: false,
       }
 
       const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
@@ -189,7 +200,7 @@ describe('Web3Packs', async ()=> {
         tokenIn: globals.wrapETHAddress,
         amountIn: amountIn,
         tokenOut: outToken,
-        forLiquidity: false, 
+        forLiquidity: false,
       }
 
       const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: amountIn });
@@ -212,7 +223,7 @@ describe('Web3Packs', async ()=> {
       deadline: globals.deadline,
       amountIn: amountIn,
       amountOutMinimum: 0n,
-      limitSqrtPrice: 0n 
+      limitSqrtPrice: 0n
     };
 
     const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
@@ -227,14 +238,14 @@ describe('Web3Packs', async ()=> {
       tokenOut: globals.modeTokenAddress,
       forLiquidity: false,
     }];
-    
+
     const newTokenId = await web3packs.callStatic.bundleMode(
       globals.testAddress,
       globals.ipfsMetadata,
       ERC20SwapOrder,
       [],
       { ERC20Timelock:0 , ERC721Timelock: 0 },
-      fee, 
+      fee,
       { value: amountIn }
     );
 
@@ -263,7 +274,7 @@ describe('Web3Packs', async ()=> {
       newTokenId.toNumber(),
       web3packs.address
     ).then((tx) => tx.wait());
-      
+
     const unBundleTransaction = await web3packs.unbundle(
       await deployerSigner.getAddress(),
       Proton.address,
@@ -278,7 +289,7 @@ describe('Web3Packs', async ()=> {
     const uniLeftInBundle = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
     expect(uniLeftInBundle[network.config.chainId ?? '']?.value).to.eq(0);
 
-    const USDt = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner); 
+    const USDt = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
     const balanceOfUSDtAfterRelease = await USDt.balanceOf(await deployerSigner.getAddress());
 
     expect(balanceOfUSDtAfterRelease.toNumber()).to.be.closeTo(2622550041690, 1311275020845);
@@ -295,7 +306,7 @@ describe('Web3Packs', async ()=> {
       deadline: globals.deadline,
       amountIn: amountIn,
       amountOutMinimum: 0n,
-      limitSqrtPrice: 0n 
+      limitSqrtPrice: 0n
     };
 
     const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
@@ -313,7 +324,7 @@ describe('Web3Packs', async ()=> {
 
     const currentBlock = await ethers.provider.getBlockNumber() + 1000000; // todo: do not hardcode
     const timeLock = await ethers.provider.getBlockNumber() + 100;
-    
+
     const newTokenId = await web3packs.callStatic.bundleMode(
       globals.testAddress,
       globals.ipfsMetadata,
@@ -344,8 +355,8 @@ describe('Web3Packs', async ()=> {
       newTokenId.toNumber(),
       web3packs.address
     ).then((tx) => tx.wait());
-      
-    
+
+
     await expect(web3packs.unbundle(
       await deployerSigner.getAddress(),
       Proton.address,
@@ -379,7 +390,7 @@ describe('Web3Packs', async ()=> {
       deadline: globals.deadline,
       amountIn: amountInSwap,
       amountOutMinimum: 0n,
-      limitSqrtPrice: 0n 
+      limitSqrtPrice: 0n
     };
 
     const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
@@ -443,7 +454,7 @@ describe('Web3Packs', async ()=> {
       deadline: globals.deadline,
       amountIn: amountInSwap,
       amountOutMinimum: 0n,
-      limitSqrtPrice: 0n 
+      limitSqrtPrice: 0n
     };
 
     const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
