@@ -386,21 +386,18 @@ contract Web3PacksMode is
       // Deposit the LP NFT into the Web3Packs NFT
       _bond(_proton, web3packsTokenId, _cpBasketManager, _nonfungiblePositionManager, lpTokenId);
     }
-  }
 
-  // function _fund(
-  //   address payable receiver,
-  //   uint256 fundingAmount
-  // )
-  //   private
-  // {
-  //   if (address(this).balance >= fundingAmount) {
-  //     (bool sent, ) = receiver.call{value: fundingAmount}("");
-  //     if (!sent) {
-  //       revert FundingFailed();
-  //     }
-  //   }
-  // }
+    // Refund unused assets
+    _refundUnusedAssets(
+      _msgSender(),
+      liquidityOrder.token0,
+      amount0,
+      liquidityOrder.amount0ToMint,
+      liquidityOrder.token1,
+      amount1,
+      liquidityOrder.amount1ToMint
+    );
+  }
 
   function _lock (
     LockState calldata lockState,
@@ -514,6 +511,30 @@ contract Web3PacksMode is
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = receiver.call{ value: extraBalance }("");
         if (!success) revert NativeAssetTransferFailed();
+    }
+  }
+
+  function _refundUnusedAssets(
+    address receiver,
+    address token0,
+    uint256 amount0,
+    uint256 amount0ToMint,
+    address token1,
+    uint256 amount1,
+    uint256 amount1ToMint
+  ) private {
+
+    // Remove allowance and refund in both assets.
+    if (amount0 < amount0ToMint) {
+        TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), 0); // Remove approval
+        uint256 refund0 = amount0ToMint - amount0;
+        TransferHelper.safeTransfer(token0, receiver, refund0); // refund
+    }
+
+    if (amount1 < amount1ToMint) {
+        TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), 0); // Remove approval
+        uint256 refund1 = amount1ToMint - amount1;
+        TransferHelper.safeTransfer(token1, receiver, refund1); // refund
     }
   }
 }
