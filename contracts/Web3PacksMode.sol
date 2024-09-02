@@ -36,6 +36,9 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
@@ -57,16 +60,19 @@ contract Web3PacksMode is
   Pausable,
   BlackholePrevention
 {
-  address _proton;
-  address _nonfungiblePositionManager;
-  address _chargedParticles;
-  address _chargedState;
+  address internal _proton;
+  address internal _nonfungiblePositionManager;
+  address internal _chargedParticles;
+  address internal _chargedState;
+
+  uint256 internal _feesCollected;
+  uint256 internal _protocolFee;
 
   // Charged Particles Wallet Managers
   string internal _cpWalletManager = "generic.B";
   string internal _cpBasketManager = "generic.B";
 
-  mapping (address => bool) allowlisted;
+  mapping (address => bool) internal _allowlisted;
 
   // Custom Errors
   error FundingFailed();
@@ -89,9 +95,9 @@ contract Web3PacksMode is
     _chargedParticles = chargedParticles;
     _chargedState = chargedState;
 
-    allowlisted[kimRouter] = true;
-    allowlisted[velodromeRouter] = true;
-    allowlisted[nonfungiblePositionManager] = true;
+    _allowlisted[kimRouter] = true;
+    _allowlisted[velodromeRouter] = true;
+    _allowlisted[nonfungiblePositionManager] = true;
   }
 
 
@@ -99,35 +105,45 @@ contract Web3PacksMode is
   |               Public              |
   |__________________________________*/
 
-  function bundleMode(
+  function bundle(
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityOrderGeneric[] calldata liquidityOrders,
-    LockState calldata lockState,
-    uint256 fee
+    LockState calldata lockState
   )
     external
     whenNotPaused
     payable
     returns(uint256 tokenId)
   {
-    if (receiver == address(0x0))
+    if (receiver == address(0x0)) {
       revert NullReceiver();
+    }
 
-    _swap(erc20SwapOrders);
-    _depositLiquidity(liquidityOrders);
+    // Track Collected Fees
+    if (msg.value < _protocolFee) {
+      revert InsufficientForFee();
+    }
+    _feesCollected += _protocolFee;
 
-    tokenId = _bundle(
-      address(this),
-      tokenMetaUri,
-      erc20SwapOrders
-    );
+    // Mint Web3Pack NFT to Receiver
+    tokenId = IBaseProton(_proton).createBasicProton(address(this), receiver, tokenMetaUri);
 
+    // Swap ETH for Various Assets to be put inside of the Web3Pack NFT
+    _swap(erc20SwapOrders,  tokenId);
+
+    // Swap ETH for Various Assets to be used for creating an LP position owned by the Web3Pack NFT
+    _depositLiquidity(liquidityOrders, tokenId);
+
+    // Set the Timelock State
     _lock(lockState, tokenId);
 
+    // Transfer the Web3Packs NFT to the Buyer
     IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
-    _returnPositiveSlippageNative(receiver, fee);
+
+    // Refund any slippage amounts
+    _returnPositiveSlippageNative(receiver, msg.value);
 
     emit PackBundled(tokenId, receiver);
   }
@@ -166,123 +182,32 @@ contract Web3PacksMode is
     emit PackUnbundled(tokenId, receiver);
   }
 
-  function swap(
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
-  )
-    external
-    payable
-    virtual
-  {
-    _swap(erc20SwapOrders);
-  }
-
-  function bond(
-    address contractAddress,
-    uint256 tokenId,
-    string calldata tokenMetadataUri,
-    string calldata basketManagerId,
-    address nftTokenAddress
-  )
-   external
-   returns (uint256 mintedTokenId)
-  {
-    mintedTokenId = _createBasicProton(
-      contractAddress,
-      tokenMetadataUri
-    );
-
-    _bond(
-      contractAddress,
-      tokenId,
-      basketManagerId,
-      nftTokenAddress,
-      mintedTokenId
-    );
-  }
-
-  function swapGeneric(ERC20SwapOrderGeneric calldata swapOrder) public payable {
-    if (!allowlisted[swapOrder.router]) revert ContractNotAllowed();
-
-    TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
-
-    (bool success, bytes memory data ) = swapOrder.router.call{ value: swapOrder.amountIn }(
-      swapOrder.callData
-    );
-
-    if (!success) {
-      assembly {
-        let dataSize := mload(data) // Load the size of the data
-        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
-        revert(dataPtr, dataSize) // Revert with the given data
-      }
-    }
-  }
-
-  function depositLiquidity(
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    LiquidityOrderGeneric[] calldata liquidityOrders
-  )
-    public
-    payable
-  {
-    _swap(erc20SwapOrders);
-    _depositLiquidity(liquidityOrders);
-  }
-
 
   /***********************************|
   |         Private Functions         |
   |__________________________________*/
 
   function _swap(
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
+    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
+    uint256 web3packsTokenId
   )
     internal
     virtual
   {
     for (uint256 i; i < erc20SwapOrders.length; i++) {
-      swapGeneric(
-        erc20SwapOrders[i]
-      );
+      _swapSingleOrder(erc20SwapOrders[i], web3packsTokenId);
     }
   }
 
   function _depositLiquidity(
-   LiquidityOrderGeneric[] calldata orders
+    LiquidityOrderGeneric[] calldata orders,
+    uint256 web3packsTokenId
   )
     internal
     virtual
   {
     for (uint256 i; i < orders.length; i++) {
-      LiquidityOrderGeneric calldata order = orders[i];
-      if (!allowlisted[order.router]) revert ContractNotAllowed();
-
-      TransferHelper.safeTransferFrom(order.token0, _msgSender(), address(this), order.amount0ToMint);
-      TransferHelper.safeTransferFrom(order.token1, _msgSender(), address(this), order.amount1ToMint);
-
-      TransferHelper.safeApprove(
-        order.token0,
-        address(order.router),
-        order.amount0ToMint
-      );
-
-      TransferHelper.safeApprove(
-        order.token1,
-        address(order.router),
-        order.amount1ToMint
-      );
-
-      (bool success, bytes memory data ) = order.router.call{ value: order.amountIn }(
-        order.callData
-      );
-
-      if (!success) {
-        assembly {
-          let dataSize := mload(data) // Load the size of the data
-          let dataPtr := add(data, 0x20) // Advance data pointer to the next word
-          revert(dataPtr, dataSize) // Revert with the given data
-        }
-      }
+      _createLiquidityPosition(orders[i], web3packsTokenId);
     }
   }
 
@@ -325,46 +250,26 @@ contract Web3PacksMode is
 
   function _energize(
     uint256 tokenId,
-    address tokenAddress,
-    bool forLiqudity
+    address tokenAddress
   )
    internal
   {
-    if (! forLiqudity) {
-      uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
+    uint256 tokenBalance = ERC20(tokenAddress).balanceOf(address(this));
 
-      TransferHelper.safeApprove(
-        tokenAddress,
-        address(_chargedParticles),
-        balance
-      );
+    TransferHelper.safeApprove(
+      tokenAddress,
+      address(_chargedParticles),
+      tokenBalance
+    );
 
-      IChargedParticles(_chargedParticles).energizeParticle(
-        _proton,
-        tokenId,
-        _cpWalletManager,
-        tokenAddress,
-        balance,
-        address(this)
-      );
-    }
-  }
-
-  function _bundle(
-    address receiver,
-    string calldata tokenMetaUri,
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders
-  )
-    internal
-    returns (uint256 tokenId)
-  {
-    // Mint Web3Pack NFT to Receiver
-    tokenId = IBaseProton(_proton).createBasicProton(address(this), receiver, tokenMetaUri);
-
-    // Bundle Assets into NFT
-    for (uint256 i; i < erc20SwapOrders.length; i++) {
-      _energize(tokenId, erc20SwapOrders[i].tokenOut, erc20SwapOrders[i].forLiquidity);
-    }
+    IChargedParticles(_chargedParticles).energizeParticle(
+      _proton,
+      tokenId,
+      _cpWalletManager,
+      tokenAddress,
+      tokenBalance,
+      address(this)
+    );
   }
 
   function _unbundle(
@@ -399,19 +304,108 @@ contract Web3PacksMode is
     }
   }
 
-  function _fund(
-    address payable receiver,
-    uint256 fundingAmount
+  function _swapSingleOrder(
+    ERC20SwapOrderGeneric memory swapOrder,
+    uint256 web3packsTokenId
   )
-    private
+    internal
+    returns (uint256 amountOut)
   {
-    if (address(this).balance >= fundingAmount) {
-      (bool sent, ) = receiver.call{value: fundingAmount}("");
-      if (!sent) {
-        revert FundingFailed();
+    if (!_allowlisted[swapOrder.router]) revert ContractNotAllowed();
+
+    TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
+
+    (bool success, bytes memory data ) = swapOrder.router.call{ value: swapOrder.amountIn }(
+      swapOrder.callData
+    );
+    if (!success) {
+      assembly {
+        let dataSize := mload(data) // Load the size of the data
+        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+        revert(dataPtr, dataSize) // Revert with the given data
       }
     }
+
+    if (swapOrder.routerType == RouterType.UniswapV2) {
+      uint[] memory amounts = abi.decode(data, (uint[]));
+      amountOut = amounts[1];
+    }
+
+    if (swapOrder.routerType == RouterType.UniswapV3) {
+      amountOut = abi.decode(data, (uint256));
+    }
+
+    // Deposit the Assets into the Web3Packs NFT
+    _energize(web3packsTokenId, swapOrder.tokenOut);
   }
+
+  function _createLiquidityPosition(
+    LiquidityOrderGeneric memory liquidityOrder,
+    uint256 web3packsTokenId
+  ) internal {
+    if (!_allowlisted[liquidityOrder.router]) revert ContractNotAllowed();
+
+    TransferHelper.safeTransferFrom(liquidityOrder.token0, _msgSender(), address(this), liquidityOrder.amount0ToMint);
+    TransferHelper.safeTransferFrom(liquidityOrder.token1, _msgSender(), address(this), liquidityOrder.amount1ToMint);
+
+    TransferHelper.safeApprove(
+      liquidityOrder.token0,
+      address(liquidityOrder.router),
+      liquidityOrder.amount0ToMint
+    );
+
+    TransferHelper.safeApprove(
+      liquidityOrder.token1,
+      address(liquidityOrder.router),
+      liquidityOrder.amount1ToMint
+    );
+
+    // Pass calldata to Router to initiale LP position
+    (bool success, bytes memory data ) = liquidityOrder.router.call{ value: liquidityOrder.amountIn }(
+      liquidityOrder.callData
+    );
+    if (!success) {
+      assembly {
+        let dataSize := mload(data) // Load the size of the data
+        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+        revert(dataPtr, dataSize) // Revert with the given data
+      }
+    }
+
+    uint256 lpTokenId;
+    uint256 liquidity;
+    uint256 amount0;
+    uint256 amount1;
+
+    if (liquidityOrder.routerType == RouterType.UniswapV2) {
+      (amount0, amount1, liquidity) = abi.decode(data, (uint256, uint256, uint128));
+
+      // Deposit the LP tokens into the Web3Packs NFT
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
+      _energize(web3packsTokenId, lpTokenAddress);
+    }
+
+    if (liquidityOrder.routerType == RouterType.UniswapV3) {
+      (lpTokenId, liquidity, amount0, amount1) = abi.decode(data, (uint256, uint128, uint256, uint256));
+
+      // Deposit the LP NFT into the Web3Packs NFT
+      _bond(_proton, web3packsTokenId, _cpBasketManager, _nonfungiblePositionManager, lpTokenId);
+    }
+  }
+
+  // function _fund(
+  //   address payable receiver,
+  //   uint256 fundingAmount
+  // )
+  //   private
+  // {
+  //   if (address(this).balance >= fundingAmount) {
+  //     (bool sent, ) = receiver.call{value: fundingAmount}("");
+  //     if (!sent) {
+  //       revert FundingFailed();
+  //     }
+  //   }
+  // }
 
   function _lock (
     LockState calldata lockState,
@@ -437,6 +431,22 @@ contract Web3PacksMode is
     }
   }
 
+
+  /***********************************|
+  |     Router-specific Functions     |
+  |__________________________________*/
+
+  function _getUniswapV2Factory(address router) private pure returns (address) {
+    IUniswapV2Router02 _router = IUniswapV2Router02(router);
+    return _router.factory();
+  }
+
+  function _getUniswapV2PairAddress(address router, address tokenA, address tokenB) private view returns (address) {
+    IUniswapV2Factory _factory = IUniswapV2Factory(_getUniswapV2Factory(router));
+    return _factory.getPair(tokenA, tokenB);
+  }
+
+
   /***********************************|
   |          Only Admin/DAO           |
   |__________________________________*/
@@ -457,6 +467,11 @@ contract Web3PacksMode is
   function setProton(address proton) external onlyOwner {
     _proton = proton;
     emit ProtonSet(proton);
+  }
+
+  function setProtocolFee(uint256 fee) external onlyOwner {
+    _protocolFee = fee;
+    emit ProtocolFeeSet(fee);
   }
 
   function pause() public onlyOwner {
@@ -495,21 +510,14 @@ contract Web3PacksMode is
       uint256,
       bytes calldata
   ) external pure returns(bytes4) {
-      return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+      return this.onERC721Received.selector;
   }
 
   function _returnPositiveSlippageNative(address receiver, uint256 fee) private {
-    uint256 nativeBalance = address(this).balance;
-
-    if (fee > nativeBalance) {
-      revert InsufficientForFee();
-    }
-
-    uint256 amountToReturn = nativeBalance - fee;
-
-    if (amountToReturn > 0) {
+    uint256 extraBalance = address(this).balance - _feesCollected;
+    if (extraBalance > 0) {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = receiver.call{ value: amountToReturn }("");
+        (bool success, ) = receiver.call{ value: extraBalance }("");
         if (!success) revert NativeAssetTransferFailed();
     }
   }

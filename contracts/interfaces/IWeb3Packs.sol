@@ -29,6 +29,12 @@ interface IWeb3Packs {
   event ProtonSet(address indexed proton);
   event PackBundled(uint256 indexed tokenId, address indexed receiver);
   event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
+  event ProtocolFeeSet(uint256 fee);
+
+  enum RouterType {
+    UniswapV2,
+    UniswapV3
+  }
 
   struct ERC20SwapOrderGeneric {
     bytes callData;
@@ -36,12 +42,7 @@ interface IWeb3Packs {
     address tokenIn;
     uint256 amountIn;
     address tokenOut;
-    bool forLiquidity;
-  }
-
-  enum SwapVersion {
-    V2,
-    V3 
+    RouterType routerType;
   }
 
   struct LiquidityOrderGeneric {
@@ -52,7 +53,7 @@ interface IWeb3Packs {
     uint256 amount0ToMint;
     uint256 amount1ToMint;
     uint256 amountIn;
-    // SwapVersion version;
+    RouterType routerType;
   }
 
   struct Web3PackOrder {
@@ -70,7 +71,7 @@ interface IWeb3Packs {
     uint256 ERC721Timelock;
   }
 
-  function bundleMode(
+  function bundle(
     address payable receiver,
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
