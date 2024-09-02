@@ -6,7 +6,7 @@ import {
   protonBAbi
 } from "@charged-particles/charged-js-sdk";
 import { Contract, Signer } from "ethers";
-import globals from "./globals";
+import globals from "../js-helpers/globals";
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
 import IKimPositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/IKimPositionManager.json'
@@ -16,6 +16,9 @@ const RouterType = {
   UniswapV2: 0n,
   UniswapV3: 1n,
 };
+
+const _modeAccount = '0x1AB4973a48dc892Cd9971ECE8e01DcC7688f8F23'; // Some Rich Account on Mode
+const _wethAccount = '0x8cfE2A02dfBAbC56aE7e573170E35f88A38BeA55'; // Some Rich Account on Mode
 
 describe('Web3Packs', async ()=> {
   // Define contracts
@@ -45,54 +48,80 @@ describe('Web3Packs', async ()=> {
   beforeEach(async() => {
     const { protocolOwner } = await getNamedAccounts();
 
+    // await prefundAccounts();
+
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [protocolOwner],
     });
   });
 
-  const swapKimModeToken = async () => {
-    const amountIn = ethers.utils.parseUnits('10', 9);
+  const prefundAccounts = async () => {
+    const { protocolOwner, deployer } = await getNamedAccounts();
+    const wethAmount = ethers.utils.parseUnits('1', 18);
+    const modeAmount = ethers.utils.parseUnits('1000', 18);
 
-    const callDataParams = {
-      tokenIn: globals.wrapETHAddress,
-      tokenOut: globals.modeTokenAddress,
-      recipient: web3packs.address,
-      deadline: globals.deadline,
-      amountIn: amountIn,
-      amountOutMinimum: 0n,
-      limitSqrtPrice: 0n
-    };
-
-    const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
-    const kimContract = new Contract(globals.kimRouterMode, KimRouterInter, deployerSigner);
-    const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
-
-    const ERC20SwapOrder = {
-      callData: <string>calldata.data,
-      router: globals.kimRouterMode,
-      tokenIn: globals.wrapETHAddress,
-      amountIn: amountIn,
-      tokenOut: globals.modeTokenAddress,
-      routerType: RouterType.UniswapV3,
-    };
-
-    const swapTransaction = await web3packs.swapGeneric(ERC20SwapOrder, { value: ethers.utils.parseUnits('20', 9) });
-    await swapTransaction.wait();
-  }
-
-  describe('KIM', () => {
-    it('Swap a single asset KIM', async() => {
-      await swapKimModeToken();
-
-      const token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
-      const balanceAfterSwap = await token.balanceOf(web3packs.address);
-      expect(balanceAfterSwap).to.be.above(0);
+    // Impersonnate Rich WETH Account
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [_wethAccount],
     });
 
+    // Transfer WETH to Owner & Deployer
+    let fakeSigner = await ethers.getSigner(_wethAccount);
+    let token = new ethers.Contract(globals.wrapETHAddress, globals.erc20Abi, fakeSigner);
+    let tokenTx = await token.transfer(protocolOwner, wethAmount);
+    await tokenTx.wait();
+    tokenTx = await token.transfer(deployer, wethAmount);
+    await tokenTx.wait();
+
+    // Impersonnate Rich MODE Account
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [_modeAccount],
+    });
+
+    // Transfer MODE to Owner & Deployer
+    fakeSigner = await ethers.getSigner(_modeAccount);
+    token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, fakeSigner);
+    tokenTx = await token.transfer(protocolOwner, modeAmount);
+    await tokenTx.wait();
+    tokenTx = await token.transfer(deployer, modeAmount);
+    await tokenTx.wait();
+  };
+
+  // const swapKimModeToken = async () => {
+  //   const amountIn = ethers.utils.parseUnits('10', 9);
+
+  //   const callDataParams = {
+  //     tokenIn: globals.wrapETHAddress,
+  //     tokenOut: globals.modeTokenAddress,
+  //     recipient: web3packs.address,
+  //     deadline: globals.deadline,
+  //     amountIn: amountIn,
+  //     amountOutMinimum: 0n,
+  //     limitSqrtPrice: 0n
+  //   };
+
+  //   const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
+  //   const kimContract = new Contract(globals.kimRouterMode, KimRouterInter, deployerSigner);
+  //   const swapTransaction = await kimContract.exactInputSingle(callDataParams);
+  //   await swapTransaction.wait();
+  // }
+
+  describe('KIM', () => {
+    // it('Swap a single asset KIM', async() => {
+    //   await swapKimModeToken();
+
+    //   const token = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+    //   const balanceAfterSwap = await token.balanceOf(web3packs.address);
+    //   expect(balanceAfterSwap).to.be.above(0);
+    // });
+
     it.only('Provides liquidity', async() => {
+      const { deployer } = await getNamedAccounts();
       // Create swap for the token liquidity
-      await swapKimModeToken();
+      // await swapKimModeToken();
 
       const KimManager = new ethers.utils.Interface(IKimPositionManager.abi);
       const KimManagerContract = new Contract(globals.KimNonfungibleTokenPosition, KimManager, deployerSigner);
@@ -102,8 +131,8 @@ describe('Web3Packs', async ()=> {
           token1: globals.modeTokenAddress,
           tickLower: BigInt(_findNearestValidTick(60, true)),
           tickUpper: BigInt(_findNearestValidTick(60, false)),
-          amount0Desired: ethers.utils.parseUnits('0.01', 18),
-          amount1Desired: ethers.utils.parseUnits('1000.0', 18),
+          amount0Desired: ethers.utils.parseUnits('0.001', 18),
+          amount1Desired: ethers.utils.parseUnits('100.0', 18),
           amount0Min: 0n,
           amount1Min: 0n,
           recipient: web3packs.address,
@@ -113,21 +142,17 @@ describe('Web3Packs', async ()=> {
       // Confirm Token Balances
       const token0 = new ethers.Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
       const balanceToken0 = await token0.balanceOf(await deployerSigner.getAddress());
-      console.log(`balanceToken0  = ${balanceToken0.toString()}`)
-      console.log(`amount0Desired = ${calldataParams.amount0Desired.toString()}`)
+      // console.log(`balanceToken0  = ${balanceToken0.toString()}`)
+      // console.log(`amount0Desired = ${calldataParams.amount0Desired.toString()}`)
 
       const token1 = new ethers.Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
       const balanceToken1 = await token1.balanceOf(await deployerSigner.getAddress());
-      console.log(`balanceToken1  = ${balanceToken1.toString()}`)
-      console.log(`amount1Desired = ${calldataParams.amount1Desired.toString()}`)
+      // console.log(`balanceToken1  = ${balanceToken1.toString()}`)
+      // console.log(`amount1Desired = ${calldataParams.amount1Desired.toString()}`)
 
       // Set Token Approvals
-      if (await token0.approve(web3packs.address, calldataParams.amount0Desired)) {
-        console.log('Token 0 Approved for Transfer..')
-      }
-      if (await token1.approve(web3packs.address, calldataParams.amount1Desired)) {
-        console.log('Token 1 Approved for Transfer..')
-      }
+      await token0.approve(web3packs.address, calldataParams.amount0Desired);
+      await token1.approve(web3packs.address, calldataParams.amount1Desired);
 
       // craft call data
       const calldata = await KimManagerContract.populateTransaction.mint(calldataParams);
@@ -142,27 +167,23 @@ describe('Web3Packs', async ()=> {
         routerType: RouterType.UniswapV3,
       }
 
-      // Add liquidity
-      // const mintTx = await web3packs.depositLiquidity([], [mintOrder]); // , { value: ethers.utils.parseEther('0.04') });
+      const preBalance = await ethers.provider.getBalance(deployer);
 
+      // Add liquidity
       const mintTx = await web3packs.bundle(
         await deployerSigner.getAddress(),
         globals.ipfsMetadata,
         [],
         [mintOrder],
         { ERC20Timelock: 0, ERC721Timelock: 0 },
-        { value: 0n }
+        { value: globals.protocolFee.mul(3) }  // TRIPLE the Fees and Expect a REFUND
       );
       const txReceipt = await mintTx.wait();
-      // console.log(txReceipt);
+      const gasCost = ethers.BigNumber.from(txReceipt.cumulativeGasUsed.toBigInt() * txReceipt.effectiveGasPrice.toBigInt());
 
-      for (let i = 0; i < txReceipt.events.length; i++) {
-        for (let j = 0; j < txReceipt.events[i].topics.length; j++) {
-          console.log(txReceipt.events[i].topics[j]);
-          console.log('-----------------');
-        }
-      }
-
+      // Expect REFUND on Excessive Fees
+      const postBalance = await ethers.provider.getBalance(deployer);
+      expect(postBalance.toBigInt()).to.eq(preBalance.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt());
     });
   });
 

@@ -34,13 +34,13 @@ pragma solidity 0.8.17;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "./lib/ERC721Mintable.sol";
 import "./lib/BlackholePrevention.sol";
 import "./lib/AllowList.sol";
 import "./interfaces/IWeb3Packs.sol";
@@ -48,7 +48,6 @@ import "./interfaces/IChargedState.sol";
 import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
 import "./interfaces/IBaseProton.sol";
-
 
 interface ERC20 {
   function balanceOf(address account) external view returns (uint256);
@@ -89,7 +88,7 @@ contract Web3PacksMode is
     address chargedState,
     address kimRouter,
     address velodromeRouter
-  ){
+  ) {
     _proton = proton;
     _nonfungiblePositionManager = nonfungiblePositionManager;
     _chargedParticles = chargedParticles;
@@ -122,7 +121,7 @@ contract Web3PacksMode is
     }
 
     // Track Collected Fees
-    if (msg.value < _protocolFee) {
+    if (_protocolFee > 0 && msg.value < _protocolFee) {
       revert InsufficientForFee();
     }
     _feesCollected += _protocolFee;
@@ -139,11 +138,8 @@ contract Web3PacksMode is
     // Set the Timelock State
     _lock(lockState, tokenId);
 
-    // Transfer the Web3Packs NFT to the Buyer
-    IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
-
     // Refund any slippage amounts
-    _returnPositiveSlippageNative(receiver, msg.value);
+    _returnPositiveSlippageNative(receiver);
 
     emit PackBundled(tokenId, receiver);
   }
@@ -236,7 +232,7 @@ contract Web3PacksMode is
     internal
   {
     // permission
-    ERC721Mintable(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
+    IERC721(nftTokenAddress).setApprovalForAll(_chargedParticles, true);
 
     IChargedParticles(_chargedParticles).covalentBond(
       contractAddress,
@@ -255,7 +251,6 @@ contract Web3PacksMode is
    internal
   {
     uint256 tokenBalance = ERC20(tokenAddress).balanceOf(address(this));
-
     TransferHelper.safeApprove(
       tokenAddress,
       address(_chargedParticles),
@@ -513,7 +508,7 @@ contract Web3PacksMode is
       return this.onERC721Received.selector;
   }
 
-  function _returnPositiveSlippageNative(address receiver, uint256 fee) private {
+  function _returnPositiveSlippageNative(address receiver) private {
     uint256 extraBalance = address(this).balance - _feesCollected;
     if (extraBalance > 0) {
         // solhint-disable-next-line avoid-low-level-calls

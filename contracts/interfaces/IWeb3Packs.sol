@@ -76,8 +76,7 @@ interface IWeb3Packs {
     string calldata tokenMetaUri,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityOrderGeneric[] calldata liquidityOrders,
-    LockState calldata lockState,
-    uint256 fee
+    LockState calldata lockState
   )
     external
     payable

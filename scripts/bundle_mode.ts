@@ -1,5 +1,5 @@
 import { Signer, Wallet } from "ethers";
-import globals from "../tests/globals";
+import globals from "../js-helpers/globals";
 import { Web3PacksMode } from "../typechain-types";
 const hre = require("hardhat");
 

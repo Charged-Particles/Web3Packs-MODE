@@ -67,6 +67,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProtocolFeeSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "proton",
@@ -129,9 +142,9 @@
             "type": "address"
           },
           {
-            "internalType": "bool",
-            "name": "forLiquidity",
-            "type": "bool"
+            "internalType": "enum IWeb3Packs.RouterType",
+            "name": "routerType",
+            "type": "uint8"
           }
         ],
         "internalType": "struct IWeb3Packs.ERC20SwapOrderGeneric[]",
@@ -174,6 +187,11 @@
             "internalType": "uint256",
             "name": "amountIn",
             "type": "uint256"
+          },
+          {
+            "internalType": "enum IWeb3Packs.RouterType",
+            "name": "routerType",
+            "type": "uint8"
           }
         ],
         "internalType": "struct IWeb3Packs.LiquidityOrderGeneric[]",
@@ -196,14 +214,9 @@
         "internalType": "struct IWeb3Packs.LockState",
         "name": "lockState",
         "type": "tuple"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
       }
     ],
-    "name": "bundleMode",
+    "name": "bundle",
     "outputs": [
       {
         "internalType": "uint256",
