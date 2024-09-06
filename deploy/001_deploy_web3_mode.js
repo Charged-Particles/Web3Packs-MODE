@@ -62,8 +62,13 @@ module.exports = async (hre) => {
   });
 
   const web3packs = await ethers.getContract('Web3PacksMode');
-  const tx = await web3packs.setProtocolFee(globals.protocolFee);
+  let tx = await web3packs.setProtocolFee(globals.protocolFee);
   await tx.wait();
+
+  tx = await web3packs.setContractAllowlist(globals.wrapETHAddress, true);
+  await tx.wait();
+
+
 };
 
 module.exports.tags = ['mode_packs']

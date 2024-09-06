@@ -36,12 +36,20 @@ interface IWeb3Packs {
     UniswapV3
   }
 
+  struct ContractCallGeneric {
+    bytes callData;
+    address contractAddress;
+    uint256 amountIn;
+  }
+
   struct ERC20SwapOrderGeneric {
     bytes callData;
     address router;
     address tokenIn;
-    uint256 amountIn;
     address tokenOut;
+    uint256 tokenAmountIn;
+    uint256 payableAmountIn;
+    bytes32 liquidityUuid;
     RouterType routerType;
   }
 
@@ -52,13 +60,24 @@ interface IWeb3Packs {
     address token1;
     uint256 amount0ToMint;
     uint256 amount1ToMint;
-    uint256 amountIn;
+    bytes32 liquidityUuidToken0;
+    bytes32 liquidityUuidToken1;
+    uint256 payableAmountIn;
     RouterType routerType;
   }
 
   struct Web3PackOrder {
     address[] erc20TokenAddresses;
     NFT[] nfts;
+  }
+
+  struct LiquidityPosition {
+    uint256 lpTokenId;
+    uint128 liquidity;
+    address token0;
+    address token1;
+    address router;
+    RouterType routerType;
   }
 
   struct NFT {
@@ -74,9 +93,11 @@ interface IWeb3Packs {
   function bundle(
     address payable receiver,
     string calldata tokenMetaUri,
+    ContractCallGeneric[] calldata contractCalls,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityOrderGeneric[] calldata liquidityOrders,
-    LockState calldata lockState
+    LockState calldata lockState,
+    uint256 ethPackPrice
   )
     external
     payable

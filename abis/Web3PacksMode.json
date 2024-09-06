@@ -57,6 +57,11 @@
   },
   {
     "inputs": [],
+    "name": "NotOwnerOrApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NullReceiver",
     "type": "error"
   },
@@ -350,6 +355,28 @@
           },
           {
             "internalType": "address",
+            "name": "contractAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWeb3Packs.ContractCallGeneric[]",
+        "name": "contractCalls",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
             "name": "router",
             "type": "address"
           },
@@ -359,14 +386,24 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "amountIn",
-            "type": "uint256"
-          },
-          {
             "internalType": "address",
             "name": "tokenOut",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payableAmountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "liquidityUuid",
+            "type": "bytes32"
           },
           {
             "internalType": "enum IWeb3Packs.RouterType",
@@ -411,8 +448,18 @@
             "type": "uint256"
           },
           {
+            "internalType": "bytes32",
+            "name": "liquidityUuidToken0",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "liquidityUuidToken1",
+            "type": "bytes32"
+          },
+          {
             "internalType": "uint256",
-            "name": "amountIn",
+            "name": "payableAmountIn",
             "type": "uint256"
           },
           {
@@ -441,6 +488,11 @@
         "internalType": "struct IWeb3Packs.LockState",
         "name": "lockState",
         "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethPackPrice",
+        "type": "uint256"
       }
     ],
     "name": "bundle",
@@ -550,6 +602,24 @@
       }
     ],
     "name": "setChargedState",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAllowed",
+        "type": "bool"
+      }
+    ],
+    "name": "setContractAllowlist",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

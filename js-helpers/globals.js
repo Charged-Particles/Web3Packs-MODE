@@ -6,6 +6,10 @@ const globals = {
     'function balanceOf(address account) public view returns (uint256)',
     'function approve(address spender, uint256 amount) external returns (bool)'
   ],
+  wethAbi : [
+    'function deposit() public',
+    'function withdraw(uint wad) public',
+  ],
   USDcContractAddress: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
   USDtContractAddress:  '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
   UniContractAddress: '0xb33EaAd8d922B1083446DC23f610c2567fB5180f',
@@ -22,7 +26,7 @@ const globals = {
   kimRouterMode: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
   KimNonfungibleTokenPosition: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
   deadline: Math.floor(Date.now() / 1000) + (60 * 10),
-  protocolFee: utils.parseUnits('0.001', 18),
+  protocolFee: utils.parseUnits('0.0001', 18),
 };
 
 module.exports = globals;

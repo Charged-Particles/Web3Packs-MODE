@@ -59,6 +59,12 @@ contract Web3PacksMode is
   Pausable,
   BlackholePrevention
 {
+  /// @notice Represents the deposit of an NFT
+  struct TokenAmount {
+    address token;
+    uint256 amount;
+  }
+
   address internal _proton;
   address internal _nonfungiblePositionManager;
   address internal _chargedParticles;
@@ -72,8 +78,12 @@ contract Web3PacksMode is
   string internal _cpBasketManager = "generic.B";
 
   mapping (address => bool) internal _allowlisted;
+  mapping (uint256 => mapping (address => uint256)) internal _refundableAssets;
+  mapping (bytes32 => TokenAmount) internal _swapForLiquidityAmount;
+  mapping (uint256 => LiquidityPosition[]) internal _liquidityPositions;
 
   // Custom Errors
+  error NotOwnerOrApproved();
   error FundingFailed();
   error NullReceiver();
   error ContractNotAllowed();
@@ -107,9 +117,11 @@ contract Web3PacksMode is
   function bundle(
     address payable receiver,
     string calldata tokenMetaUri,
+    ContractCallGeneric[] calldata contractCalls,
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
     LiquidityOrderGeneric[] calldata liquidityOrders,
-    LockState calldata lockState
+    LockState calldata lockState,
+    uint256 ethPackPrice
   )
     external
     whenNotPaused
@@ -121,13 +133,16 @@ contract Web3PacksMode is
     }
 
     // Track Collected Fees
-    if (_protocolFee > 0 && msg.value < _protocolFee) {
+    if (_protocolFee > 0 && msg.value < ethPackPrice + _protocolFee) {
       revert InsufficientForFee();
     }
     _feesCollected += _protocolFee;
 
     // Mint Web3Pack NFT to Receiver
-    tokenId = IBaseProton(_proton).createBasicProton(address(this), receiver, tokenMetaUri);
+    tokenId = IBaseProton(_proton).createBasicProton(address(this), address(this), tokenMetaUri);
+
+    // Perform Generic Contract Calls before Bundling Assets
+    _contractCalls(contractCalls);
 
     // Swap ETH for Various Assets to be put inside of the Web3Pack NFT
     _swap(erc20SwapOrders,  tokenId);
@@ -137,6 +152,9 @@ contract Web3PacksMode is
 
     // Set the Timelock State
     _lock(lockState, tokenId);
+
+    // Transfer the Web3Packs NFT to the Buyer
+    IBaseProton(_proton).safeTransferFrom(address(this), receiver, tokenId);
 
     // Refund any slippage amounts
     _returnPositiveSlippageNative(receiver);
@@ -183,15 +201,26 @@ contract Web3PacksMode is
   |         Private Functions         |
   |__________________________________*/
 
+  function _contractCalls(
+    ContractCallGeneric[] calldata contractCalls
+  )
+    internal
+    virtual
+  {
+    for (uint256 i; i < contractCalls.length; i++) {
+      _contractCall(contractCalls[i]);
+    }
+  }
+
   function _swap(
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
+    ERC20SwapOrderGeneric[] calldata orders,
     uint256 web3packsTokenId
   )
     internal
     virtual
   {
-    for (uint256 i; i < erc20SwapOrders.length; i++) {
-      _swapSingleOrder(erc20SwapOrders[i], web3packsTokenId);
+    for (uint256 i; i < orders.length; i++) {
+      _swapSingleOrder(orders[i], web3packsTokenId);
     }
   }
 
@@ -220,6 +249,13 @@ contract Web3PacksMode is
       address(this),
       tokenMetadataUri
     );
+
+    // Pre-approve for Unbundling
+    IChargedState(_chargedState).setApprovalForAll(
+      _proton,
+      mintedTokenId,
+      address(this)
+    );
   }
 
   function _bond(
@@ -246,15 +282,19 @@ contract Web3PacksMode is
 
   function _energize(
     uint256 tokenId,
-    address tokenAddress
+    address tokenAddress,
+    uint256 tokenAmount
   )
    internal
   {
-    uint256 tokenBalance = ERC20(tokenAddress).balanceOf(address(this));
+    if (tokenAmount == 0) {
+      tokenAmount = ERC20(tokenAddress).balanceOf(address(this));
+    }
+
     TransferHelper.safeApprove(
       tokenAddress,
       address(_chargedParticles),
-      tokenBalance
+      tokenAmount
     );
 
     IChargedParticles(_chargedParticles).energizeParticle(
@@ -262,7 +302,7 @@ contract Web3PacksMode is
       tokenId,
       _cpWalletManager,
       tokenAddress,
-      tokenBalance,
+      tokenAmount,
       address(this)
     );
   }
@@ -276,6 +316,12 @@ contract Web3PacksMode is
   )
     internal
   {
+    // Verify Ownership
+    address owner = IERC721(tokenAddress).ownerOf(tokenId);
+    if (_msgSender() != owner) {
+      revert NotOwnerOrApproved();
+    }
+
     for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
       IChargedParticles(_chargedParticles).releaseParticle(
         receiver,
@@ -297,6 +343,26 @@ contract Web3PacksMode is
         1
       );
     }
+
+    // Remove all Liquidity Positions
+    _removeLiquidityPositions(tokenId, receiver);
+  }
+
+  function _contractCall(
+    ContractCallGeneric memory contractCall
+  ) internal {
+    if (!_allowlisted[contractCall.contractAddress]) revert ContractNotAllowed();
+
+    (bool success, bytes memory data ) = contractCall.contractAddress.call{value: contractCall.amountIn}(
+      contractCall.callData
+    );
+    if (!success) {
+      assembly {
+        let dataSize := mload(data) // Load the size of the data
+        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+        revert(dataPtr, dataSize) // Revert with the given data
+      }
+    }
   }
 
   function _swapSingleOrder(
@@ -308,9 +374,9 @@ contract Web3PacksMode is
   {
     if (!_allowlisted[swapOrder.router]) revert ContractNotAllowed();
 
-    TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.amountIn);
+    TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.tokenAmountIn);
 
-    (bool success, bytes memory data ) = swapOrder.router.call{ value: swapOrder.amountIn }(
+    (bool success, bytes memory data ) = swapOrder.router.call{value: swapOrder.payableAmountIn}(
       swapOrder.callData
     );
     if (!success) {
@@ -331,7 +397,11 @@ contract Web3PacksMode is
     }
 
     // Deposit the Assets into the Web3Packs NFT
-    _energize(web3packsTokenId, swapOrder.tokenOut);
+    if (swapOrder.liquidityUuid == bytes32("")) {
+      _energize(web3packsTokenId, swapOrder.tokenOut, amountOut);
+    } else {
+      _swapForLiquidityAmount[swapOrder.liquidityUuid] = TokenAmount({token: swapOrder.tokenOut, amount: amountOut});
+    }
   }
 
   function _createLiquidityPosition(
@@ -340,23 +410,37 @@ contract Web3PacksMode is
   ) internal {
     if (!_allowlisted[liquidityOrder.router]) revert ContractNotAllowed();
 
-    TransferHelper.safeTransferFrom(liquidityOrder.token0, _msgSender(), address(this), liquidityOrder.amount0ToMint);
-    TransferHelper.safeTransferFrom(liquidityOrder.token1, _msgSender(), address(this), liquidityOrder.amount1ToMint);
+    uint256 balanceAmount0 = liquidityOrder.amount0ToMint;
+    uint256 balanceAmount1 = liquidityOrder.amount1ToMint;
+
+    if (liquidityOrder.liquidityUuidToken0 != bytes32("")) {
+      if (liquidityOrder.token0 != _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken0].token) {
+        // ERROR
+      }
+      balanceAmount0 = _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken0].amount;
+    }
+
+    if (liquidityOrder.liquidityUuidToken1 != bytes32("")) {
+      if (liquidityOrder.token1 != _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken1].token) {
+        // ERROR
+      }
+      balanceAmount1 = _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken1].amount;
+    }
 
     TransferHelper.safeApprove(
       liquidityOrder.token0,
       address(liquidityOrder.router),
-      liquidityOrder.amount0ToMint
+      balanceAmount0
     );
 
     TransferHelper.safeApprove(
       liquidityOrder.token1,
       address(liquidityOrder.router),
-      liquidityOrder.amount1ToMint
+      balanceAmount1
     );
 
     // Pass calldata to Router to initiale LP position
-    (bool success, bytes memory data ) = liquidityOrder.router.call{ value: liquidityOrder.amountIn }(
+    (bool success, bytes memory data ) = liquidityOrder.router.call{ value: liquidityOrder.payableAmountIn }(
       liquidityOrder.callData
     );
     if (!success) {
@@ -368,7 +452,7 @@ contract Web3PacksMode is
     }
 
     uint256 lpTokenId;
-    uint256 liquidity;
+    uint128 liquidity;
     uint256 amount0;
     uint256 amount1;
 
@@ -377,7 +461,8 @@ contract Web3PacksMode is
 
       // Deposit the LP tokens into the Web3Packs NFT
       address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
-      _energize(web3packsTokenId, lpTokenAddress);
+      lpTokenId = uint256(uint160(lpTokenAddress));
+      _energize(web3packsTokenId, lpTokenAddress, 0);
     }
 
     if (liquidityOrder.routerType == RouterType.UniswapV3) {
@@ -387,16 +472,134 @@ contract Web3PacksMode is
       _bond(_proton, web3packsTokenId, _cpBasketManager, _nonfungiblePositionManager, lpTokenId);
     }
 
+    // Track Liquidity Positions
+    _liquidityPositions[web3packsTokenId].push(
+      LiquidityPosition({
+        lpTokenId: lpTokenId,
+        liquidity: liquidity,
+        token0: liquidityOrder.token0,
+        token1: liquidityOrder.token1,
+        routerType: liquidityOrder.routerType,
+        router: liquidityOrder.router
+      })
+    );
+
     // Refund unused assets
-    _refundUnusedAssets(
-      _msgSender(),
+    _updateRefundableAssets(
+      // _msgSender(),
+      lpTokenId,
       liquidityOrder.token0,
       amount0,
-      liquidityOrder.amount0ToMint,
+      balanceAmount0,
       liquidityOrder.token1,
       amount1,
-      liquidityOrder.amount1ToMint
+      balanceAmount1
     );
+  }
+
+  function _removeLiquidityPositions(
+    uint256 web3packsTokenId,
+    address receiver
+  ) internal {
+    uint amount0;
+    uint amount1;
+    uint fees0;
+    uint fees1;
+    uint refund0;
+    uint refund1;
+
+    for (uint256 i; i < _liquidityPositions[web3packsTokenId].length; i++) {
+      LiquidityPosition memory lp = _liquidityPositions[web3packsTokenId][i];
+
+      // Collect Fees
+      if (lp.routerType == RouterType.UniswapV3) {
+        (fees0, fees1) = _collectLpFees(lp);
+      }
+
+      // Remove All Liquidity
+      (amount0, amount1) = _removeLiquidity(lp, web3packsTokenId);
+
+      // Check for Refundable Assets
+      refund0 = _refundableAssets[lp.lpTokenId][lp.token0];
+      refund1 = _refundableAssets[lp.lpTokenId][lp.token1];
+      _refundableAssets[lp.lpTokenId][lp.token0] = 0;
+      _refundableAssets[lp.lpTokenId][lp.token1] = 0;
+
+      // Send to Receiver
+      TransferHelper.safeTransfer(lp.token0, receiver, amount0 + fees0 + refund0);
+      TransferHelper.safeTransfer(lp.token1, receiver, amount1 + fees1 + refund1);
+    }
+  }
+
+  function _collectLpFees(
+    LiquidityPosition memory liquidityPosition
+  )
+    internal
+    returns (uint256 amount0, uint256 amount1)
+  {
+    INonfungiblePositionManager.CollectParams memory params =
+      INonfungiblePositionManager.CollectParams({
+        tokenId: liquidityPosition.lpTokenId,
+        recipient: address(this),
+        amount0Max: type(uint128).max,
+        amount1Max: type(uint128).max
+      });
+
+    (amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).collect(params);
+  }
+
+  function _removeLiquidity(
+    LiquidityPosition memory liquidityPosition,
+    uint256 web3packsTokenId
+  )
+    internal
+    returns (uint amount0, uint amount1)
+  {
+    if (liquidityPosition.routerType == RouterType.UniswapV2) {
+      // Grab Liquidity Tokens from Web3 Pack
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
+      IChargedParticles(_chargedParticles).releaseParticle(
+        address(this),
+        _proton,
+        web3packsTokenId,
+        _cpBasketManager,
+        lpTokenAddress
+      );
+
+      (amount0, amount1) = IUniswapV2Router02(liquidityPosition.router).removeLiquidity(
+        liquidityPosition.token0,
+        liquidityPosition.token1,
+        liquidityPosition.liquidity,
+        type(uint).max,
+        type(uint).max,
+        address(this),
+        block.timestamp
+      );
+    }
+
+    if (liquidityPosition.routerType == RouterType.UniswapV3) {
+      // Grab LP NFT From Web3 Pack
+      IChargedParticles(_chargedParticles).breakCovalentBond(
+        address(this),
+        _proton,
+        web3packsTokenId,
+        _cpBasketManager,
+        _nonfungiblePositionManager,
+        liquidityPosition.lpTokenId,
+        1
+      );
+
+      // Release Liquidity
+      INonfungiblePositionManager.DecreaseLiquidityParams memory params =
+        INonfungiblePositionManager.DecreaseLiquidityParams({
+          tokenId: liquidityPosition.lpTokenId,
+          liquidity: liquidityPosition.liquidity,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: block.timestamp
+        });
+      (amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).decreaseLiquidity(params);
+    }
   }
 
   function _lock (
@@ -420,6 +623,40 @@ contract Web3PacksMode is
         tokenId,
         lockState.ERC721Timelock
       );
+    }
+  }
+
+  function _returnPositiveSlippageNative(address receiver) private {
+    uint256 extraBalance = address(this).balance - _feesCollected;
+    if (extraBalance > 0) {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = receiver.call{ value: extraBalance }("");
+        if (!success) revert NativeAssetTransferFailed();
+    }
+  }
+
+  function _updateRefundableAssets(
+    // address receiver,
+    uint256 lpTokenId,
+    address token0,
+    uint256 amount0,
+    uint256 amount0ToMint,
+    address token1,
+    uint256 amount1,
+    uint256 amount1ToMint
+  ) private {
+
+    // Remove allowance and refund in both assets.
+    if (amount0 < amount0ToMint) {
+        TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), 0); // Remove approval
+        uint256 refund0 = amount0ToMint - amount0;
+        _refundableAssets[lpTokenId][token0] = refund0;
+    }
+
+    if (amount1 < amount1ToMint) {
+        TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), 0); // Remove approval
+        uint256 refund1 = amount1ToMint - amount1;
+        _refundableAssets[lpTokenId][token1] = refund1;
     }
   }
 
@@ -466,6 +703,10 @@ contract Web3PacksMode is
     emit ProtocolFeeSet(fee);
   }
 
+  function setContractAllowlist(address contractAddress, bool isAllowed) external onlyOwner {
+    _allowlisted[contractAddress] = isAllowed;
+  }
+
   function pause() public onlyOwner {
     _pause();
   }
@@ -503,38 +744,5 @@ contract Web3PacksMode is
       bytes calldata
   ) external pure returns(bytes4) {
       return this.onERC721Received.selector;
-  }
-
-  function _returnPositiveSlippageNative(address receiver) private {
-    uint256 extraBalance = address(this).balance - _feesCollected;
-    if (extraBalance > 0) {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = receiver.call{ value: extraBalance }("");
-        if (!success) revert NativeAssetTransferFailed();
-    }
-  }
-
-  function _refundUnusedAssets(
-    address receiver,
-    address token0,
-    uint256 amount0,
-    uint256 amount0ToMint,
-    address token1,
-    uint256 amount1,
-    uint256 amount1ToMint
-  ) private {
-
-    // Remove allowance and refund in both assets.
-    if (amount0 < amount0ToMint) {
-        TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), 0); // Remove approval
-        uint256 refund0 = amount0ToMint - amount0;
-        TransferHelper.safeTransfer(token0, receiver, refund0); // refund
-    }
-
-    if (amount1 < amount1ToMint) {
-        TransferHelper.safeApprove(token1, address(_nonfungiblePositionManager), 0); // Remove approval
-        uint256 refund1 = amount1ToMint - amount1;
-        TransferHelper.safeTransfer(token1, receiver, refund1); // refund
-    }
   }
 }
