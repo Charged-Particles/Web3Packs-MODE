@@ -8,7 +8,7 @@ import { _findNearestValidTick } from './utils';
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
 import INonfungiblePositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json';
-import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json';
+// import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json';
 import {
   default as Charged,
   chargedStateAbi,
@@ -161,8 +161,45 @@ describe('Web3Packs', async ()=> {
     return lpOrder;
   };
 
+  const _callBundle = async ({
+    deployer,
+    contractCalls,
+    swapOrders,
+    lpOrders,
+    packPriceEth,
+    timelocks = { ERC20Timelock: 0, ERC721Timelock: 0 },
+  }) => {
+    const bundleFee = globals.protocolFee;
+
+    const tokenId = await web3packs.callStatic.bundle(
+      deployer,
+      globals.ipfsMetadata,
+      contractCalls ?? [],
+      swapOrders ?? [],
+      lpOrders ?? [],
+      timelocks,
+      packPriceEth.toBigInt(),
+      { value: packPriceEth.add(bundleFee) }
+    );
+
+    const mintTx = await web3packs.bundle(
+      deployer,
+      globals.ipfsMetadata,
+      contractCalls ?? [],
+      swapOrders ?? [],
+      lpOrders ?? [],
+      timelocks,
+      packPriceEth.toBigInt(),
+      { value: packPriceEth.add(bundleFee) }
+    );
+    const txReceipt = await mintTx.wait();
+    const gasCost = ethers.BigNumber.from(txReceipt.cumulativeGasUsed.toBigInt() * txReceipt.effectiveGasPrice.toBigInt());
+
+    return {tokenId, gasCost};
+  };
+
   describe('KIM', () => {
-    it.only('Provides liquidity', async() => {
+    it('Provides liquidity', async() => {
       const { deployer } = await getNamedAccounts();
 
       // TODO:
@@ -178,7 +215,6 @@ describe('Web3Packs', async ()=> {
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
       const wethAmount = packPriceEth / 2;
       const modeAmount = ethers.utils.parseUnits('95.0', 18);
-      const bundleFee = globals.protocolFee;
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -209,18 +245,13 @@ describe('Web3Packs', async ()=> {
       const preBalance = await ethers.provider.getBalance(deployer);
 
       // Bundle Pack
-      const mintTx = await web3packs.bundle(
+      const {tokenId, gasCost} = await _callBundle({
         deployer,
-        globals.ipfsMetadata,
-        [ contractCall1 ],
-        [ swapOrder1 ],
-        [ lpOrder1 ],
-        { ERC20Timelock: 0, ERC721Timelock: 0 },
-        packPriceEth.toBigInt(),
-        { value: packPriceEth.add(bundleFee.mul(3)) }  // TRIPLE the Fees and Expect a REFUND
-      );
-      const txReceipt = await mintTx.wait();
-      const gasCost = ethers.BigNumber.from(txReceipt.cumulativeGasUsed.toBigInt() * txReceipt.effectiveGasPrice.toBigInt());
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
@@ -296,89 +327,112 @@ describe('Web3Packs', async ()=> {
     });
   });
 
-  xit('Bundles token with two swaps and then unbundles the nft', async() => {
-    const amountIn = ethers.utils.parseUnits('0.001', 18);
+  it('Bundles with three swaps and then unbundles the nft', async() => {
+    const MODE = new Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+    const USDC = new Contract(globals.USDcContractAddress, globals.erc20Abi, deployerSigner);
+    const USDT = new Contract(globals.USDtContractAddress, globals.erc20Abi, deployerSigner);
 
+    const { deployer } = await getNamedAccounts();
+    const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+    const wethAmount = ethers.utils.parseUnits('0.000333333333333333', 18);
 
-
-
-    const swapOrder1 = _createSwapOrder({
-      tokenIn: globals.wrapETHAddress,
-      tokenOut: globals.modeTokenAddress,
-      amountIn,
-    });
-
-
-    const callDataParams = {
-      tokenIn: globals.wrapETHAddress,
-      tokenOut: globals.modeTokenAddress,
-      recipient: web3packs.address,
-      deadline: globals.deadline,
-      amountIn: amountIn,
-      amountOutMinimum: 0n,
-      limitSqrtPrice: 0n
+    // Wrap ETH for WETH
+    const wethCalldata = await wETH.populateTransaction.deposit();
+    const contractCall1 = {
+      callData: wethCalldata.data,
+      contractAddress: globals.wrapETHAddress,
+      amountIn: packPriceEth.toBigInt(),
     };
 
-    const KimRouterInter = new ethers.utils.Interface(IkimRouterABI.abi);
-    const kimContract = new Contract(globals.kimRouterMode, KimRouterInter, deployerSigner);
-    const calldata = await kimContract.populateTransaction.exactInputSingle(callDataParams);
-
-    const ERC20SwapOrder = [{
-      callData: <string>calldata.data,
-      router:globals.kimRouterMode,
+    // Swap WETH for Mode
+    const swapOrder1 = await _createSwapOrder({
       tokenIn: globals.wrapETHAddress,
-      amountIn: amountIn,
       tokenOut: globals.modeTokenAddress,
-      routerType: RouterType.UniswapV3,
-    }];
+      tokenAmountIn: wethAmount,
+    });
 
-    const newTokenId = await web3packs.callStatic.bundle(
-      globals.testAddress,
-      globals.ipfsMetadata,
-      ERC20SwapOrder,
-      [],
-      { ERC20Timelock:0 , ERC721Timelock: 0 },
-      { value: globals.protocolFee.add(amountIn) }
-    );
+    // Swap WETH for USDC
+    const swapOrder2 = await _createSwapOrder({
+      tokenIn: globals.wrapETHAddress,
+      tokenOut: globals.USDcContractAddress,
+      tokenAmountIn: wethAmount,
+    });
 
-    const bundleTransaction = await web3packs.bundle(
-      await deployerSigner.getAddress(),
-      globals.ipfsMetadata,
-      ERC20SwapOrder,
-      [],
-      { ERC20Timelock: 0, ERC721Timelock: 0 },
-      { value: globals.protocolFee.add(amountIn) }
-    );
+    // Swap WETH for USDT
+    const swapOrder3 = await _createSwapOrder({
+      tokenIn: globals.wrapETHAddress,
+      tokenOut: globals.USDtContractAddress,
+      tokenAmountIn: wethAmount,
+    });
 
-    await bundleTransaction.wait();
+    // Bundle Pack
+    const {tokenId, gasCost} = await _callBundle({
+      deployer,
+      contractCalls: [ contractCall1 ],
+      swapOrders: [ swapOrder1, swapOrder2, swapOrder3 ],
+      lpOrders: [],
+      packPriceEth,
+    });
 
-    const bundToken = charged.NFT(Proton.address, newTokenId.toNumber());
-    const tkenMass = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
-    expect(tkenMass[network.config.chainId ?? '']?.value).to.be.gt(1);
+    const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
 
-    // Charged settings contract
+    // Check Pack for Mode Tokens
+    let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+    const modeTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+    expect(modeTokenAmount).to.be.gt(1);
+
+    // Check Pack for USDC Tokens
+    tokenMass = await web3pack.getMass(globals.USDcContractAddress, 'generic.B');
+    const usdcTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+    expect(usdcTokenAmount).to.be.gt(1);
+
+    // Check Pack for USDT Tokens
+    tokenMass = await web3pack.getMass(globals.USDtContractAddress, 'generic.B');
+    const usdtTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+    expect(usdtTokenAmount).to.be.gt(1);
+
+
+    // Approve Web3Packs to Unbundle our Charged Particle
     const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
+    await chargedState.setApprovalForAll(Proton.address, tokenId.toNumber(), web3packs.address).then(tx => tx.wait());
 
-    // setBreakBondApproval
-    // await chargedState.setApprovalForAll(
-    //   Proton.address,
-    //   newTokenId.toNumber(),
-    //   web3packs.address
-    // ).then((tx) => tx.wait());
-
-    const unBundleTransaction = await web3packs.unbundle(
-      await deployerSigner.getAddress(),
+    // Unbundle Pack
+    const unBundleTx = await web3packs.unbundle(
+      deployer,
       Proton.address,
-      newTokenId.toNumber(),
+      tokenId.toNumber(),
       {
-        erc20TokenAddresses: [ globals.modeTokenAddress ],
+        erc20TokenAddresses: [
+          globals.modeTokenAddress,
+          globals.USDcContractAddress,
+          globals.USDtContractAddress,
+        ],
         nfts: []
       },
     );
-    await unBundleTransaction.wait();
+    await unBundleTx.wait();
 
-    const uniLeftInBundle = await bundToken.getMass(globals.modeTokenAddress, 'generic.B');
-    expect(uniLeftInBundle[network.config.chainId ?? '']?.value).to.eq(0);
+    // Check Pack for Mode Tokens
+    tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+    expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+    // Check Pack for USDC Tokens
+    tokenMass = await web3pack.getMass(globals.USDcContractAddress, 'generic.B');
+    expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+    // Check Pack for USDT Tokens
+    tokenMass = await web3pack.getMass(globals.USDtContractAddress, 'generic.B');
+    expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+    // Check Receiver for Pack Tokens
+    const modeTokenBalance = await MODE.balanceOf(deployer);
+    expect(modeTokenBalance).to.be.gte(modeTokenAmount);
+
+    const usdcTokenBalance = await USDC.balanceOf(deployer);
+    expect(usdcTokenBalance).to.be.gte(usdcTokenAmount);
+
+    const usdtTokenBalance = await USDT.balanceOf(deployer);
+    expect(usdtTokenBalance).to.be.gte(usdtTokenAmount);
   });
 
   xit('Should not allow to break pack when locked: erc20s', async() => {

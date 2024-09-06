@@ -249,13 +249,6 @@ contract Web3PacksMode is
       address(this),
       tokenMetadataUri
     );
-
-    // Pre-approve for Unbundling
-    IChargedState(_chargedState).setApprovalForAll(
-      _proton,
-      mintedTokenId,
-      address(this)
-    );
   }
 
   function _bond(
