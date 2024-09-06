@@ -88,6 +88,7 @@ contract Web3PacksMode is
   error NullReceiver();
   error ContractNotAllowed();
   error NativeAssetTransferFailed();
+  error MismatchedTokens();
   error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
   error InsufficientForFee();
 
@@ -147,7 +148,7 @@ contract Web3PacksMode is
     // Swap ETH for Various Assets to be put inside of the Web3Pack NFT
     _swap(erc20SwapOrders,  tokenId);
 
-    // Swap ETH for Various Assets to be used for creating an LP position owned by the Web3Pack NFT
+    // Create an LP position owned by the Web3Pack NFT
     _depositLiquidity(liquidityOrders, tokenId);
 
     // Set the Timelock State
@@ -408,14 +409,14 @@ contract Web3PacksMode is
 
     if (liquidityOrder.liquidityUuidToken0 != bytes32("")) {
       if (liquidityOrder.token0 != _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken0].token) {
-        // ERROR
+        revert MismatchedTokens();
       }
       balanceAmount0 = _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken0].amount;
     }
 
     if (liquidityOrder.liquidityUuidToken1 != bytes32("")) {
       if (liquidityOrder.token1 != _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken1].token) {
-        // ERROR
+        revert MismatchedTokens();
       }
       balanceAmount1 = _swapForLiquidityAmount[liquidityOrder.liquidityUuidToken1].amount;
     }
@@ -479,7 +480,6 @@ contract Web3PacksMode is
 
     // Refund unused assets
     _updateRefundableAssets(
-      // _msgSender(),
       lpTokenId,
       liquidityOrder.token0,
       amount0,
@@ -496,21 +496,23 @@ contract Web3PacksMode is
   ) internal {
     uint amount0;
     uint amount1;
-    uint fees0;
-    uint fees1;
     uint refund0;
     uint refund1;
 
     for (uint256 i; i < _liquidityPositions[web3packsTokenId].length; i++) {
       LiquidityPosition memory lp = _liquidityPositions[web3packsTokenId][i];
 
-      // Collect Fees
-      if (lp.routerType == RouterType.UniswapV3) {
-        (fees0, fees1) = _collectLpFees(lp);
-      }
+      _pullLiquidityTokens(lp, web3packsTokenId);
 
       // Remove All Liquidity
-      (amount0, amount1) = _removeLiquidity(lp, web3packsTokenId);
+      //  - must be done before collectLpFees as the removed liquidity
+      //    is only returned through INonfungiblePositionManager.collect()
+      (amount0, amount1) = _removeLiquidity(lp);
+
+      // Collect Fees
+      if (lp.routerType == RouterType.UniswapV3) {
+        (amount0, amount1) = _collectLpFees(lp);
+      }
 
       // Check for Refundable Assets
       refund0 = _refundableAssets[lp.lpTokenId][lp.token0];
@@ -519,8 +521,8 @@ contract Web3PacksMode is
       _refundableAssets[lp.lpTokenId][lp.token1] = 0;
 
       // Send to Receiver
-      TransferHelper.safeTransfer(lp.token0, receiver, amount0 + fees0 + refund0);
-      TransferHelper.safeTransfer(lp.token1, receiver, amount1 + fees1 + refund1);
+      TransferHelper.safeTransfer(lp.token0, receiver, amount0 + refund0);
+      TransferHelper.safeTransfer(lp.token1, receiver, amount1 + refund1);
     }
   }
 
@@ -542,11 +544,42 @@ contract Web3PacksMode is
   }
 
   function _removeLiquidity(
+    LiquidityPosition memory liquidityPosition
+  )
+    internal
+    returns (uint amount0, uint amount1)
+  {
+    if (liquidityPosition.routerType == RouterType.UniswapV2) {
+      (amount0, amount1) = IUniswapV2Router02(liquidityPosition.router).removeLiquidity(
+        liquidityPosition.token0,
+        liquidityPosition.token1,
+        liquidityPosition.liquidity,
+        type(uint).max,
+        type(uint).max,
+        address(this),
+        block.timestamp
+      );
+    }
+
+    if (liquidityPosition.routerType == RouterType.UniswapV3) {
+      // Release Liquidity
+      INonfungiblePositionManager.DecreaseLiquidityParams memory params =
+        INonfungiblePositionManager.DecreaseLiquidityParams({
+          tokenId: liquidityPosition.lpTokenId,
+          liquidity: liquidityPosition.liquidity,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: block.timestamp
+        });
+      (amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).decreaseLiquidity(params);
+    }
+  }
+
+  function _pullLiquidityTokens(
     LiquidityPosition memory liquidityPosition,
     uint256 web3packsTokenId
   )
     internal
-    returns (uint amount0, uint amount1)
   {
     if (liquidityPosition.routerType == RouterType.UniswapV2) {
       // Grab Liquidity Tokens from Web3 Pack
@@ -557,16 +590,6 @@ contract Web3PacksMode is
         web3packsTokenId,
         _cpBasketManager,
         lpTokenAddress
-      );
-
-      (amount0, amount1) = IUniswapV2Router02(liquidityPosition.router).removeLiquidity(
-        liquidityPosition.token0,
-        liquidityPosition.token1,
-        liquidityPosition.liquidity,
-        type(uint).max,
-        type(uint).max,
-        address(this),
-        block.timestamp
       );
     }
 
@@ -581,17 +604,6 @@ contract Web3PacksMode is
         liquidityPosition.lpTokenId,
         1
       );
-
-      // Release Liquidity
-      INonfungiblePositionManager.DecreaseLiquidityParams memory params =
-        INonfungiblePositionManager.DecreaseLiquidityParams({
-          tokenId: liquidityPosition.lpTokenId,
-          liquidity: liquidityPosition.liquidity,
-          amount0Min: 0,
-          amount1Min: 0,
-          deadline: block.timestamp
-        });
-      (amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).decreaseLiquidity(params);
     }
   }
 
@@ -629,7 +641,6 @@ contract Web3PacksMode is
   }
 
   function _updateRefundableAssets(
-    // address receiver,
     uint256 lpTokenId,
     address token0,
     uint256 amount0,
@@ -638,7 +649,6 @@ contract Web3PacksMode is
     uint256 amount1,
     uint256 amount1ToMint
   ) private {
-
     // Remove allowance and refund in both assets.
     if (amount0 < amount0ToMint) {
         TransferHelper.safeApprove(token0, address(_nonfungiblePositionManager), 0); // Remove approval

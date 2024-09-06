@@ -52,6 +52,11 @@
   },
   {
     "inputs": [],
+    "name": "MismatchedTokens",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NativeAssetTransferFailed",
     "type": "error"
   },
