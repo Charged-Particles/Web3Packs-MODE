@@ -1,5 +1,61 @@
 [
   {
+    "inputs": [],
+    "name": "ContractNotAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FundingFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientForFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MismatchedTokens",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NativeAssetTransferFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotOwnerOrApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NullReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "router",
+        "type": "address"
+      }
+    ],
+    "name": "UnsucessfulSwap",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -323,7 +379,7 @@
     ],
     "name": "unbundle",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

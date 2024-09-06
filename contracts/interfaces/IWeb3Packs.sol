@@ -31,9 +31,25 @@ interface IWeb3Packs {
   event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
   event ProtocolFeeSet(uint256 fee);
 
+  // Custom Errors
+  error NotOwnerOrApproved();
+  error FundingFailed();
+  error NullReceiver();
+  error ContractNotAllowed();
+  error NativeAssetTransferFailed();
+  error MismatchedTokens();
+  error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
+  error InsufficientForFee();
+
   enum RouterType {
     UniswapV2,
     UniswapV3
+  }
+
+  /// @notice Represents the deposit of an NFT
+  struct TokenAmount {
+    address token;
+    uint256 amount;
   }
 
   struct ContractCallGeneric {
@@ -108,5 +124,5 @@ interface IWeb3Packs {
     address contractAddress,
     uint256 tokenId,
     Web3PackOrder calldata web3PackOrder
-  ) external payable;
+  ) external;
 }

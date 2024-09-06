@@ -37,6 +37,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
@@ -57,14 +58,9 @@ contract Web3PacksMode is
   IWeb3Packs,
   Ownable,
   Pausable,
-  BlackholePrevention
+  BlackholePrevention,
+  ReentrancyGuard
 {
-  /// @notice Represents the deposit of an NFT
-  struct TokenAmount {
-    address token;
-    uint256 amount;
-  }
-
   address internal _proton;
   address internal _nonfungiblePositionManager;
   address internal _chargedParticles;
@@ -81,16 +77,6 @@ contract Web3PacksMode is
   mapping (uint256 => mapping (address => uint256)) internal _refundableAssets;
   mapping (bytes32 => TokenAmount) internal _swapForLiquidityAmount;
   mapping (uint256 => LiquidityPosition[]) internal _liquidityPositions;
-
-  // Custom Errors
-  error NotOwnerOrApproved();
-  error FundingFailed();
-  error NullReceiver();
-  error ContractNotAllowed();
-  error NativeAssetTransferFailed();
-  error MismatchedTokens();
-  error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
-  error InsufficientForFee();
 
   constructor(
     address proton,
@@ -126,6 +112,7 @@ contract Web3PacksMode is
   )
     external
     whenNotPaused
+    nonReentrant
     payable
     returns(uint256 tokenId)
   {
@@ -145,7 +132,7 @@ contract Web3PacksMode is
     // Perform Generic Contract Calls before Bundling Assets
     _contractCalls(contractCalls);
 
-    // Swap ETH for Various Assets to be put inside of the Web3Pack NFT
+    // Perform Token Swaps owned by the Web3Pack NFT
     _swap(erc20SwapOrders,  tokenId);
 
     // Create an LP position owned by the Web3Pack NFT
@@ -170,8 +157,8 @@ contract Web3PacksMode is
     Web3PackOrder calldata web3PackOrder
   )
     external
-    payable
     whenNotPaused
+    nonReentrant
   {
     _unbundle(
       receiver,
@@ -192,10 +179,58 @@ contract Web3PacksMode is
   )
     external
     whenNotPaused
+    nonReentrant
   {
     _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
+
+  // function unbundleForEth(
+  //   address receiver,
+  //   address tokenAddress,
+  //   uint256 tokenId,
+  //   Web3PackOrder calldata web3PackOrder
+  // )
+  //   external
+  //   whenNotPaused
+  //   nonReentrant
+  // {
+  //   _unbundle(
+  //     address(this),
+  //     tokenAddress,
+  //     tokenId,
+  //     _cpWalletManager,
+  //     web3PackOrder
+  //   );
+
+  //   // TODO: Swap all for ETH and return ETH to receiver
+
+  //   emit PackUnbundled(tokenId, receiver);
+  // }
+
+  // function unbundleFromManagerForEth(
+  //   address receiver,
+  //   address tokenAddress,
+  //   uint256 tokenId,
+  //   string calldata walletManager,
+  //   Web3PackOrder calldata web3PackOrder
+  // )
+  //   external
+  //   whenNotPaused
+  //   nonReentrant
+  // {
+  //   _unbundle(
+  //     address(this),
+  //     tokenAddress,
+  //     tokenId,
+  //     walletManager,
+  //     web3PackOrder
+  //   );
+
+  //   // TODO: Swap all for ETH and return ETH to receiver
+
+  //   emit PackUnbundled(tokenId, receiver);
+  // }
 
 
   /***********************************|
