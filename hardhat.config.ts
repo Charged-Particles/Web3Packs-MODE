@@ -1,26 +1,26 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-import "@nomicfoundation/hardhat-verify";
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-ethers'
-import '@typechain/hardhat'
-import 'hardhat-gas-reporter'
-import 'hardhat-abi-exporter'
-import 'solidity-coverage'
+import '@nomicfoundation/hardhat-verify';
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@typechain/hardhat';
+import 'hardhat-gas-reporter';
+import 'hardhat-abi-exporter';
+import 'solidity-coverage';
 
-import 'hardhat-deploy-ethers'
-import 'hardhat-deploy'
-import 'hardhat-watcher'
+import 'hardhat-deploy-ethers';
+import 'hardhat-deploy';
+import 'hardhat-watcher';
 
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig, task } from 'hardhat/config';
 import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
 
-// Task to run deployment fixtures before tests without the need of "--deploy-fixture"
+// Task to run deployment fixtures before tests without the need of '--deploy-fixture'
 //  - Required to get fixtures deployed before running Coverage Reports
 task(
   TASK_TEST,
-  "Runs the coverage report",
+  'Runs the coverage report',
   async (args: Object, hre, runSuper) => {
     await hre.run('compile');
     await hre.deployments.fixture();
@@ -39,10 +39,10 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.7.6",
+        version: '0.7.6',
       },
       {
-        version: "0.8.17",
+        version: '0.8.17',
         settings: {
           optimizer: {
             enabled: !optimizerDisabled,
@@ -72,9 +72,9 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-      sources: "./contracts",
-      tests: "./test",
-      cache: "./cache",
+      sources: './contracts',
+      tests: './test',
+      cache: './cache',
       artifacts: './build/contracts',
       deploy: './deploy',
       deployments: './deployments'
@@ -84,9 +84,9 @@ const config: HardhatUserConfig = {
       chainId: 34443,
       gasPrice: 100e9,
       forking: {
-        // url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+        // url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
         // blockNumber: 30784049
-        url: "https://mainnet.mode.network",
+        url: 'https://mainnet.mode.network',
         blockNumber: 12351132
       },
       accounts: {
@@ -106,7 +106,7 @@ const config: HardhatUserConfig = {
         }
     },
     polygon: {
-        url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+        url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
         gasPrice: 'auto',
         accounts: {
             mnemonic: mnemonic.mainnet,
@@ -116,7 +116,7 @@ const config: HardhatUserConfig = {
         chainId: 137
     },
     mode: {
-        url: "https://mainnet.mode.network/",
+        url: 'https://mainnet.mode.network/',
         accounts: {
             mnemonic: mnemonic.mainnet,
             count: 8,
@@ -131,7 +131,7 @@ const config: HardhatUserConfig = {
       // mode: process.env.ETHERSCAN_APIKEY,
       // customChains: [
       //   {
-      //     network: "mode",
+      //     network: 'mode',
       //     chainId: 34443,
       //     urls: {
       //       apiURL: 'https://explorer.mode.network/api\?',

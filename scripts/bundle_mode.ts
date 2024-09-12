@@ -11,6 +11,7 @@ async function main() {
   const RouterType = {
     UniswapV2: 0n,
     UniswapV3: 1n,
+    Velodrome: 2n,
   };
 
   // pool https://explorer.mode.network/address/0x8cfE2A02dfBAbC56aE7e573170E35f88A38BeA55?tab=read_contract

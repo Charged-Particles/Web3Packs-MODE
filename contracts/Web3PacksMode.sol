@@ -54,6 +54,20 @@ interface ERC20 {
   function balanceOf(address account) external view returns (uint256);
 }
 
+interface IVelodrome {
+  function poolFor(address tokenA, address tokenB, bool stable) external view returns (address pool);
+  function removeLiquidity(
+    address tokenA,
+    address tokenB,
+    bool stable,
+    uint256 liquidity,
+    uint256 amountAMin,
+    uint256 amountBMin,
+    address to,
+    uint256 deadline
+  ) external returns (uint256 amountA, uint256 amountB);
+}
+
 contract Web3PacksMode is
   IWeb3Packs,
   Ownable,
@@ -126,7 +140,7 @@ contract Web3PacksMode is
     }
     _feesCollected += _protocolFee;
 
-    // Mint Web3Pack NFT to Receiver
+    // Mint Web3Pack NFT
     tokenId = IBaseProton(_proton).createBasicProton(address(this), address(this), tokenMetaUri);
 
     // Perform Generic Contract Calls before Bundling Assets
@@ -416,9 +430,9 @@ contract Web3PacksMode is
       }
     }
 
-    if (swapOrder.routerType == RouterType.UniswapV2) {
+    if (swapOrder.routerType == RouterType.UniswapV2 || swapOrder.routerType == RouterType.Velodrome) {
       uint[] memory amounts = abi.decode(data, (uint[]));
-      amountOut = amounts[1];
+      amountOut = amounts[amounts.length-1];
     }
 
     if (swapOrder.routerType == RouterType.UniswapV3) {
@@ -485,11 +499,12 @@ contract Web3PacksMode is
     uint256 amount0;
     uint256 amount1;
 
-    if (liquidityOrder.routerType == RouterType.UniswapV2) {
+    if (liquidityOrder.routerType == RouterType.UniswapV2 || liquidityOrder.routerType == RouterType.Velodrome) {
       (amount0, amount1, liquidity) = abi.decode(data, (uint256, uint256, uint128));
 
       // Deposit the LP tokens into the Web3Packs NFT
-      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.routerType, liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
+
       lpTokenId = uint256(uint160(lpTokenAddress));
       _energize(web3packsTokenId, lpTokenAddress, 0);
     }
@@ -584,13 +599,42 @@ contract Web3PacksMode is
     internal
     returns (uint amount0, uint amount1)
   {
+    if (liquidityPosition.routerType == RouterType.Velodrome) {
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.routerType, liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
+
+      TransferHelper.safeApprove(
+        lpTokenAddress,
+        address(liquidityPosition.router),
+        liquidityPosition.liquidity
+      );
+
+      (amount0, amount1) = IVelodrome(liquidityPosition.router).removeLiquidity(
+        liquidityPosition.token0,
+        liquidityPosition.token1,
+        false,
+        liquidityPosition.liquidity,
+        0,
+        0,
+        address(this),
+        block.timestamp
+      );
+    }
+
     if (liquidityPosition.routerType == RouterType.UniswapV2) {
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.routerType, liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
+
+      TransferHelper.safeApprove(
+        lpTokenAddress,
+        address(liquidityPosition.router),
+        liquidityPosition.liquidity
+      );
+
       (amount0, amount1) = IUniswapV2Router02(liquidityPosition.router).removeLiquidity(
         liquidityPosition.token0,
         liquidityPosition.token1,
         liquidityPosition.liquidity,
-        type(uint).max,
-        type(uint).max,
+        0,
+        0,
         address(this),
         block.timestamp
       );
@@ -616,9 +660,9 @@ contract Web3PacksMode is
   )
     internal
   {
-    if (liquidityPosition.routerType == RouterType.UniswapV2) {
+    if (liquidityPosition.routerType == RouterType.UniswapV2 || liquidityPosition.routerType == RouterType.Velodrome) {
       // Grab Liquidity Tokens from Web3 Pack
-      address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.routerType, liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
       IChargedParticles(_chargedParticles).releaseParticle(
         address(this),
         _proton,
@@ -708,9 +752,13 @@ contract Web3PacksMode is
     return _router.factory();
   }
 
-  function _getUniswapV2PairAddress(address router, address tokenA, address tokenB) private view returns (address) {
-    IUniswapV2Factory _factory = IUniswapV2Factory(_getUniswapV2Factory(router));
-    return _factory.getPair(tokenA, tokenB);
+  function _getUniswapV2PairAddress(RouterType routerType, address router, address token0, address token1) private view returns (address) {
+    if (routerType == RouterType.Velodrome) {
+      return IVelodrome(router).poolFor(token0, token1, false);
+    } else { // UniswapV2
+      IUniswapV2Factory _factory = IUniswapV2Factory(_getUniswapV2Factory(router));
+      return _factory.getPair(token0, token1);
+    }
   }
 
 
