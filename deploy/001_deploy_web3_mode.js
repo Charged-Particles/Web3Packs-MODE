@@ -23,6 +23,7 @@ const _ADDRESS = {
     NonfungibleTokenPositionDescriptor: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
     kimRouter: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
     VelodromeRouter: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
+    BalancerRouter: '0xBA12222222228d8Ba445958a75a0704d566BF2C8', // Replace with the actual Balancer router address on Mode
   },
 };
 
@@ -56,7 +57,8 @@ module.exports = async (hre) => {
       _ADDRESS[chainId].ChargedParticles,
       _ADDRESS[chainId].ChargedState,
       _ADDRESS[chainId].kimRouter,
-      _ADDRESS[chainId].VelodromeRouter
+      _ADDRESS[chainId].VelodromeRouter,
+      _ADDRESS[chainId].BalancerRouter,
     ],
     log: true,
   });
