@@ -4,6 +4,8 @@ const {
   chainIdByName,
 } = require('../js-helpers/utils');
 
+const { verifyContract } = require('../js-helpers/verifyContract');
+
 const _ = require('lodash');
 const globals = require('../js-helpers/globals');
 
@@ -32,6 +34,12 @@ module.exports = async (hre) => {
   const { deployer, protocolOwner, user1 } = await getNamedAccounts();
   const network = await hre.network;
   const chainId = chainIdByName(network.name);
+
+  const isHardhat = () => {
+    const isForked = network?.config?.forking?.enabled ?? false;
+    return isForked || network?.name === 'hardhat';
+  };
+
   log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
   log('Charged Particles - Web3 Packs MODE - Contract Deployment');
   log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
@@ -48,18 +56,23 @@ module.exports = async (hre) => {
   //
   log('  Deploying Web3PacksMode...');
 
+  const constructorArgs = [
+    _ADDRESS[chainId].Proton,
+    _ADDRESS[chainId].NonfungibleTokenPositionDescriptor,
+    _ADDRESS[chainId].ChargedParticles,
+    _ADDRESS[chainId].ChargedState,
+    _ADDRESS[chainId].kimRouter,
+    _ADDRESS[chainId].VelodromeRouter
+  ];
   await deploy('Web3PacksMode', {
     from: deployer,
-    args: [
-      _ADDRESS[chainId].Proton,
-      _ADDRESS[chainId].NonfungibleTokenPositionDescriptor,
-      _ADDRESS[chainId].ChargedParticles,
-      _ADDRESS[chainId].ChargedState,
-      _ADDRESS[chainId].kimRouter,
-      _ADDRESS[chainId].VelodromeRouter
-    ],
+    args: constructorArgs,
     log: true,
   });
+
+  if (!isHardhat()) {
+    await verifyContract('Web3PacksMode', await ethers.getContract('Web3PacksMode'), constructorArgs);
+  }
 
   const web3packs = await ethers.getContract('Web3PacksMode');
   let tx = await web3packs.setProtocolFee(globals.protocolFee);
@@ -67,8 +80,6 @@ module.exports = async (hre) => {
 
   tx = await web3packs.setContractAllowlist(globals.wrapETHAddress, true);
   await tx.wait();
-
-
 };
 
 module.exports.tags = ['mode_packs']

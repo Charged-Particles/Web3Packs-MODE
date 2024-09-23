@@ -141,7 +141,7 @@ contract Web3PacksMode is
     _feesCollected += _protocolFee;
 
     // Mint Web3Pack NFT
-    tokenId = IBaseProton(_proton).createBasicProton(address(this), address(this), tokenMetaUri);
+    tokenId = _createBasicProton(tokenMetaUri);
 
     // Perform Generic Contract Calls before Bundling Assets
     _contractCalls(contractCalls);
@@ -287,14 +287,13 @@ contract Web3PacksMode is
   }
 
   function _createBasicProton(
-    address contractAddress,
     string memory tokenMetadataUri
   )
     internal
     returns (uint256 mintedTokenId)
   {
-    // mint
-    mintedTokenId = IBaseProton(contractAddress).createBasicProton(
+    // Mint Web3Packs NFT (Charged-Particles ProtonC)
+    mintedTokenId = IBaseProton(_proton).createBasicProton(
       address(this),
       address(this),
       tokenMetadataUri
@@ -482,7 +481,7 @@ contract Web3PacksMode is
       balanceAmount1
     );
 
-    // Pass calldata to Router to initiale LP position
+    // Pass calldata to Router to initialize LP position
     (bool success, bytes memory data ) = liquidityOrder.router.call{ value: liquidityOrder.payableAmountIn }(
       liquidityOrder.callData
     );
@@ -521,6 +520,7 @@ contract Web3PacksMode is
       LiquidityPosition({
         lpTokenId: lpTokenId,
         liquidity: liquidity,
+        stable: liquidityOrder.stable,
         token0: liquidityOrder.token0,
         token1: liquidityOrder.token1,
         routerType: liquidityOrder.routerType,
@@ -611,7 +611,7 @@ contract Web3PacksMode is
       (amount0, amount1) = IVelodrome(liquidityPosition.router).removeLiquidity(
         liquidityPosition.token0,
         liquidityPosition.token1,
-        false,
+        liquidityPosition.stable,
         liquidityPosition.liquidity,
         0,
         0,

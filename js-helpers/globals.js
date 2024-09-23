@@ -36,7 +36,7 @@ const globals = {
   velodromeRouter: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
   velodromeRouterAbi: [
     'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, (address,address,bool)[] calldata routes, address to, uint256 deadline) external returns (uint256[] memory amounts)',
-    'function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)',
+    'function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline) payable returns (uint256[] memory amounts)',
     'function addLiquidity(address tokenA, address tokenB, bool stable, uint256 amountADesired, uint256 amountBDesired, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) public returns (uint256 amountA, uint256 amountB, uint256 liquidity)',
     'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) public returns (uint256 amountA, uint256 amountB)',
   ],

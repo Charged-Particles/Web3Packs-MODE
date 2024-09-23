@@ -468,6 +468,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "bool",
+            "name": "stable",
+            "type": "bool"
+          },
+          {
             "internalType": "enum IWeb3Packs.RouterType",
             "name": "routerType",
             "type": "uint8"

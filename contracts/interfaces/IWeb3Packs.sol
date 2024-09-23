@@ -80,6 +80,7 @@ interface IWeb3Packs {
     bytes32 liquidityUuidToken0;
     bytes32 liquidityUuidToken1;
     uint256 payableAmountIn;
+    bool stable;
     RouterType routerType;
   }
 
@@ -91,6 +92,7 @@ interface IWeb3Packs {
   struct LiquidityPosition {
     uint256 lpTokenId;
     uint128 liquidity;
+    bool stable;
     address token0;
     address token1;
     address router;
