@@ -92,6 +92,8 @@ contract Web3PacksMode is
   mapping (bytes32 => TokenAmount) internal _swapForLiquidityAmount;
   mapping (uint256 => LiquidityPosition[]) internal _liquidityPositions;
 
+  // TODO: Refactor router handling for better scalability and maintainability
+  // Consider using an array of routers in the constructor and removing the RouterType enum
   constructor(
     address proton,
     address nonfungiblePositionManager,
@@ -99,6 +101,7 @@ contract Web3PacksMode is
     address chargedState,
     address kimRouter,
     address velodromeRouter
+    address balancerRouter
   ) {
     _proton = proton;
     _nonfungiblePositionManager = nonfungiblePositionManager;
@@ -108,6 +111,7 @@ contract Web3PacksMode is
     _allowlisted[kimRouter] = true;
     _allowlisted[velodromeRouter] = true;
     _allowlisted[nonfungiblePositionManager] = true;
+    _allowlisted[balancerRouter] = true;
   }
 
 
@@ -198,54 +202,6 @@ contract Web3PacksMode is
     _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
     emit PackUnbundled(tokenId, receiver);
   }
-
-  // function unbundleForEth(
-  //   address receiver,
-  //   address tokenAddress,
-  //   uint256 tokenId,
-  //   Web3PackOrder calldata web3PackOrder
-  // )
-  //   external
-  //   whenNotPaused
-  //   nonReentrant
-  // {
-  //   _unbundle(
-  //     address(this),
-  //     tokenAddress,
-  //     tokenId,
-  //     _cpWalletManager,
-  //     web3PackOrder
-  //   );
-
-  //   // TODO: Swap all for ETH and return ETH to receiver
-
-  //   emit PackUnbundled(tokenId, receiver);
-  // }
-
-  // function unbundleFromManagerForEth(
-  //   address receiver,
-  //   address tokenAddress,
-  //   uint256 tokenId,
-  //   string calldata walletManager,
-  //   Web3PackOrder calldata web3PackOrder
-  // )
-  //   external
-  //   whenNotPaused
-  //   nonReentrant
-  // {
-  //   _unbundle(
-  //     address(this),
-  //     tokenAddress,
-  //     tokenId,
-  //     walletManager,
-  //     web3PackOrder
-  //   );
-
-  //   // TODO: Swap all for ETH and return ETH to receiver
-
-  //   emit PackUnbundled(tokenId, receiver);
-  // }
-
 
   /***********************************|
   |         Private Functions         |
@@ -437,6 +393,11 @@ contract Web3PacksMode is
 
     if (swapOrder.routerType == RouterType.UniswapV3) {
       amountOut = abi.decode(data, (uint256));
+    }
+
+    if (swapOrder.routerType == RouterType.Balancer) {
+      (int256[] memory assetDeltas) = abi.decode(data, (int256[]));
+      amountOut = uint256(-assetDeltas[1]);
     }
 
     // Deposit the Assets into the Web3Packs NFT
@@ -832,3 +793,4 @@ contract Web3PacksMode is
       return this.onERC721Received.selector;
   }
 }
+

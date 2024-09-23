@@ -44,7 +44,8 @@ interface IWeb3Packs {
   enum RouterType {
     UniswapV2,
     UniswapV3,
-    Velodrome
+    Velodrome,
+    Balancer
   }
 
   /// @notice Represents the deposit of an NFT
