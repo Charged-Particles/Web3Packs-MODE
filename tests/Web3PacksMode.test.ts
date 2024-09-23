@@ -20,6 +20,7 @@ const RouterType = {
   UniswapV2: 0n,
   UniswapV3: 1n,
   Velodrome: 2n,
+  Balancer: 3n,
 };
 
 describe('Web3Packs', async ()=> {
@@ -94,6 +95,7 @@ describe('Web3Packs', async ()=> {
     routerFunction = 'exactInputSingle',
     routerPath = [] as any[][],
     liquidityUuid = ethers.utils.formatBytes32String(''),
+    poolId = ethers.constants.HashZero,
   }) => {
     let calldata;
 
@@ -105,18 +107,30 @@ describe('Web3Packs', async ()=> {
         recipient,
         globals.deadline
       );
-    } else { // UniswapV3
-      const callDataParams = {
-        tokenIn,
-        tokenOut,
-        recipient,
-        amountIn: tokenAmountIn,
-        amountOutMinimum,
-        limitSqrtPrice: 0n,
-        deadline: globals.deadline,
+    } else if (routerType === RouterType.Balancer) {
+      const singleSwap = {
+        poolId: poolId,
+        kind: 0, // GIVEN_IN
+        assetIn: tokenIn,
+        assetOut: tokenOut,
+        amount: tokenAmountIn,
+        userData: '0x',
       };
-      calldata = await router.populateTransaction[routerFunction](callDataParams);
-    }
+  
+      const funds = {
+        sender: web3packs.address,
+        fromInternalBalance: false,
+        recipient: recipient,
+        toInternalBalance: false,
+      };
+  
+      calldata = await router.populateTransaction.swap(
+        singleSwap,
+        funds,
+        amountOutMinimum,
+        globals.deadline
+      );
+    } else { // UniswapV3
 
     const swapOrder = {
       callData: <string>calldata.data,
