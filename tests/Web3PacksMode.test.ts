@@ -2,14 +2,14 @@ import { expect } from 'chai';
 import { ethers, network, getNamedAccounts } from 'hardhat';
 import { Contract, Signer } from 'ethers';
 
-import globals from '../js-helpers/globals';
+import globals, { balancerRouter } from '../js-helpers/globals';
 import { _findNearestValidTick } from './utils';
 
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
 import INonfungiblePositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json';
-// import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json';
-// import { abi as RouterV2ABI } from '@uniswap/v2-periphery/build/UniswapV2Router02.json';
+import IBalancerVaultABI from '../build/contracts/contracts/interfaces/IBalancerV2Vault.sol/IBalancerV2Vault.json';
+
 import {
   default as Charged,
   chargedStateAbi,
@@ -27,7 +27,6 @@ describe('Web3Packs', async ()=> {
   // Define contracts
   let web3packs: Web3PacksMode;
   let Proton: Contract;
-  let TestNFT: Contract;
   let charged: Charged;
   let wETH: Contract;
 
@@ -41,6 +40,9 @@ describe('Web3Packs', async ()=> {
 
   let IKimRouter;
   let kimRouter: Contract;
+
+  let IBalancerV2Vault;
+  let balancerRouter: Contract;
 
   let IKimManager;
   let kimManager: Contract;
@@ -63,6 +65,9 @@ describe('Web3Packs', async ()=> {
 
     IKimRouter = new ethers.utils.Interface(IkimRouterABI.abi);
     kimRouter = new Contract(globals.kimRouterMode, IKimRouter, deployerSigner);
+
+    IBalancerV2Vault = new ethers.utils.Interface(IBalancerVaultABI.abi);
+    balancerRouter = new Contract(globals.balancerRouter, IBalancerV2Vault, deployerSigner);
 
     IKimManager = new ethers.utils.Interface(INonfungiblePositionManager.abi);
     kimManager = new Contract(globals.KimNonfungibleTokenPosition, IKimManager, deployerSigner);
@@ -132,18 +137,19 @@ describe('Web3Packs', async ()=> {
       );
     } else { // UniswapV3
 
-    const swapOrder = {
-      callData: <string>calldata.data,
-      router: router.address,
-      tokenIn,
-      tokenOut,
-      tokenAmountIn,
-      payableAmountIn,
-      routerType,
-      liquidityUuid,
-    };
+      const swapOrder = {
+        callData: <string>calldata.data,
+        router: router.address,
+        tokenIn,
+        tokenOut,
+        tokenAmountIn,
+        payableAmountIn,
+        routerType,
+        liquidityUuid,
+      };
 
-    return swapOrder;
+      return swapOrder;
+    }
   };
 
   const _createLiquidityOrder = async ({
@@ -282,6 +288,50 @@ describe('Web3Packs', async ()=> {
 
     return {gasCost};
   };
+
+  describe('Balancer', async() => {
+    it('Bundles a single asset with Balancer', async() => {
+      const { deployer } = await getNamedAccounts();
+
+      const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for another token using Balancer
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.someOtherTokenAddress,
+        tokenAmountIn: packPriceEth,
+        router: balancerRouter,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = await ethers.provider.getBalance(deployer);
+
+      // Bundle Pack
+      const {gasCost} = await _callBundle({
+        deployer,
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [],
+        packPriceEth,
+      });
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = await ethers.provider.getBalance(deployer);
+      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+    });
+  });
+
 
   describe('KIM', () => {
     it('Bundles a single asset', async() => {
