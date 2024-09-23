@@ -27,6 +27,7 @@ describe('Web3Packs', async ()=> {
   // Define contracts
   let web3packs: Web3PacksMode;
   let Proton: Contract;
+  let TestNFT: Contract;
   let charged: Charged;
   let wETH: Contract;
 
@@ -137,19 +138,30 @@ describe('Web3Packs', async ()=> {
       );
     } else { // UniswapV3
 
-      const swapOrder = {
-        callData: <string>calldata.data,
-        router: router.address,
+      const callDataParams = {
         tokenIn,
         tokenOut,
-        tokenAmountIn,
-        payableAmountIn,
-        routerType,
-        liquidityUuid,
+        recipient,
+        amountIn: tokenAmountIn,
+        amountOutMinimum,
+        limitSqrtPrice: 0n,
+        deadline: globals.deadline,
       };
-
-      return swapOrder;
+      calldata = await router.populateTransaction[routerFunction](callDataParams);
     }
+
+    const swapOrder = {
+      callData: <string>calldata.data,
+      router: router.address,
+      tokenIn,
+      tokenOut,
+      tokenAmountIn,
+      payableAmountIn,
+      routerType,
+      liquidityUuid,
+    };
+
+    return swapOrder;
   };
 
   const _createLiquidityOrder = async ({

@@ -46,7 +46,7 @@ const globals = {
   KimNonfungibleTokenPosition: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
 
   // Balancer
-  balancerRouter: '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
+  balancerRouter: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
 
   // Standard Parameters
   deadline: Math.floor(Date.now() / 1000) + (60 * 10),
