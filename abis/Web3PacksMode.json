@@ -30,6 +30,11 @@
         "internalType": "address",
         "name": "velodromeRouter",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "balancerRouter",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",

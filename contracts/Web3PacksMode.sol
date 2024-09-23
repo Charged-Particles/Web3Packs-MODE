@@ -100,7 +100,7 @@ contract Web3PacksMode is
     address chargedParticles,
     address chargedState,
     address kimRouter,
-    address velodromeRouter
+    address velodromeRouter,
     address balancerRouter
   ) {
     _proton = proton;
