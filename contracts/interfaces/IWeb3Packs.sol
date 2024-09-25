@@ -71,15 +71,17 @@ interface IWeb3Packs {
   }
 
   struct LiquidityOrderGeneric {
-    bytes callData;
     address router;
     address token0;
     address token1;
     uint256 amount0ToMint;
     uint256 amount1ToMint;
+    uint256 amount0Min;
+    uint256 amount1Min;
     bytes32 liquidityUuidToken0;
     bytes32 liquidityUuidToken1;
-    uint256 payableAmountIn;
+    int24 tickLower;
+    int24 tickUpper;
     bool stable;
     RouterType routerType;
   }
@@ -91,7 +93,7 @@ interface IWeb3Packs {
 
   struct LiquidityPosition {
     uint256 lpTokenId;
-    uint128 liquidity;
+    uint256 liquidity;
     bool stable;
     address token0;
     address token1;

@@ -139,73 +139,28 @@ describe('Web3Packs', async ()=> {
     amount1Desired,
     amount0Min = 0n,
     amount1Min = 0n,
-    payableAmountIn = 0n,
     stable = false,
     liquidityUuidToken0 = ethers.utils.formatBytes32String(''),
     liquidityUuidToken1 = ethers.utils.formatBytes32String(''),
     tickLower = BigInt(_findNearestValidTick(60, true)),
     tickUpper = BigInt(_findNearestValidTick(60, false)),
-    recipient = web3packs.address,
-    deadline = globals.deadline,
-    lpManager = kimManager,
     router = globals.KimNonfungibleTokenPosition,
     routerType = RouterType.UniswapV3,
-    routerFunction = 'mint',
   }) => {
-    let calldata;
-
-    if (routerType === RouterType.UniswapV2) {
-      calldata = await lpManager.populateTransaction[routerFunction](
-        token0,
-        token1,
-        amount0Desired,
-        amount1Desired,
-        amount0Min,
-        amount1Min,
-        recipient,
-        deadline
-      );
-    }
-    else if (routerType === RouterType.Velodrome) {
-      calldata = await lpManager.populateTransaction[routerFunction](
-        token0,
-        token1,
-        stable,
-        amount0Desired,
-        amount1Desired,
-        amount0Min,
-        amount1Min,
-        recipient,
-        deadline
-      );
-    } else { // UniswapV3
-      const calldataParams = {
-        token0,
-        token1,
-        tickLower,
-        tickUpper,
-        amount0Desired,
-        amount1Desired,
-        amount0Min,
-        amount1Min,
-        recipient,
-        deadline,
-      };
-      calldata = await lpManager.populateTransaction[routerFunction](calldataParams);
-    }
-
     // craft call data
     const lpOrder = {
-      callData: calldata.data,
       router,
       token0,
       token1,
       amount0ToMint: amount0Desired,
       amount1ToMint: amount1Desired,
-      payableAmountIn,
+      amount0Min,
+      amount1Min,
       stable,
       liquidityUuidToken0,
       liquidityUuidToken1,
+      tickLower,
+      tickUpper,
       routerType,
     }
     return lpOrder;
@@ -671,10 +626,8 @@ describe('Web3Packs', async ()=> {
         amount0Desired: wethAmount,
         amount1Desired: modeAmount.toBigInt(),
         liquidityUuidToken1,
-        lpManager: velodromeRouter,
         router: globals.velodromeRouter,
         routerType: RouterType.Velodrome,
-        routerFunction: 'addLiquidity',
       });
 
       // Get Balance before Transaction for Test Confirmation
@@ -734,10 +687,8 @@ describe('Web3Packs', async ()=> {
         amount0Desired: wethAmount,
         amount1Desired: modeAmount.toBigInt(),
         liquidityUuidToken1,
-        lpManager: velodromeRouter,
         router: globals.velodromeRouter,
         routerType: RouterType.Velodrome,
-        routerFunction: 'addLiquidity',
       });
 
       // Bundle Pack
