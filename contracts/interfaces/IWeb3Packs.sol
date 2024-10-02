@@ -39,7 +39,7 @@ interface IWeb3Packs {
   error NativeAssetTransferFailed();
   error MismatchedTokens();
   error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
-  error InsufficientForFee();
+  error InsufficientForFee(uint256 value, uint256 ethPackPrice, uint256 protocolFee);
 
   enum RouterType {
     UniswapV2,

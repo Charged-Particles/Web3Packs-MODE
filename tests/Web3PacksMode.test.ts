@@ -136,6 +136,7 @@ describe('Web3Packs', async ()=> {
         amountOutMinimum,
         globals.deadline
       );
+
     } else { // UniswapV3
 
       const callDataParams = {
@@ -251,6 +252,18 @@ describe('Web3Packs', async ()=> {
   }) => {
     const bundleFee = globals.protocolFee;
 
+    const bundleCalldata = web3packs.interface.encodeFunctionData('bundle', [
+      deployer,
+      globals.ipfsMetadata,
+      contractCalls ?? [],
+      swapOrders ?? [],
+      lpOrders ?? [],
+      timelocks,
+      packPriceEth.toBigInt(),
+    ]);
+
+    console.log('Bundle call data:', bundleCalldata);
+
     const tokenId = await web3packs.callStatic.bundle(
       deployer,
       globals.ipfsMetadata,
@@ -301,11 +314,11 @@ describe('Web3Packs', async ()=> {
     return {gasCost};
   };
 
-  describe('Balancer', async() => {
+  describe.only('Balancer', async() => {
     it('Bundles a single asset with Balancer', async() => {
       const { deployer } = await getNamedAccounts();
 
-      const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -318,11 +331,11 @@ describe('Web3Packs', async ()=> {
       // Swap WETH for another token using Balancer
       const swapOrder1 = await _createSwapOrder({
         tokenIn: globals.wrapETHAddress,
-        tokenOut: globals.someOtherTokenAddress,
+        tokenOut: globals.modeTokenAddress,
         tokenAmountIn: packPriceEth,
         router: balancerRouter,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: '0x7c86a44778c52a0aad17860924b53bf3f35dc932000200000000000000000007',
       });
 
       // Get Balance before Transaction for Test Confirmation

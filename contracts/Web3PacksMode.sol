@@ -140,7 +140,7 @@ contract Web3PacksMode is
 
     // Track Collected Fees
     if (_protocolFee > 0 && msg.value < ethPackPrice + _protocolFee) {
-      revert InsufficientForFee();
+      revert InsufficientForFee(msg.value, ethPackPrice, _protocolFee);
     }
     _feesCollected += _protocolFee;
 

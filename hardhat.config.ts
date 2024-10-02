@@ -87,7 +87,7 @@ const config: HardhatUserConfig = {
         // url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
         // blockNumber: 30784049
         url: 'https://mainnet.mode.network',
-        blockNumber: 12351132
+        // blockNumber: 12351132
       },
       accounts: {
         mnemonic: mnemonic.mainnet,
