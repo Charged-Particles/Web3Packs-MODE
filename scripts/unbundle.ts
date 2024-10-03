@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import globals from "../tests/globals";
+import globals from "../js-helpers/globals";
 import { Web3Packs } from "../typechain-types";
 import { chargedStateAbi } from "@charged-particles/charged-js-sdk";
 const hre = require("hardhat");

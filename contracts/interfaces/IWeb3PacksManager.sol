@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// IWeb3Packs.sol
+// IWeb3PacksManager.sol
 // Copyright (c) 2023 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,24 +24,11 @@ pragma solidity 0.8.17;
 
 import "./IWeb3PacksDefs.sol";
 
-interface IWeb3Packs is IWeb3PacksDefs {
-  function bundle(
-    string calldata tokenMetaUri,
-    ContractCallGeneric[] calldata contractCalls,
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    LiquidityOrderGeneric[] calldata liquidityOrders,
-    LockState calldata lockState,
-    uint256 ethPackPrice
-  )
-    external
-    payable
-    returns(uint256 tokenId);
-
-  function unbundle(
-    address receiver,
-    address contractAddress,
-    uint256 tokenId,
-    Web3PackOrder calldata web3PackOrder
-  ) external
-    payable;
+interface IWeb3PacksManager is IWeb3PacksDefs {
+  function isContractAllowed(address contractAddress) external returns (bool isAllowed);
+  function getLiquidityPositions(uint256 tokenId) external returns (LiquidityPosition[] memory positions);
+  function saveLiquidityPosition(uint256 tokenId, LiquidityPosition memory position) external;
+  function clearLiquidityPositions(uint256 tokenId) external;
+  function setContractAllowlist(address contractAddress, bool isAllowed) external;
+  function setWeb3PacksContract(address contractAddress, bool isAllowed) external ;
 }

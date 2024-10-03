@@ -1,5 +1,5 @@
 import { Signer, Wallet } from "ethers";
-import globals from "../tests/globals";
+import globals from "../js-helpers/globals";
 import { Web3PacksMode } from "../typechain-types";
 const hre = require("hardhat");
 
@@ -7,6 +7,12 @@ const hre = require("hardhat");
 async function main() {
   const [ deployer ] = await hre.ethers.getSigners();
   const web3Packs: Web3PacksMode = await hre.ethers.getContract('Web3PacksMode');
+
+  const RouterType = {
+    UniswapV2: 0n,
+    UniswapV3: 1n,
+    Velodrome: 2n,
+  };
 
   // pool https://explorer.mode.network/address/0x8cfE2A02dfBAbC56aE7e573170E35f88A38BeA55?tab=read_contract
   const amount2 = hre.ethers.utils.parseEther('0.000000000001');
@@ -22,7 +28,7 @@ async function main() {
       deadline: globals.deadline,
       amountOutMinimum: 0,
       sqrtPriceLimitX96: 0,
-      forLiquidity: true
+      routerType: RouterType.UniswapV2,
     },
     {
       inputTokenAddress: globals.wrapETHAddress,
@@ -32,7 +38,7 @@ async function main() {
       deadline: globals.deadline,
       amountOutMinimum: 0,
       sqrtPriceLimitX96: 0,
-      forLiquidity: false
+      routerType: RouterType.UniswapV2,
     },
   ];
 
@@ -45,11 +51,12 @@ async function main() {
       amount0Min: 0,
       amount1Min: 0,
       tickSpace: tickSpace,
-      poolFee: 0 
+      poolFee: 0,
+      routerType: RouterType.UniswapV3,
     }
   ];
 
-  const tokenId = await web3Packs.callStatic.bundleMode(
+  const tokenId = await web3Packs.callStatic.bundle(
     await deployer.getAddress(),
     globals.ipfsMetadata,
     ERC20SwapOrder,
@@ -59,7 +66,7 @@ async function main() {
   );
   console.log(tokenId);
 
-  //  await web3Packs.bundleMode(
+  //  await web3Packs.bundle(
   //   await deployer.getAddress(),
   //   globals.ipfsMetadata,
   //   ERC20SwapOrder,

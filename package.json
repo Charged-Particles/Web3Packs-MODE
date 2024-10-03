@@ -22,22 +22,23 @@
     "coverage": "yarn clean-test && hardhat --show-stack-traces coverage --temp coverage_build && yarn clean-test",
     "gas": "REPORT_GAS=true hardhat test",
     "start": "hardhat node --port 8545",
-    "deploy": "hardhat deploy --tags core --network",
-    "setup": "hardhat deploy --tags setup --network",
-    "etherscan-verify": "hardhat deploy --tags verify --network",
-    "gen-docs": "solidity-docgen -i contracts -o docs"
+    "deploy": "hardhat deploy --tags mode_packs --network"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.8",
     "@openzeppelin/contracts": "^4.7.3",
     "@uniswap/sdk-core": "^3.1.1",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.3",
     "@uniswap/v3-sdk": "^3.9.0"
   },
   "devDependencies": {
     "@charged-particles/charged-js-sdk": "https://github.com/Charged-Particles/charged-js-sdk.git",
-    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@nomiclabs/hardhat-etherscan": "3.0.0",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/cli": "^2.8.0",

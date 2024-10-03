@@ -1,26 +1,26 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-import "@nomicfoundation/hardhat-verify";
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-ethers'
-import '@typechain/hardhat'
-import 'hardhat-gas-reporter'
-import 'hardhat-abi-exporter'
-import 'solidity-coverage'
+import '@nomicfoundation/hardhat-verify';
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@typechain/hardhat';
+import 'hardhat-gas-reporter';
+import 'hardhat-abi-exporter';
+import 'solidity-coverage';
 
-import 'hardhat-deploy-ethers'
-import 'hardhat-deploy'
-import 'hardhat-watcher'
+import 'hardhat-deploy-ethers';
+import 'hardhat-deploy';
+import 'hardhat-watcher';
 
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig, task } from 'hardhat/config';
 import { TASK_TEST } from 'hardhat/builtin-tasks/task-names';
 
-// Task to run deployment fixtures before tests without the need of "--deploy-fixture"
+// Task to run deployment fixtures before tests without the need of '--deploy-fixture'
 //  - Required to get fixtures deployed before running Coverage Reports
 task(
   TASK_TEST,
-  "Runs the coverage report",
+  'Runs the coverage report',
   async (args: Object, hre, runSuper) => {
     await hre.run('compile');
     await hre.deployments.fixture();
@@ -39,10 +39,10 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.7.6",
+        version: '0.7.6',
       },
       {
-        version: "0.8.17",
+        version: '0.8.17',
         settings: {
           optimizer: {
             enabled: !optimizerDisabled,
@@ -72,9 +72,9 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-      sources: "./contracts",
-      tests: "./test",
-      cache: "./cache",
+      sources: './contracts',
+      tests: './test',
+      cache: './cache',
       artifacts: './build/contracts',
       deploy: './deploy',
       deployments: './deployments'
@@ -84,13 +84,13 @@ const config: HardhatUserConfig = {
       chainId: 34443,
       gasPrice: 100e9,
       forking: {
-        // url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
-        // blockNumber: 30784049 
-        url: "https://mainnet.mode.network",
-        blockNumber: 10491342
+        // url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
+        // blockNumber: 30784049
+        url: 'https://mainnet.mode.network',
+        blockNumber: 13550000
       },
       accounts: {
-        mnemonic: mnemonic.testnet,
+        mnemonic: mnemonic.mainnet,
         initialIndex: 0,
         count: 10,
       },
@@ -106,7 +106,7 @@ const config: HardhatUserConfig = {
         }
     },
     polygon: {
-        url: "https://polygon-mainnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY,
+        url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
         gasPrice: 'auto',
         accounts: {
             mnemonic: mnemonic.mainnet,
@@ -115,32 +115,52 @@ const config: HardhatUserConfig = {
         },
         chainId: 137
     },
+    modeSepolia: {
+      url: "https://sepolia.mode.network",
+      gasPrice: 'auto',
+      accounts: {
+          mnemonic: mnemonic.testnet,
+          initialIndex: 0,
+          count: 10,
+      },
+      chainId: 919,
+    },
     mode: {
-        url: "https://mainnet.mode.network/",
-        accounts: {
-            mnemonic: mnemonic.mainnet,
-            count: 8,
-        },
-        chainId: 34443
-    }
+      url: "https://mainnet.mode.network",
+      gasPrice: 'auto',
+      accounts: {
+          mnemonic: mnemonic.mainnet,
+          initialIndex: 0,
+          count: 10,
+      },
+      chainId: 34443,
+    },
   },
-  // etherscan: {
-  //   apiKey: {
-      // polygon: process.env.POLYGONSCAN_APIKEY,
-      // polygonMumbai: process.env.POLYGONSCAN_APIKEY,
-      // mode: process.env.ETHERSCAN_APIKEY,
-      // customChains: [
-      //   {
-      //     network: "mode",
-      //     chainId: 34443,
-      //     urls: {
-      //       apiURL: 'https://explorer.mode.network/api\?',
-      //       browserURL: 'https://explorer.mode.network',
-      //     },
-      //   }
-      // ]
-    // }
-  // },
+  etherscan: {
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY ?? '',
+      mode: process.env.ETHERSCAN_APIKEY ?? '',
+      modeSepolia: 'MODE-NETWORK-TESTNET',
+    },
+    customChains: [
+      {
+        network: 'mode',
+        chainId: 34443,
+        urls: {
+          apiURL: 'https://explorer.mode.network/api\?',
+          browserURL: 'https://explorer.mode.network',
+        },
+      },
+      {
+        network: 'modeSepolia',
+        chainId: 919,
+        urls: {
+          apiURL: 'https://sepolia.explorer.mode.network/api',
+          browserURL: 'https://sepolia.explorer.mode.network'
+        }
+      }
+    ],
+  },
   gasReporter: {
       currency: 'USD',
       gasPrice: 1,
