@@ -28,6 +28,7 @@ const globals = {
   modeTokenAddress: '0xDfc7C877a950e49D2610114102175A06C2e3167a',
   ionTokenAddress: '0x18470019bF0E94611f15852F7e93cf5D65BC34CA',
   iclTokenAddress: '0x95177295A394f2b9B04545FFf58f4aF0673E839d',
+  ionxTokenAddress: '0x77E7bcfeE826b12cD498Faa9831d7055b7478272',
 
   // IPFS
   ipfsMetadata: 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST',
@@ -36,7 +37,7 @@ const globals = {
   velodromeRouter: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
   velodromeRouterAbi: [
     'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, (address,address,bool)[] calldata routes, address to, uint256 deadline) external returns (uint256[] memory amounts)',
-    'function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline)',
+    'function swapExactETHForTokens(uint256 amountOutMin, (address,address,bool)[] routes, address to, uint256 deadline) payable returns (uint256[] memory amounts)',
     'function addLiquidity(address tokenA, address tokenB, bool stable, uint256 amountADesired, uint256 amountBDesired, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) public returns (uint256 amountA, uint256 amountB, uint256 liquidity)',
     'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) public returns (uint256 amountA, uint256 amountB)',
   ],
@@ -50,7 +51,7 @@ const globals = {
 
   // Standard Parameters
   deadline: Math.floor(Date.now() / 1000) + (60 * 10),
-  protocolFee: utils.parseUnits('0.0001', 18),
+  protocolFee: utils.parseUnits('0.0003', 18),
 
   // Random Addresses
   testAddress: '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A',

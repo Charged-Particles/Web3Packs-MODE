@@ -87,7 +87,7 @@ const config: HardhatUserConfig = {
         // url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
         // blockNumber: 30784049
         url: 'https://mainnet.mode.network',
-        // blockNumber: 12351132
+        // blockNumber: 13550000
       },
       accounts: {
         mnemonic: mnemonic.mainnet,
@@ -115,32 +115,52 @@ const config: HardhatUserConfig = {
         },
         chainId: 137
     },
+    modeSepolia: {
+      url: "https://sepolia.mode.network",
+      gasPrice: 'auto',
+      accounts: {
+          mnemonic: mnemonic.testnet,
+          initialIndex: 0,
+          count: 10,
+      },
+      chainId: 919,
+    },
     mode: {
-        url: 'https://mainnet.mode.network/',
-        accounts: {
-            mnemonic: mnemonic.mainnet,
-            count: 8,
-        },
-        chainId: 34443
-    }
+      url: "https://mainnet.mode.network",
+      gasPrice: 'auto',
+      accounts: {
+          mnemonic: mnemonic.mainnet,
+          initialIndex: 0,
+          count: 10,
+      },
+      chainId: 34443,
+    },
   },
-  // etherscan: {
-  //   apiKey: {
-      // polygon: process.env.POLYGONSCAN_APIKEY,
-      // polygonMumbai: process.env.POLYGONSCAN_APIKEY,
-      // mode: process.env.ETHERSCAN_APIKEY,
-      // customChains: [
-      //   {
-      //     network: 'mode',
-      //     chainId: 34443,
-      //     urls: {
-      //       apiURL: 'https://explorer.mode.network/api\?',
-      //       browserURL: 'https://explorer.mode.network',
-      //     },
-      //   }
-      // ]
-    // }
-  // },
+  etherscan: {
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY ?? '',
+      mode: process.env.ETHERSCAN_APIKEY ?? '',
+      modeSepolia: 'MODE-NETWORK-TESTNET',
+    },
+    customChains: [
+      {
+        network: 'mode',
+        chainId: 34443,
+        urls: {
+          apiURL: 'https://explorer.mode.network/api\?',
+          browserURL: 'https://explorer.mode.network',
+        },
+      },
+      {
+        network: 'modeSepolia',
+        chainId: 919,
+        urls: {
+          apiURL: 'https://sepolia.explorer.mode.network/api',
+          browserURL: 'https://sepolia.explorer.mode.network'
+        }
+      }
+    ],
+  },
   gasReporter: {
       currency: 'USD',
       gasPrice: 1,

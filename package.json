@@ -22,10 +22,7 @@
     "coverage": "yarn clean-test && hardhat --show-stack-traces coverage --temp coverage_build && yarn clean-test",
     "gas": "REPORT_GAS=true hardhat test",
     "start": "hardhat node --port 8545",
-    "deploy": "hardhat deploy --tags core --network",
-    "setup": "hardhat deploy --tags setup --network",
-    "etherscan-verify": "hardhat deploy --tags verify --network",
-    "gen-docs": "solidity-docgen -i contracts -o docs"
+    "deploy": "hardhat deploy --tags mode_packs --network"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
