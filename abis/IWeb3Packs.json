@@ -10,7 +10,23 @@
     "type": "error"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethPackPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "protocolFee",
+        "type": "uint256"
+      }
+    ],
     "name": "InsufficientForFee",
     "type": "error"
   },
@@ -240,12 +256,22 @@
           },
           {
             "internalType": "uint256",
+            "name": "tokenAmountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "payableAmountIn",
             "type": "uint256"
           },
           {
             "internalType": "bytes32",
             "name": "liquidityUuid",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
             "type": "bytes32"
           },
           {
@@ -297,6 +323,11 @@
           },
           {
             "internalType": "uint256",
+            "name": "minimumLpTokens",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "slippage",
             "type": "uint256"
           },
@@ -314,6 +345,11 @@
             "internalType": "bool",
             "name": "stable",
             "type": "bool"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
           },
           {
             "internalType": "enum IWeb3PacksDefs.RouterType",
@@ -398,6 +434,47 @@
             ],
             "internalType": "struct IWeb3PacksDefs.NFT[]",
             "name": "nfts",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "components": [
+                  {
+                    "internalType": "address",
+                    "name": "token",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                  }
+                ],
+                "internalType": "struct IWeb3PacksDefs.TokenAmount",
+                "name": "token0",
+                "type": "tuple"
+              },
+              {
+                "components": [
+                  {
+                    "internalType": "address",
+                    "name": "token",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                  }
+                ],
+                "internalType": "struct IWeb3PacksDefs.TokenAmount",
+                "name": "token1",
+                "type": "tuple"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.TokenPairs[]",
+            "name": "lps",
             "type": "tuple[]"
           }
         ],

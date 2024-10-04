@@ -8,8 +8,8 @@ import { _findNearestValidTick } from './utils';
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
 import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
 import INonfungiblePositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json';
-// import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json';
-// import { abi as RouterV2ABI } from '@uniswap/v2-periphery/build/UniswapV2Router02.json';
+import IBalancerVaultABI from '../build/contracts/contracts/interfaces/IBalancerV2Vault.sol/IBalancerV2Vault.json';
+
 import {
   default as Charged,
   chargedStateAbi,
@@ -20,9 +20,11 @@ const RouterType = {
   UniswapV2: 0n,
   UniswapV3: 1n,
   Velodrome: 2n,
+  Balancer: 3n,
 };
 
-const WETH_BYTES32 = ethers.utils.formatBytes32String('WETH');
+const toBytes32 = (text) => ethers.utils.formatBytes32String(text);
+const WETH_BYTES32 = toBytes32('WETH');
 
 describe('Web3Packs', async ()=> {
   // Define contracts
@@ -42,6 +44,9 @@ describe('Web3Packs', async ()=> {
 
   let IKimRouter;
   let kimRouter: Contract;
+
+  let IBalancerV2Vault;
+  let balancerVault: Contract;
 
   let IKimManager;
   let kimManager: Contract;
@@ -64,6 +69,9 @@ describe('Web3Packs', async ()=> {
 
     IKimRouter = new ethers.utils.Interface(IkimRouterABI.abi);
     kimRouter = new Contract(globals.kimRouterMode, IKimRouter, deployerSigner);
+
+    IBalancerV2Vault = new ethers.utils.Interface(IBalancerVaultABI.abi);
+    balancerVault = new Contract(globals.balancerVault, IBalancerV2Vault, deployerSigner);
 
     IKimManager = new ethers.utils.Interface(INonfungiblePositionManager.abi);
     kimManager = new Contract(globals.KimNonfungibleTokenPosition, IKimManager, deployerSigner);
@@ -95,7 +103,8 @@ describe('Web3Packs', async ()=> {
     routerType = RouterType.UniswapV3,
     routerFunction = 'exactInputSingle',
     routerPath = [] as any[][],
-    liquidityUuid = ethers.utils.formatBytes32String(''),
+    liquidityUuid = toBytes32(''),
+    poolId = ethers.constants.HashZero,
   }) => {
     let calldata;
 
@@ -107,7 +116,7 @@ describe('Web3Packs', async ()=> {
         recipient,
         globals.deadline
       );
-    } else { // UniswapV3
+    } else if (routerType === RouterType.UniswapV3) {
       const callDataParams = {
         tokenIn,
         tokenOut,
@@ -118,6 +127,8 @@ describe('Web3Packs', async ()=> {
         deadline: globals.deadline,
       };
       calldata = await router.populateTransaction[routerFunction](callDataParams);
+    } else { // Balancer
+      calldata = { data: toBytes32('') };
     }
 
     const swapOrder = {
@@ -126,8 +137,10 @@ describe('Web3Packs', async ()=> {
       tokenIn,
       tokenOut,
       tokenAmountIn,
+      tokenAmountOutMin: amountOutMinimum,
       payableAmountIn,
       routerType,
+      poolId,
       liquidityUuid,
     };
 
@@ -138,13 +151,15 @@ describe('Web3Packs', async ()=> {
     token0,
     token1,
     stable = false,
-    liquidityUuidToken0 = ethers.utils.formatBytes32String(''),
-    liquidityUuidToken1 = ethers.utils.formatBytes32String(''),
+    liquidityUuidToken0 = toBytes32(''),
+    liquidityUuidToken1 = toBytes32(''),
     percentToken0 = 10000n, // 100%
     percentToken1 = 10000n, // 100%
     slippage = 300n, // 3%
+    minimumLpTokens = 0n,
     tickLower = BigInt(_findNearestValidTick(60, true)),
     tickUpper = BigInt(_findNearestValidTick(60, false)),
+    poolId = ethers.constants.HashZero,
     router = globals.KimNonfungibleTokenPosition,
     routerType = RouterType.UniswapV3,
   }) => {
@@ -158,9 +173,11 @@ describe('Web3Packs', async ()=> {
       liquidityUuidToken1,
       percentToken0,
       percentToken1,
+      minimumLpTokens,
       slippage,
       tickLower,
       tickUpper,
+      poolId,
       routerType,
     }
     return lpOrder;
@@ -205,6 +222,7 @@ describe('Web3Packs', async ()=> {
     tokenId,
     erc20TokenAddresses,
     nfts,
+    lps,
   }) => {
     // Approve Web3Packs to Unbundle our Charged Particle
     const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
@@ -216,7 +234,7 @@ describe('Web3Packs', async ()=> {
       deployer,
       Proton.address,
       tokenId.toNumber(),
-      { erc20TokenAddresses, nfts },
+      { erc20TokenAddresses, nfts, lps },
       { value: unbundleFee },
     );
     const txReceipt = await unbundleTx.wait();
@@ -225,12 +243,287 @@ describe('Web3Packs', async ()=> {
     return {gasCost};
   };
 
+  describe('Balancer', async() => {
+    it('Bundles a single asset', async() => {
+      const { deployer } = await getNamedAccounts();
+
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for MODE using Balancer
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: packPriceEth,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      const modeTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+      expect(modeTokenAmount).to.be.gt(100);
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
+    });
+
+    it('Bundles multiple assets', async() => {
+      const { deployer } = await getNamedAccounts();
+
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+      const wethForIonx = packPriceEth.div(2);
+      const wethForMode = packPriceEth.div(2);
+      // const wethForLP = packPriceEth.div(4);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for MODE using Balancer
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethForMode,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Swap WETH for IONX
+      const swapOrder2 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.ionxTokenAddress,
+        tokenAmountIn: wethForIonx,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1, swapOrder2 ],
+        lpOrders: [],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      const modeTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+      expect(modeTokenAmount).to.be.gt(100);
+
+      // Check Pack for IONX Tokens
+      tokenMass = await web3pack.getMass(globals.ionxTokenAddress, 'generic.B');
+      const ionxTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+      expect(ionxTokenAmount).to.be.gt(1);
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
+    });
+
+    it('Bundles a Liquidity Position', async() => {
+      const { deployer } = await getNamedAccounts();
+
+      const liquidityUuidToken1 = ethers.utils.formatBytes32String('weth-mode-1');
+
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+      const wethForIonx = packPriceEth.mul(300).div(10000); // 3%
+      const wethForMode = packPriceEth.mul(4850).div(10000); // 48.5%
+      const remainingWeth = packPriceEth.sub(wethForIonx).sub(wethForMode); // 48.5%
+      const wethForModeLP = remainingWeth.div(5);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for MODE using Balancer
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethForMode,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Swap WETH for IONX
+      const swapOrder2 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.ionxTokenAddress,
+        tokenAmountIn: wethForIonx,
+      });
+
+      // Swap WETH for MODE using Balancer
+      const swapOrder3 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethForModeLP.mul(4), // 80% of remaining WETH
+        liquidityUuid: liquidityUuidToken1,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Create LP Position using WETH/Mode
+      const lpOrder1 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.modeTokenAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1,
+        percentToken0: 10000n, // 100%
+        percentToken1: 10000n, // 100%
+        minimumLpTokens: 1n,
+        router: balancerVault.address,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1, swapOrder2, swapOrder3 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
+    });
+
+    it('Unbundles a Liquidity Position', async() => {
+      const MODE = new Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+
+      const { deployer } = await getNamedAccounts();
+      const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+      const wethAmount = packPriceEth.div(5).mul(4);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for Mode
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidToken1,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Create LP Position using WETH/Mode
+      const lpOrder1 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.modeTokenAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1,
+        percentToken0: 10000n, // 100%
+        percentToken1: 10000n, // 100%
+        minimumLpTokens: 1n,
+        router: balancerVault.address,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+      // TODO: Test for LP NFT in Pack
+
+      // Unbundle Pack
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20TokenAddresses: [],
+        nfts: [],
+        lps: [
+          {
+            token0: { token: globals.wrapETHAddress, amount: 0 },
+            token1: { token: globals.modeTokenAddress, amount: 0 },
+          }
+        ]
+      });
+
+      // Check Pack for Mode Tokens
+      tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+      // Check Receiver for Mode Tokens
+      const modeTokenBalance = await MODE.balanceOf(deployer);
+      expect(modeTokenBalance).to.be.gt(0);
+
+      // Check Receiver for WETH tokens
+      const wethTokenBalance = await WETH.balanceOf(deployer);
+      expect(wethTokenBalance).to.be.gt(0);
+    });
+  });
+
+
   describe('KIM', () => {
     it('Bundles a single asset', async() => {
       const { deployer } = await getNamedAccounts();
 
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -248,7 +541,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -259,16 +552,16 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Bundles multiple assets', async() => {
       const { deployer } = await getNamedAccounts();
 
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -293,7 +586,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -304,9 +597,9 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Bundles a Liquidity Position', async() => {
@@ -323,7 +616,7 @@ describe('Web3Packs', async ()=> {
 
       const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -352,7 +645,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -363,9 +656,9 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Unbundles a Liquidity Position', async() => {
@@ -375,7 +668,7 @@ describe('Web3Packs', async ()=> {
       const { deployer } = await getNamedAccounts();
       const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -424,7 +717,13 @@ describe('Web3Packs', async ()=> {
         deployer,
         tokenId,
         erc20TokenAddresses: [],
-        nfts: []
+        nfts: [],
+        lps: [
+          {
+            token0: { token: globals.wrapETHAddress, amount: 0 },
+            token1: { token: globals.modeTokenAddress, amount: 0 },
+          }
+        ]
       });
 
       // Check Pack for Mode Tokens
@@ -446,7 +745,7 @@ describe('Web3Packs', async ()=> {
       const liquidityUuidMode = ethers.utils.formatBytes32String('swap-order-1');
       const liquidityUuidUsdc = ethers.utils.formatBytes32String('swap-order-2');
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 4;
+      const wethAmount = packPriceEth.div(4);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -494,7 +793,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -505,9 +804,9 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
   });
 
@@ -537,7 +836,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
@@ -548,9 +847,9 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Bundles a single asset (multi-path route)', async() => {
@@ -581,7 +880,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
@@ -592,16 +891,16 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Bundles multiple assets', async() => {
       const { deployer } = await getNamedAccounts();
 
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -634,7 +933,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
@@ -645,9 +944,9 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Bundles a Liquidity Position', async () => {
@@ -655,7 +954,7 @@ describe('Web3Packs', async ()=> {
 
       const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -690,7 +989,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = await ethers.provider.getBalance(deployer);
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -701,9 +1000,9 @@ describe('Web3Packs', async ()=> {
       });
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance.toBigInt() - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = await ethers.provider.getBalance(deployer);
-      expect(postBalance.toBigInt()).to.eq(expectedBalance);
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
 
     it('Unbundles a Liquidity Position', async () => {
@@ -714,7 +1013,7 @@ describe('Web3Packs', async ()=> {
 
       const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth / 2;
+      const wethAmount = packPriceEth.div(2);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -769,7 +1068,13 @@ describe('Web3Packs', async ()=> {
         deployer,
         tokenId,
         erc20TokenAddresses: [],
-        nfts: []
+        nfts: [],
+        lps: [
+          {
+            token0: { token: globals.wrapETHAddress, amount: 0 },
+            token1: { token: globals.modeTokenAddress, amount: 0 },
+          }
+        ]
       });
 
       // Check Pack for Mode Tokens
@@ -858,7 +1163,8 @@ describe('Web3Packs', async ()=> {
         globals.USDcContractAddress,
         globals.USDtContractAddress,
       ],
-      nfts: []
+      nfts: [],
+      lps: []
     });
 
     // Check Pack for Mode Tokens
@@ -970,7 +1276,7 @@ describe('Web3Packs', async ()=> {
         packPriceEth.toBigInt(),
         { value: packPriceEth }
       )
-    ).to.be.revertedWithCustomError(web3packs, 'InsufficientForFee()');
+    ).to.be.revertedWithCustomError(web3packs, 'InsufficientForFee');
 
     // Bundle Pack
     await _callBundle({
@@ -1012,7 +1318,6 @@ describe('Web3Packs', async ()=> {
     // Attempt Bundle Pack
     expect(
       web3packs.bundle(
-        deployer,
         globals.ipfsMetadata,
         [ contractCall1 ],
         [ swapOrder1 ],

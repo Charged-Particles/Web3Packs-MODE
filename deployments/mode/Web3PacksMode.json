@@ -43,7 +43,23 @@
       "type": "error"
     },
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ethPackPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "protocolFee",
+          "type": "uint256"
+        }
+      ],
       "name": "InsufficientForFee",
       "type": "error"
     },
@@ -654,11 +670,16 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "proton",
+          "name": "contractAddress",
           "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "isAllowed",
+          "type": "bool"
         }
       ],
-      "name": "setProton",
+      "name": "setContractAllowlist",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -784,7 +805,7 @@
       ],
       "name": "unbundle",
       "outputs": [],
-      "stateMutability": "payable",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -1134,6 +1155,12 @@
         "label": "address",
         "numberOfBytes": "20"
       },
+      "t_array(t_struct(LiquidityPosition)5045_storage)dyn_storage": {
+        "base": "t_struct(LiquidityPosition)5045_storage",
+        "encoding": "dynamic_array",
+        "label": "struct IWeb3Packs.LiquidityPosition[]",
+        "numberOfBytes": "32"
+      },
       "t_bool": {
         "encoding": "inplace",
         "label": "bool",
@@ -1150,6 +1177,34 @@
         "label": "mapping(bytes32 => struct IWeb3PacksDefs.TokenAmount)",
         "numberOfBytes": "32",
         "value": "t_struct(TokenAmount)5459_storage"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_bytes32,t_struct(TokenAmount)4976_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct IWeb3Packs.TokenAmount)",
+        "numberOfBytes": "32",
+        "value": "t_struct(TokenAmount)4976_storage"
+      },
+      "t_mapping(t_uint256,t_array(t_struct(LiquidityPosition)5045_storage)dyn_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct IWeb3Packs.LiquidityPosition[])",
+        "numberOfBytes": "32",
+        "value": "t_array(t_struct(LiquidityPosition)5045_storage)dyn_storage"
+      },
+      "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => mapping(address => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_uint256)"
       },
       "t_string_storage": {
         "encoding": "bytes",

@@ -26,6 +26,7 @@ const _ADDRESS = {
     NonfungibleTokenPositionDescriptor: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
     kimRouter: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
     VelodromeRouter: '0x3a63171DD9BebF4D07BC782FECC7eb0b890C2A45',
+    BalancerRouter: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },
 };
 
@@ -116,6 +117,9 @@ module.exports = async (hre) => {
 
   log(`  Setting Allowlisted Contract (VelodromeRouter) in Web3PacksManager: ${_ADDRESS[chainId].VelodromeRouter}`);
   await web3packsManager.setContractAllowlist(_ADDRESS[chainId].VelodromeRouter, true).then(tx => tx.wait());
+
+  log(`  Setting Allowlisted Contract (Balancer) in Web3PacksManager: ${_ADDRESS[chainId].BalancerRouter}`);
+  await web3packsManager.setContractAllowlist(_ADDRESS[chainId].BalancerRouter, true).then(tx => tx.wait());
 
   // Set Protocol Fees
   log(`  Setting Protocol Fee in Web3Packs: ${globals.protocolFee}`);

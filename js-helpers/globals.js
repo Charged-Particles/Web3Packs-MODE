@@ -46,6 +46,10 @@ const globals = {
   kimRouterMode: '0xAc48FcF1049668B285f3dC72483DF5Ae2162f7e8',
   KimNonfungibleTokenPosition: '0x2e8614625226D26180aDf6530C3b1677d3D7cf10',
 
+  // Balancer (Router is Vault)
+  balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+  balancerPoolId: '0x7c86a44778c52a0aad17860924b53bf3f35dc932000200000000000000000007',
+
   // Standard Parameters
   deadline: Math.floor(Date.now() / 1000) + (60 * 10),
   protocolFee: utils.parseUnits('0.0003', 18),
