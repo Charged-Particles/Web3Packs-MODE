@@ -53,13 +53,13 @@ const config: HardhatUserConfig = {
     ],
   },
   namedAccounts: {
-    // er: 0,
-    // tokenOwner: 1,
     deployer: {
       default: 0,
     },
     protocolOwner: {
       default: 1,
+      // Treasury:
+      'mode': '0x464D36f62BA47813dE1C28A4eEb5BA59FA64c0E8',
     },
     user1: {
       default: 2,
