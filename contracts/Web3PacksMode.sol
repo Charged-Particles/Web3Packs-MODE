@@ -46,6 +46,7 @@ import "./lib/BlackholePrevention.sol";
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IWeb3PacksManager.sol";
 import "./interfaces/IVelodrome.sol";
+import {IAsset, IBalancerV2Vault} from "./interfaces/IBalancerV2Vault.sol";
 import "./interfaces/IChargedState.sol";
 import "./interfaces/INonfungiblePositionManager.sol";
 import "./interfaces/IChargedParticles.sol";
@@ -311,7 +312,7 @@ contract Web3PacksMode is
     }
 
     // Remove all Liquidity Positions
-    _removeLiquidityPositions(tokenId, receiver);
+    _removeLiquidityPositions(tokenId, receiver, web3PackOrder.lps);
   }
 
   function _contractCall(
@@ -340,31 +341,46 @@ contract Web3PacksMode is
   {
     _requireAllowlisted(swapOrder.router);
 
-    TransferHelper.safeApprove(swapOrder.tokenIn, address(swapOrder.router), swapOrder.tokenAmountIn);
-
-    (bool success, bytes memory data ) = swapOrder.router.call{value: swapOrder.payableAmountIn}(
-      swapOrder.callData
-    );
-    if (!success) {
-      assembly {
-        let dataSize := mload(data) // Load the size of the data
-        let dataPtr := add(data, 0x20) // Advance data pointer to the next word
-        revert(dataPtr, dataSize) // Revert with the given data
-      }
-    }
-
-    if (swapOrder.routerType == RouterType.UniswapV2 || swapOrder.routerType == RouterType.Velodrome) {
-      uint[] memory amounts = abi.decode(data, (uint[]));
-      amountOut = amounts[amounts.length-1];
-    }
-
-    if (swapOrder.routerType == RouterType.UniswapV3) {
-      amountOut = abi.decode(data, (uint256));
-    }
+    TransferHelper.safeApprove(swapOrder.tokenIn, swapOrder.router, swapOrder.tokenAmountIn);
 
     if (swapOrder.routerType == RouterType.Balancer) {
-      (int256[] memory assetDeltas) = abi.decode(data, (int256[]));
-      amountOut = uint256(-assetDeltas[1]);
+      IBalancerV2Vault.SingleSwap memory swapData = IBalancerV2Vault.SingleSwap({
+        poolId: swapOrder.poolId,
+        kind: IBalancerV2Vault.SwapKind.GIVEN_IN,
+        assetIn: IAsset(swapOrder.tokenIn),
+        assetOut: IAsset(swapOrder.tokenOut),
+        amount: swapOrder.tokenAmountIn,
+        userData: bytes("")
+      });
+
+      IBalancerV2Vault.FundManagement memory fundData = IBalancerV2Vault.FundManagement({
+          sender: address(this),
+          fromInternalBalance: false,
+          recipient: payable(address(this)),
+          toInternalBalance: false
+      });
+      amountOut = IBalancerV2Vault(swapOrder.router).swap(swapData, fundData, swapOrder.tokenAmountOutMin, block.timestamp);
+
+    } else {
+      (bool success, bytes memory data ) = swapOrder.router.call{value: swapOrder.payableAmountIn}(
+        swapOrder.callData
+      );
+      if (!success) {
+        assembly {
+          let dataSize := mload(data) // Load the size of the data
+          let dataPtr := add(data, 0x20) // Advance data pointer to the next word
+          revert(dataPtr, dataSize) // Revert with the given data
+        }
+      }
+
+      if (swapOrder.routerType == RouterType.UniswapV2 || swapOrder.routerType == RouterType.Velodrome) {
+        uint[] memory amounts = abi.decode(data, (uint[]));
+        amountOut = amounts[amounts.length-1];
+      }
+
+      if (swapOrder.routerType == RouterType.UniswapV3) {
+        amountOut = abi.decode(data, (uint256));
+      }
     }
 
     // Deposit the Assets into the Web3Packs NFT
@@ -414,74 +430,28 @@ contract Web3PacksMode is
     uint256 amount0Min = (balanceAmount0 * (10000 - liquidityOrder.slippage)) / 10000;
     uint256 amount1Min = (balanceAmount1 * (10000 - liquidityOrder.slippage)) / 10000;
 
-
-    if (liquidityOrder.routerType == RouterType.UniswapV2 || liquidityOrder.routerType == RouterType.Velodrome) {
-      TransferHelper.safeApprove(liquidityOrder.token0, address(liquidityOrder.router), balanceAmount0);
-      TransferHelper.safeApprove(liquidityOrder.token1, address(liquidityOrder.router), balanceAmount1);
-    }
     if (liquidityOrder.routerType == RouterType.UniswapV3) {
       TransferHelper.safeApprove(liquidityOrder.token0, _nonfungiblePositionManager, balanceAmount0);
       TransferHelper.safeApprove(liquidityOrder.token1, _nonfungiblePositionManager, balanceAmount1);
+    } else {
+      TransferHelper.safeApprove(liquidityOrder.token0, address(liquidityOrder.router), balanceAmount0);
+      TransferHelper.safeApprove(liquidityOrder.token1, address(liquidityOrder.router), balanceAmount1);
+    }
+
+    if (liquidityOrder.routerType == RouterType.Balancer) {
+      (lpTokenId, liquidity, amount0, amount1) = _createBalancerPosition(liquidityOrder, web3packsTokenId, balanceAmount0, balanceAmount1);
     }
 
     if (liquidityOrder.routerType == RouterType.Velodrome) {
-      // Add Liquidity
-      (amount0, amount1, liquidity) = IVelodrome(liquidityOrder.router).addLiquidity(
-        liquidityOrder.token0,
-        liquidityOrder.token1,
-        liquidityOrder.stable,
-        balanceAmount0,
-        balanceAmount1,
-        amount0Min,
-        amount1Min,
-        address(this),
-        block.timestamp
-      );
-
-      // Deposit the LP tokens into the Web3Packs NFT
-      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.routerType, liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
-      lpTokenId = uint256(uint160(lpTokenAddress));
-      _energize(web3packsTokenId, lpTokenAddress, 0);
+      (lpTokenId, liquidity, amount0, amount1) = _createVelodromePosition(liquidityOrder, web3packsTokenId, balanceAmount0, balanceAmount1, amount0Min, amount1Min);
     }
 
     if (liquidityOrder.routerType == RouterType.UniswapV2) {
-      // Add Liquidity
-      (amount0, amount1, liquidity) = IUniswapV2Router02(liquidityOrder.router).addLiquidity(
-        liquidityOrder.token0,
-        liquidityOrder.token1,
-        balanceAmount0,
-        balanceAmount1,
-        amount0Min,
-        amount1Min,
-        address(this),
-        block.timestamp
-      );
-
-      // Deposit the LP tokens into the Web3Packs NFT
-      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.routerType, liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
-      lpTokenId = uint256(uint160(lpTokenAddress));
-      _energize(web3packsTokenId, lpTokenAddress, 0);
+      (lpTokenId, liquidity, amount0, amount1) = _createUniswapV2Position(liquidityOrder, web3packsTokenId, balanceAmount0, balanceAmount1, amount0Min, amount1Min);
     }
 
     if (liquidityOrder.routerType == RouterType.UniswapV3) {
-      // Release Liquidity
-      INonfungiblePositionManager.MintParams memory params =
-        INonfungiblePositionManager.MintParams({
-          token0: liquidityOrder.token0,
-          token1: liquidityOrder.token1,
-          tickLower: liquidityOrder.tickLower,
-          tickUpper: liquidityOrder.tickUpper,
-          amount0Desired: balanceAmount0,
-          amount1Desired: balanceAmount1,
-          amount0Min: amount0Min,
-          amount1Min: amount1Min,
-          recipient: address(this),
-          deadline: block.timestamp
-        });
-      (lpTokenId, liquidity, amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).mint(params);
-
-      // Deposit the LP NFT into the Web3Packs NFT
-      _bond(_proton, web3packsTokenId, _cpBasketManager, _nonfungiblePositionManager, lpTokenId);
+      (lpTokenId, liquidity, amount0, amount1) = _createUniswapV3Position(liquidityOrder, web3packsTokenId, balanceAmount0, balanceAmount1, amount0Min, amount1Min);
     }
 
     // Track Liquidity Positions
@@ -491,6 +461,7 @@ contract Web3PacksMode is
       stable: liquidityOrder.stable,
       token0: liquidityOrder.token0,
       token1: liquidityOrder.token1,
+      poolId: liquidityOrder.poolId,
       routerType: liquidityOrder.routerType,
       router: liquidityOrder.router
     });
@@ -507,9 +478,146 @@ contract Web3PacksMode is
     );
   }
 
+  function _createBalancerPosition(
+    LiquidityOrderGeneric memory liquidityOrder,
+    uint256 web3packsTokenId,
+    uint256 balanceAmount0,
+    uint256 balanceAmount1
+  ) internal returns (
+    uint256 lpTokenId,
+    uint256 liquidity,
+    uint256 amount0,
+    uint256 amount1
+  ) {
+      (address poolAddress, ) = IBalancerV2Vault(liquidityOrder.router).getPool(liquidityOrder.poolId);
+
+      IAsset[] memory assets = new IAsset[](2);
+      assets[0] = IAsset(liquidityOrder.token0);
+      assets[1] = IAsset(liquidityOrder.token1);
+
+      uint256[] memory amounts = new uint256[](2);
+      amounts[0] = balanceAmount0;
+      amounts[1] = balanceAmount1;
+
+      // Add Liquidity
+      bytes memory userData = abi.encode(IBalancerV2Vault.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, amounts, liquidityOrder.minimumLpTokens);
+      IBalancerV2Vault.JoinPoolRequest memory joinData = IBalancerV2Vault.JoinPoolRequest({
+        assets: assets,
+        maxAmountsIn: amounts,
+        userData: userData,
+        fromInternalBalance: false
+      });
+      IBalancerV2Vault(liquidityOrder.router).joinPool(liquidityOrder.poolId, address(this), address(this), joinData);
+
+      lpTokenId = uint256(uint160(poolAddress));
+      liquidity = IERC20(poolAddress).balanceOf(address(this));
+      amount0 = balanceAmount0 - IERC20(liquidityOrder.token0).balanceOf(address(this));
+      amount1 = balanceAmount1 - IERC20(liquidityOrder.token1).balanceOf(address(this));
+
+      // Deposit the LP tokens into the Web3Packs NFT
+      _energize(web3packsTokenId, poolAddress, liquidity);
+  }
+
+  function _createVelodromePosition(
+    LiquidityOrderGeneric memory liquidityOrder,
+    uint256 web3packsTokenId,
+    uint256 balanceAmount0,
+    uint256 balanceAmount1,
+    uint256 minAmount0,
+    uint256 minAmount1
+  ) internal returns (
+    uint256 lpTokenId,
+    uint256 liquidity,
+    uint256 amount0,
+    uint256 amount1
+  ) {
+      // Add Liquidity
+      (amount0, amount1, liquidity) = IVelodrome(liquidityOrder.router).addLiquidity(
+        liquidityOrder.token0,
+        liquidityOrder.token1,
+        liquidityOrder.stable,
+        balanceAmount0,
+        balanceAmount1,
+        minAmount0,
+        minAmount1,
+        address(this),
+        block.timestamp
+      );
+
+      // Deposit the LP tokens into the Web3Packs NFT
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.routerType, liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
+      lpTokenId = uint256(uint160(lpTokenAddress));
+      _energize(web3packsTokenId, lpTokenAddress, 0);
+  }
+
+  function _createUniswapV2Position(
+    LiquidityOrderGeneric memory liquidityOrder,
+    uint256 web3packsTokenId,
+    uint256 balanceAmount0,
+    uint256 balanceAmount1,
+    uint256 minAmount0,
+    uint256 minAmount1
+  ) internal returns (
+    uint256 lpTokenId,
+    uint256 liquidity,
+    uint256 amount0,
+    uint256 amount1
+  ) {
+      // Add Liquidity
+      (amount0, amount1, liquidity) = IUniswapV2Router02(liquidityOrder.router).addLiquidity(
+        liquidityOrder.token0,
+        liquidityOrder.token1,
+        balanceAmount0,
+        balanceAmount1,
+        minAmount0,
+        minAmount1,
+        address(this),
+        block.timestamp
+      );
+
+      // Deposit the LP tokens into the Web3Packs NFT
+      address lpTokenAddress = _getUniswapV2PairAddress(liquidityOrder.routerType, liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
+      lpTokenId = uint256(uint160(lpTokenAddress));
+      _energize(web3packsTokenId, lpTokenAddress, 0);
+  }
+
+  function _createUniswapV3Position(
+    LiquidityOrderGeneric memory liquidityOrder,
+    uint256 web3packsTokenId,
+    uint256 balanceAmount0,
+    uint256 balanceAmount1,
+    uint256 minAmount0,
+    uint256 minAmount1
+  ) internal returns (
+    uint256 lpTokenId,
+    uint256 liquidity,
+    uint256 amount0,
+    uint256 amount1
+  ) {
+      // Add Liquidity
+      INonfungiblePositionManager.MintParams memory params =
+        INonfungiblePositionManager.MintParams({
+          token0: liquidityOrder.token0,
+          token1: liquidityOrder.token1,
+          tickLower: liquidityOrder.tickLower,
+          tickUpper: liquidityOrder.tickUpper,
+          amount0Desired: balanceAmount0,
+          amount1Desired: balanceAmount1,
+          amount0Min: minAmount0,
+          amount1Min: minAmount1,
+          recipient: address(this),
+          deadline: block.timestamp
+        });
+      (lpTokenId, liquidity, amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).mint(params);
+
+      // Deposit the LP NFT into the Web3Packs NFT
+      _bond(_proton, web3packsTokenId, _cpBasketManager, _nonfungiblePositionManager, lpTokenId);
+  }
+
   function _removeLiquidityPositions(
     uint256 web3packsTokenId,
-    address receiver
+    address receiver,
+    TokenPairs[] memory lps
   ) internal {
     uint amount0;
     uint amount1;
@@ -517,13 +625,14 @@ contract Web3PacksMode is
     LiquidityPosition[] memory positions = IWeb3PacksManager(_web3PacksManager).getLiquidityPositions(web3packsTokenId);
     for (uint256 i; i < positions.length; i++) {
       LiquidityPosition memory lp = positions[i];
+      TokenPairs memory amountsOutMin = lps[i];
 
       _pullLiquidityTokens(lp, web3packsTokenId);
 
       // Remove All Liquidity
       //  - must be done before collectLpFees as the removed liquidity
       //    is only returned through INonfungiblePositionManager.collect()
-      (amount0, amount1) = _removeLiquidity(lp);
+      (amount0, amount1) = _removeLiquidity(lp, amountsOutMin);
 
       // Collect Fees
       if (lp.routerType == RouterType.UniswapV3) {
@@ -555,17 +664,49 @@ contract Web3PacksMode is
   }
 
   function _removeLiquidity(
-    LiquidityPosition memory liquidityPosition
+    LiquidityPosition memory liquidityPosition,
+    TokenPairs memory amountsOutMin
   )
     internal
     returns (uint amount0, uint amount1)
   {
+    if (liquidityPosition.routerType == RouterType.Balancer) {
+      (address poolAddress, ) = IBalancerV2Vault(liquidityPosition.router).getPool(liquidityPosition.poolId);
+
+      IAsset[] memory assets = new IAsset[](2);
+      assets[0] = IAsset(liquidityPosition.token0);
+      assets[1] = IAsset(liquidityPosition.token1);
+
+      uint256[] memory amounts = new uint256[](2);
+      amounts[0] = amountsOutMin.token0.amount;
+      amounts[1] = amountsOutMin.token1.amount;
+
+      TransferHelper.safeApprove(
+        poolAddress,
+        liquidityPosition.router,
+        liquidityPosition.liquidity
+      );
+
+      // Remove Liquidity
+      bytes memory userData = abi.encode(IBalancerV2Vault.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT, liquidityPosition.liquidity);
+      IBalancerV2Vault.ExitPoolRequest memory exitData = IBalancerV2Vault.ExitPoolRequest({
+        assets: assets,
+        minAmountsOut: amounts,
+        userData: userData,
+        toInternalBalance: false
+      });
+      IBalancerV2Vault(liquidityPosition.router).exitPool(liquidityPosition.poolId, address(this), payable(address(this)), exitData);
+
+      amount0 = IERC20(liquidityPosition.token0).balanceOf(address(this));
+      amount1 = IERC20(liquidityPosition.token1).balanceOf(address(this));
+    }
+
     if (liquidityPosition.routerType == RouterType.Velodrome) {
       address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.routerType, liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
 
       TransferHelper.safeApprove(
         lpTokenAddress,
-        address(liquidityPosition.router),
+        liquidityPosition.router,
         liquidityPosition.liquidity
       );
 
@@ -574,8 +715,8 @@ contract Web3PacksMode is
         liquidityPosition.token1,
         liquidityPosition.stable,
         liquidityPosition.liquidity,
-        0,
-        0,
+        amountsOutMin.token0.amount,
+        amountsOutMin.token1.amount,
         address(this),
         block.timestamp
       );
@@ -586,7 +727,7 @@ contract Web3PacksMode is
 
       TransferHelper.safeApprove(
         lpTokenAddress,
-        address(liquidityPosition.router),
+        liquidityPosition.router,
         liquidityPosition.liquidity
       );
 
@@ -594,8 +735,8 @@ contract Web3PacksMode is
         liquidityPosition.token0,
         liquidityPosition.token1,
         liquidityPosition.liquidity,
-        0,
-        0,
+        amountsOutMin.token0.amount,
+        amountsOutMin.token1.amount,
         address(this),
         block.timestamp
       );
@@ -607,8 +748,8 @@ contract Web3PacksMode is
         INonfungiblePositionManager.DecreaseLiquidityParams({
           tokenId: liquidityPosition.lpTokenId,
           liquidity: uint128(liquidityPosition.liquidity),
-          amount0Min: 0,
-          amount1Min: 0,
+          amount0Min: amountsOutMin.token0.amount,
+          amount1Min: amountsOutMin.token1.amount,
           deadline: block.timestamp
         });
       (amount0, amount1) = INonfungiblePositionManager(_nonfungiblePositionManager).decreaseLiquidity(params);
@@ -621,6 +762,18 @@ contract Web3PacksMode is
   )
     internal
   {
+    if (liquidityPosition.routerType == RouterType.Balancer) {
+      // Grab Liquidity Tokens from Web3 Pack
+      (address poolAddress, ) = IBalancerV2Vault(liquidityPosition.router).getPool(liquidityPosition.poolId);
+      IChargedParticles(_chargedParticles).releaseParticle(
+        address(this),
+        _proton,
+        web3packsTokenId,
+        _cpBasketManager,
+        poolAddress
+      );
+    }
+
     if (liquidityPosition.routerType == RouterType.UniswapV2 || liquidityPosition.routerType == RouterType.Velodrome) {
       // Grab Liquidity Tokens from Web3 Pack
       address lpTokenAddress = _getUniswapV2PairAddress(liquidityPosition.routerType, liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);

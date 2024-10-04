@@ -55,6 +55,10 @@ interface IWeb3PacksDefs {
     address token;
     uint256 amount;
   }
+  struct TokenPairs {
+    TokenAmount token0;
+    TokenAmount token1;
+  }
 
   struct ContractCallGeneric {
     bytes callData;
@@ -68,8 +72,10 @@ interface IWeb3PacksDefs {
     address tokenIn;
     address tokenOut;
     uint256 tokenAmountIn;
+    uint256 tokenAmountOutMin;
     uint256 payableAmountIn;
     bytes32 liquidityUuid;
+    bytes32 poolId;
     RouterType routerType;
   }
 
@@ -81,16 +87,19 @@ interface IWeb3PacksDefs {
     bytes32 liquidityUuidToken1;
     uint256 percentToken0;
     uint256 percentToken1;
+    uint256 minimumLpTokens;
     uint256 slippage;
     int24 tickLower;
     int24 tickUpper;
     bool stable;
+    bytes32 poolId;
     RouterType routerType;
   }
 
   struct Web3PackOrder {
     address[] erc20TokenAddresses;
     NFT[] nfts;
+    TokenPairs[] lps;
   }
 
   struct LiquidityPosition {
@@ -99,6 +108,7 @@ interface IWeb3PacksDefs {
     bool stable;
     address token0;
     address token1;
+    bytes32 poolId;
     address router;
     RouterType routerType;
   }

@@ -373,6 +373,11 @@
             "type": "address"
           },
           {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "router",
             "type": "address"
@@ -463,6 +468,11 @@
             "internalType": "address",
             "name": "token1",
             "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
           },
           {
             "internalType": "address",
