@@ -71,7 +71,7 @@ describe('Web3Packs', async ()=> {
     kimRouter = new Contract(globals.kimRouterMode, IKimRouter, deployerSigner);
 
     IBalancerV2Vault = new ethers.utils.Interface(IBalancerVaultABI.abi);
-    balancerVault = new Contract(globals.balancerPools.MODE_WETH_LP.vault, IBalancerV2Vault, deployerSigner);
+    balancerVault = new Contract(globals.balancerVault, IBalancerV2Vault, deployerSigner);
 
     IKimManager = new ethers.utils.Interface(INonfungiblePositionManager.abi);
     kimManager = new Contract(globals.KimNonfungibleTokenPosition, IKimManager, deployerSigner);
@@ -264,7 +264,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: packPriceEth,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Get Balance before Transaction for Test Confirmation
@@ -314,7 +314,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: wethForMode,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Swap WETH for IONX
@@ -379,7 +379,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: wethForMode,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Swap WETH for IONX
@@ -397,7 +397,7 @@ describe('Web3Packs', async ()=> {
         liquidityUuid: liquidityUuidToken1,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Create LP Position using WETH/Mode
@@ -411,7 +411,7 @@ describe('Web3Packs', async ()=> {
         minimumLpTokens: 1n,
         router: balancerVault.address,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Get Balance before Transaction for Test Confirmation
@@ -456,7 +456,7 @@ describe('Web3Packs', async ()=> {
         liquidityUuid: liquidityUuidToken1,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Create LP Position using WETH/Mode
@@ -470,7 +470,7 @@ describe('Web3Packs', async ()=> {
         minimumLpTokens: 1n,
         router: balancerVault.address,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPools.MODE_WETH_LP.poolId,
+        poolId: globals.balancerPoolId,
       });
 
       // Bundle Pack
