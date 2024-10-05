@@ -31,6 +31,7 @@ interface IWeb3PacksDefs {
   event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
   event ProtocolFeeSet(uint256 fee);
   event Web3PacksManagerSet(address indexed manager);
+  event Web3PacksTreasurySet(address indexed treasury);
 
   // Custom Errors
   error NotOwnerOrApproved();

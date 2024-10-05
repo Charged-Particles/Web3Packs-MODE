@@ -65,8 +65,7 @@ contract Web3PacksMode is
   address internal _nonfungiblePositionManager;
   address internal _chargedParticles;
   address internal _chargedState;
-
-  uint256 internal _feesCollected;
+  address payable internal _treasury;
   uint256 internal _protocolFee;
 
   // Charged Particles Wallet Managers
@@ -857,7 +856,9 @@ contract Web3PacksMode is
     if (_protocolFee > 0 && msg.value < (_protocolFee + excludedAmount)) {
       revert InsufficientForFee(msg.value, excludedAmount, _protocolFee);
     }
-    _feesCollected += msg.value - excludedAmount;
+    uint256 fees = msg.value - excludedAmount;
+    (bool sent, ) = _treasury.call{value: fees}("");
+    require(sent, "Failed to send fees to Treasury");
   }
 
   /***********************************|
@@ -887,21 +888,31 @@ contract Web3PacksMode is
     * @dev Setup the ChargedParticles Interface
   */
   function setChargedParticles(address chargedParticles) external onlyOwner {
+    require(chargedParticles != address(0), "Invalid address for chargedParticles");
     _chargedParticles = chargedParticles;
     emit ChargedParticlesSet(chargedParticles);
   }
 
   function setChargedState(address chargedState) external onlyOwner {
+    require(chargedState != address(0), "Invalid address for chargedState");
     _chargedParticles = chargedState;
     emit ChargedStateSet(chargedState);
   }
 
   function setWeb3PacksManager(address manager) external onlyOwner {
+    require(manager != address(0), "Invalid address for manager");
     _web3PacksManager = manager;
     emit Web3PacksManagerSet(manager);
   }
 
+  function setTreasury(address payable treasury) external onlyOwner {
+    require(treasury != address(0), "Invalid address for treasury");
+    _treasury = treasury;
+    emit Web3PacksTreasurySet(treasury);
+  }
+
   function setProton(address proton) external onlyOwner {
+    require(proton != address(0), "Invalid address for proton");
     _proton = proton;
     emit ProtonSet(proton);
   }

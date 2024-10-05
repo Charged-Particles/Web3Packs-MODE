@@ -199,6 +199,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "treasury",
+        "type": "address"
+      }
+    ],
+    "name": "Web3PacksTreasurySet",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "string",

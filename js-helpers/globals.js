@@ -1,6 +1,8 @@
 const { utils } = require('ethers');
 
 const globals = {
+  treasury: '',
+
   erc20Abi : [
     'function transfer(address to, uint amount)',
     'function balanceOf(address account) public view returns (uint256)',

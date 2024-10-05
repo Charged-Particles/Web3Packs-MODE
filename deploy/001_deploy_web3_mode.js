@@ -124,6 +124,10 @@ module.exports = async (hre) => {
   // Set Protocol Fees
   log(`  Setting Protocol Fee in Web3Packs: ${globals.protocolFee}`);
   await web3packs.setProtocolFee(globals.protocolFee).then(tx => tx.wait());
+
+  // Set Protocol Treasury
+  log(`  Setting Protocol Treasury in Web3Packs: ${protocolOwner}`);
+  await web3packs.setTreasury(protocolOwner).then(tx => tx.wait());
 };
 
 module.exports.tags = ['mode_packs']

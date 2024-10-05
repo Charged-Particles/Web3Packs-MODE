@@ -1244,8 +1244,8 @@ describe('Web3Packs', async ()=> {
     )).to.be.revertedWith('CP:E-302');
   });
 
-  it('Should hold protocol fee in contract', async () => {
-    const { deployer } = await getNamedAccounts();
+  it('Should send protocol fees to treasury', async () => {
+    const { protocolOwner } = await getNamedAccounts();
     const provider = ownerSigner.provider!;
     const packPriceEth = ethers.utils.parseUnits('0.001', 18);
     const bundleFee = globals.protocolFee;
@@ -1286,8 +1286,8 @@ describe('Web3Packs', async ()=> {
       packPriceEth,
     });
 
-    const packBalance = await provider.getBalance(web3packs.address);
-    expect(packBalance).to.be.gte(bundleFee.toNumber());
+    const treasuryBalance = await provider.getBalance(protocolOwner);
+    expect(treasuryBalance).to.be.gte(bundleFee.toNumber());
   });
 
   it('Fails to execute not allow listed router', async() => {
