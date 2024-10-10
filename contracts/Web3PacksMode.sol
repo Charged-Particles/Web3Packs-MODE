@@ -136,7 +136,9 @@ contract Web3PacksMode is
     address receiver,
     address tokenAddress,
     uint256 tokenId,
-    Web3PackOrder calldata web3PackOrder
+    address[] calldata erc20s,
+    NFT[] calldata nfts,
+    TokenPairs[] calldata lps
   )
     external
     payable
@@ -149,7 +151,9 @@ contract Web3PacksMode is
       tokenAddress,
       tokenId,
       _cpWalletManager,
-      web3PackOrder
+      erc20s,
+      nfts,
+      lps
     );
     emit PackUnbundled(tokenId, receiver);
   }
@@ -159,7 +163,9 @@ contract Web3PacksMode is
     address tokenAddress,
     uint256 tokenId,
     string calldata walletManager,
-    Web3PackOrder calldata web3PackOrder
+    address[] calldata erc20s,
+    NFT[] calldata nfts,
+    TokenPairs[] calldata lps
   )
     external
     payable
@@ -167,7 +173,15 @@ contract Web3PacksMode is
     nonReentrant
   {
     _collectFees(0);
-    _unbundle(receiver, tokenAddress,tokenId, walletManager, web3PackOrder);
+    _unbundle(
+      receiver,
+      tokenAddress,
+      tokenId,
+      walletManager,
+      erc20s,
+      nfts,
+      lps
+    );
     emit PackUnbundled(tokenId, receiver);
   }
 
@@ -278,7 +292,9 @@ contract Web3PacksMode is
     address tokenAddress,
     uint256 tokenId,
     string memory walletManager,
-    Web3PackOrder calldata web3PackOrder
+    address[] memory erc20s,
+    NFT[] memory nfts,
+    TokenPairs[] memory lps
   )
     internal
   {
@@ -288,30 +304,34 @@ contract Web3PacksMode is
       revert NotOwnerOrApproved();
     }
 
-    for (uint256 i; i < web3PackOrder.erc20TokenAddresses.length; i++) {
-      IChargedParticles(_chargedParticles).releaseParticle(
-        receiver,
-        tokenAddress,
-        tokenId,
-        walletManager,
-        web3PackOrder.erc20TokenAddresses[i]
-      );
+    for (uint256 i; i < erc20s.length; i++) {
+      if (erc20s[i] != address(0)) {
+        IChargedParticles(_chargedParticles).releaseParticle(
+          receiver,
+          tokenAddress,
+          tokenId,
+          walletManager,
+          erc20s[i]
+        );
+      }
     }
 
-    for (uint256 i; i < web3PackOrder.nfts.length; i++) {
-      IChargedParticles(_chargedParticles).breakCovalentBond(
-        receiver,
-        tokenAddress,
-        tokenId,
-        walletManager,
-        web3PackOrder.nfts[i].tokenAddress,
-        web3PackOrder.nfts[i].id,
-        1
-      );
+    for (uint256 i; i < nfts.length; i++) {
+      if (nfts[i].tokenAddress != address(0)) {
+        IChargedParticles(_chargedParticles).breakCovalentBond(
+          receiver,
+          tokenAddress,
+          tokenId,
+          walletManager,
+          nfts[i].tokenAddress,
+          nfts[i].id,
+          1
+        );
+      }
     }
 
     // Remove all Liquidity Positions
-    _removeLiquidityPositions(tokenId, receiver, web3PackOrder.lps);
+    _removeLiquidityPositions(tokenId, receiver, lps);
   }
 
   function _contractCall(

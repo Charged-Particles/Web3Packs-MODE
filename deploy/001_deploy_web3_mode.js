@@ -33,7 +33,7 @@ const _ADDRESS = {
 module.exports = async (hre) => {
   const { getNamedAccounts, deployments } = hre;
   const { deploy } = deployments;
-  const { deployer, protocolOwner, user1 } = await getNamedAccounts();
+  const { deployer, treasury, user1 } = await getNamedAccounts();
   const network = await hre.network;
   const chainId = chainIdByName(network.name);
 
@@ -49,7 +49,7 @@ module.exports = async (hre) => {
   log(`  Using Network: ${chainNameById(chainId)} (${network.name}:${chainId})`);
   log('  Using Accounts:');
   log('  - Deployer: ', deployer);
-  log('  - Owner:    ', protocolOwner);
+  log('  - Treaury:  ', treasury);
   log('  - User1:    ', user1);
   log(' ');
 
@@ -126,8 +126,8 @@ module.exports = async (hre) => {
   await web3packs.setProtocolFee(globals.protocolFee).then(tx => tx.wait());
 
   // Set Protocol Treasury
-  log(`  Setting Protocol Treasury in Web3Packs: ${protocolOwner}`);
-  await web3packs.setTreasury(protocolOwner).then(tx => tx.wait());
+  log(`  Setting Protocol Treasury in Web3Packs: ${treasury}`);
+  await web3packs.setTreasury(treasury).then(tx => tx.wait());
 };
 
 module.exports.tags = ['mode_packs']

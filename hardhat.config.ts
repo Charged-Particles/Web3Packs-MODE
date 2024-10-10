@@ -55,11 +55,12 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: {
       default: 0,
+      // mode: process.env.MAINNET_PKEY as string,
     },
-    protocolOwner: {
+    treasury: {
       default: 1,
       // Treasury:
-      'mode': '0x464D36f62BA47813dE1C28A4eEb5BA59FA64c0E8',
+      'mode': '0x74D599ddC5c015C45D8033670404C7C23d932C77', // https://safe.optimism.io/address-book?safe=mode:0x74D599ddC5c015C45D8033670404C7C23d932C77
     },
     user1: {
       default: 2,
@@ -147,8 +148,8 @@ const config: HardhatUserConfig = {
         network: 'mode',
         chainId: 34443,
         urls: {
-          apiURL: 'https://explorer.mode.network/api\?',
-          browserURL: 'https://explorer.mode.network',
+          apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
+          browserURL: 'https://modescan.io',
         },
       },
       {

@@ -426,74 +426,67 @@
         "type": "uint256"
       },
       {
+        "internalType": "address[]",
+        "name": "erc20s",
+        "type": "address[]"
+      },
+      {
         "components": [
           {
-            "internalType": "address[]",
-            "name": "erc20TokenAddresses",
-            "type": "address[]"
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWeb3PacksDefs.NFT[]",
+        "name": "nfts",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.TokenAmount",
+            "name": "token0",
+            "type": "tuple"
           },
           {
             "components": [
               {
                 "internalType": "address",
-                "name": "tokenAddress",
+                "name": "token",
                 "type": "address"
               },
               {
                 "internalType": "uint256",
-                "name": "id",
+                "name": "amount",
                 "type": "uint256"
               }
             ],
-            "internalType": "struct IWeb3PacksDefs.NFT[]",
-            "name": "nfts",
-            "type": "tuple[]"
-          },
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "token",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct IWeb3PacksDefs.TokenAmount",
-                "name": "token0",
-                "type": "tuple"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "token",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct IWeb3PacksDefs.TokenAmount",
-                "name": "token1",
-                "type": "tuple"
-              }
-            ],
-            "internalType": "struct IWeb3PacksDefs.TokenPairs[]",
-            "name": "lps",
-            "type": "tuple[]"
+            "internalType": "struct IWeb3PacksDefs.TokenAmount",
+            "name": "token1",
+            "type": "tuple"
           }
         ],
-        "internalType": "struct IWeb3PacksDefs.Web3PackOrder",
-        "name": "web3PackOrder",
-        "type": "tuple"
+        "internalType": "struct IWeb3PacksDefs.TokenPairs[]",
+        "name": "lps",
+        "type": "tuple[]"
       }
     ],
     "name": "unbundle",

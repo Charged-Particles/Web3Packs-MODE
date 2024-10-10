@@ -52,12 +52,12 @@ describe('Web3Packs', async ()=> {
   let kimManager: Contract;
 
   beforeEach(async () => {
-    const { protocolOwner, deployer } = await getNamedAccounts();
+    const { treasury, deployer } = await getNamedAccounts();
 
     web3packs = await ethers.getContract('Web3PacksMode') as Web3PacksMode;
     TestNFT = await ethers.getContract('ERC721Mintable');
 
-    ownerSigner = await ethers.getSigner(protocolOwner);
+    ownerSigner = await ethers.getSigner(treasury);
     deployerSigner = await ethers.getSigner(deployer);
     testSigner = ethers.Wallet.fromMnemonic(`${process.env.TESTNET_MNEMONIC}`.replace(/_/g, ' '));
     charged = new Charged({ providers: network.provider , signer: testSigner });
@@ -84,11 +84,11 @@ describe('Web3Packs', async ()=> {
   });
 
   beforeEach(async() => {
-    const { protocolOwner } = await getNamedAccounts();
+    const { treasury } = await getNamedAccounts();
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [protocolOwner],
+      params: [treasury],
     });
   });
 
@@ -234,7 +234,9 @@ describe('Web3Packs', async ()=> {
       deployer,
       Proton.address,
       tokenId.toNumber(),
-      { erc20TokenAddresses, nfts, lps },
+      erc20TokenAddresses,
+      nfts,
+      lps,
       { value: unbundleFee },
     );
     const txReceipt = await unbundleTx.wait();
@@ -401,6 +403,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Create LP Position using WETH/Mode
+      // NOTE: Order of tokens must be in numerical order with the lowest token address (as int) comes first.
       const lpOrder1 = await _createLiquidityOrder({
         token0: globals.wrapETHAddress,
         token1: globals.modeTokenAddress,
@@ -516,7 +519,6 @@ describe('Web3Packs', async ()=> {
       expect(wethTokenBalance).to.be.gt(0);
     });
   });
-
 
   describe('KIM', () => {
     it('Bundles a single asset', async() => {
@@ -670,6 +672,9 @@ describe('Web3Packs', async ()=> {
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
       const wethAmount = packPriceEth.div(2);
 
+      const preModeTokenBalance = await MODE.balanceOf(deployer);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
       const contractCall1 = {
@@ -732,11 +737,11 @@ describe('Web3Packs', async ()=> {
 
       // Check Receiver for Mode Tokens
       const modeTokenBalance = await MODE.balanceOf(deployer);
-      expect(modeTokenBalance).to.be.gt(0);
+      expect(modeTokenBalance).to.be.gt(preModeTokenBalance);
 
       // Check Receiver for WETH tokens
       const wethTokenBalance = await WETH.balanceOf(deployer);
-      expect(wethTokenBalance).to.be.gt(0);
+      expect(wethTokenBalance).to.be.gt(preWethTokenBalance);
     });
 
     it('Bundles a Complex Liquidity Position', async() => {
@@ -1245,7 +1250,7 @@ describe('Web3Packs', async ()=> {
   });
 
   it('Should send protocol fees to treasury', async () => {
-    const { protocolOwner } = await getNamedAccounts();
+    const { treasury } = await getNamedAccounts();
     const provider = ownerSigner.provider!;
     const packPriceEth = ethers.utils.parseUnits('0.001', 18);
     const bundleFee = globals.protocolFee;
@@ -1286,7 +1291,7 @@ describe('Web3Packs', async ()=> {
       packPriceEth,
     });
 
-    const treasuryBalance = await provider.getBalance(protocolOwner);
+    const treasuryBalance = await provider.getBalance(treasury);
     expect(treasuryBalance).to.be.gte(bundleFee.toNumber());
   });
 

@@ -97,12 +97,6 @@ interface IWeb3PacksDefs {
     RouterType routerType;
   }
 
-  struct Web3PackOrder {
-    address[] erc20TokenAddresses;
-    NFT[] nfts;
-    TokenPairs[] lps;
-  }
-
   struct LiquidityPosition {
     uint256 lpTokenId;
     uint256 liquidity;

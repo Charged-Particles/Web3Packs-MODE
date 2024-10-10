@@ -41,7 +41,9 @@ interface IWeb3Packs is IWeb3PacksDefs {
     address receiver,
     address contractAddress,
     uint256 tokenId,
-    Web3PackOrder calldata web3PackOrder
+    address[] calldata erc20s,
+    NFT[] calldata nfts,
+    TokenPairs[] calldata lps
   ) external
     payable;
 }
