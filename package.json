@@ -15,14 +15,16 @@
     "clean-test": "rm -rf abis .openzeppelin/${npm_config_network:-'unknown-31337'}.json deployments/${npm_config_network:-hardhat}/*.json test-results.xml",
     "verify": "yarn hint && yarn test",
     "compile": "hardhat --show-stack-traces --max-memory 8192 compile",
-    "test": "yarn hardhat test --deploy-fixture --network hardhat",
+    "test": "yarn hardhat test --deploy-fixture --network hardhat ./tests/Web3PacksMode.test.ts",
     "test-only": "yarn clean-test && hardhat test --show-stack-traces",
     "watch-test": "hardhat watch test",
     "hint": "solhint \"contracts/**/*.sol\"",
     "coverage": "yarn clean-test && hardhat --show-stack-traces coverage --temp coverage_build && yarn clean-test",
     "gas": "REPORT_GAS=true hardhat test",
     "start": "hardhat node --port 8545",
-    "deploy": "hardhat deploy --tags mode_packs --network"
+    "deploy": "hardhat deploy --tags mode_packs --network",
+    "mint-erc20": "hardhat deploy --tags ERC20Mintable --network",
+    "rewards": "hardhat deploy --tags DistroRewards --network"
   },
   "dependencies": {
     "@balancer-labs/sdk": "^1.1.6",

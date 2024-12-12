@@ -136,20 +136,41 @@ const config: HardhatUserConfig = {
       },
       chainId: 34443,
     },
+    optimism: {
+      url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY_OP}`,
+      gasPrice: 'auto',
+      accounts: {
+          mnemonic: mnemonic.mainnet,
+          initialIndex: 0,
+          count: 10,
+      },
+      chainId: 10,
+    },
   },
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY ?? '',
       mode: process.env.ETHERSCAN_APIKEY ?? '',
       modeSepolia: 'MODE-NETWORK-TESTNET',
+      optimism: 'FZDJWADMSRXXEK35YJNFR3T7WVB4SK3CJW', // process.env.ETHERSCAN_API_KEY ?? '',
     },
     customChains: [
+      {
+        network: 'optimism',
+        chainId: 10,
+        urls: {
+          apiURL: 'https://api-optimistic.etherscan.io/api',
+          browserURL: 'https://optimistic.etherscan.io',
+        },
+      },
       {
         network: 'mode',
         chainId: 34443,
         urls: {
-          apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
-          browserURL: 'https://modescan.io',
+          // apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan',
+          // browserURL: 'https://modescan.io',
+          apiURL: 'https://explorer.mode.network/api',
+          browserURL: 'https://explorer.mode.network:443',
         },
       },
       {
