@@ -22,17 +22,15 @@
 // SOFTWARE.
 pragma solidity 0.8.17;
 
-interface IWeb3PacksDefs {
+interface IWeb3PacksDefsOld {
   event ChargedParticlesSet(address indexed chargedParticles);
   event ChargedStateSet(address indexed chargedState);
   event RouterSet(address indexed router);
   event ProtonSet(address indexed proton);
   event PackBundled(uint256 indexed tokenId, address indexed receiver, bytes32 packType, bytes32 usdPackPrice);
-  event PackUnbundled(uint256 indexed tokenId, address indexed receiver, uint256 ethAmount);
+  event PackUnbundled(uint256 indexed tokenId, address indexed receiver);
   event ProtocolFeeSet(uint256 fee);
-  event Web3PacksSet(address indexed web3packs);
   event Web3PacksManagerSet(address indexed manager);
-  event Web3PacksExchangeManagerSet(address indexed manager);
   event Web3PacksTreasurySet(address indexed treasury);
 
   // Custom Errors
@@ -50,8 +48,7 @@ interface IWeb3PacksDefs {
     UniswapV2,
     UniswapV3,
     Velodrome,
-    Balancer,
-    SwapMode
+    Balancer
   }
 
   /// @notice Represents the deposit of an NFT
@@ -62,12 +59,7 @@ interface IWeb3PacksDefs {
   struct LiquidityPairs {
     TokenAmount token0;
     TokenAmount token1;
-    uint256 slippage;
-    bytes32 poolId;
-    address router;
-    RouterType routerType;
     bool exitLpOnUnbundle;
-    bool stable;
   }
 
   struct ContractCallGeneric {

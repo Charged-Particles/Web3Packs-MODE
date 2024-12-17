@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// IWeb3Packs.sol
+// Web3PacksExchangeManager.sol
 // Copyright (c) 2023 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,58 +20,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
+//                _    ____                   _
+//               | |  |___ \                 | |
+//  __      _____| |__  __) |_ __   __ _  ___| | _____
+//  \ \ /\ / / _ \ '_ \|__ <| '_ \ / _` |/ __| |/ / __|
+//   \ V  V /  __/ |_) |__) | |_) | (_| | (__|   <\__ \
+//    \_/\_/ \___|_.__/____/| .__/ \__,_|\___|_|\_\___/
+//                          | |
+//                          |_|
+
 pragma solidity 0.8.17;
+pragma abicoder v2;
 
 import "./IWeb3PacksDefs.sol";
 
-interface IWeb3Packs is IWeb3PacksDefs {
-  function bundle(
-    string calldata tokenMetaUri,
-    ContractCallGeneric[] calldata contractCalls,
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    LiquidityOrderGeneric[] calldata liquidityOrders,
-    LockState calldata lockState,
-    uint256 ethPackPrice,
-    bytes32 usdPackPrice,
-    bytes32 packType
-  )
-    external
-    payable
-    returns(uint256 tokenId);
+interface IWeb3PacksExchangeManager is IWeb3PacksDefs {
+  function performContractCalls(
+    ContractCallGeneric[] calldata contractCalls
+  ) external;
 
-  function unbundle(
+  function performSwaps(
+    ERC20SwapOrderGeneric[] calldata orders,
+    uint256 web3packsTokenId
+  ) external;
+
+  function depositLiquidity(
+    LiquidityOrderGeneric[] calldata orders,
+    uint256 web3packsTokenId
+  ) external;
+
+  function removeLiquidity(
+    LiquidityPosition calldata liquidityPosition,
+    LiquidityPairs calldata liquidityPair,
     address receiver,
-    address tokenAddress,
-    uint256 tokenId,
-    ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    LiquidityPairs[] calldata liquidityPairs,
     bool sellAll
-  ) external
-    payable;
+  ) external;
 
-  function unbundleFromManager(
-    address receiver,
-    address tokenAddress,
-    uint256 tokenId,
-    string calldata walletManager,
+  function swapAllForEth(
     ERC20SwapOrderGeneric[] calldata erc20SwapOrders,
-    LiquidityPairs[] calldata liquidityPairs,
-    bool sellAll
-  )
-    external
-    payable;
+    LiquidityPairs[] memory liquidityPairs,
+    address receiver
+  ) external returns (uint ethAmount);
 
-  function energize(
-    uint256 tokenId,
-    address tokenAddress,
-    uint256 tokenAmount
-  )
-    external;
-
-  function bond(
-    uint256 tokenId,
-    address nftTokenAddress,
-    uint256 mintedTokenId
-  )
-    external;
+  function getLiquidityTokenData(
+    LiquidityPosition calldata liquidityPosition
+  ) external returns (address lpTokenAddress, uint256 lpTokenId);
 }

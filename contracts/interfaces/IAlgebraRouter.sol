@@ -2,11 +2,13 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
+import './IAlgebraSwapCallback.sol';
+
 /// @title Router token swapping functionality
 /// @notice Functions for swapping tokens via Algebra
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
-interface IKimRouter {
+interface IAlgebraRouter is IAlgebraSwapCallback {
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;

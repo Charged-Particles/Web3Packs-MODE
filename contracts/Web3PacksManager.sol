@@ -37,6 +37,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./lib/BlackholePrevention.sol";
 import "./interfaces/IWeb3PacksManager.sol";
+import "./interfaces/IWeb3PacksManagerOld.sol";
+import { IWeb3PacksDefs } from "./interfaces/IWeb3PacksDefs.sol";
 
 contract Web3PacksManager is
   IWeb3PacksManager,
@@ -57,24 +59,53 @@ contract Web3PacksManager is
     isAllowed = _allowlistedContracts[contractAddress];
   }
 
+  function isWeb3PacksAllowed(address contractAddress) external view returns (bool isAllowed) {
+    isAllowed = _web3packsContracts[contractAddress];
+  }
+
   function getLiquidityPositions(uint256 tokenId) external view returns (LiquidityPosition[] memory positions) {
     positions = _liquidityPositions[tokenId];
   }
 
-  function saveLiquidityPosition(uint256 tokenId, LiquidityPosition memory position) external onlyWeb3PacksOrOwner(_msgSender()) {
+  function saveLiquidityPosition(uint256 tokenId, LiquidityPosition memory position) external onlyWeb3PacksOrOwner(msg.sender) {
     _liquidityPositions[tokenId].push(position);
   }
 
-  function clearLiquidityPositions(uint256 tokenId) external onlyWeb3PacksOrOwner(_msgSender()) {
+  function clearLiquidityPositions(uint256 tokenId) external onlyWeb3PacksOrOwner(msg.sender) {
     delete _liquidityPositions[tokenId];
   }
 
-  function setContractAllowlist(address contractAddress, bool isAllowed) external onlyWeb3PacksOrOwner(_msgSender()) {
+  function setContractAllowlist(address contractAddress, bool isAllowed) external onlyWeb3PacksOrOwner(msg.sender) {
     _allowlistedContracts[contractAddress] = isAllowed;
   }
 
   function setWeb3PacksContract(address contractAddress, bool isAllowed) external onlyOwner {
     _web3packsContracts[contractAddress] = isAllowed;
+  }
+
+  function migrateFromOldManager(address oldManagerAddress, uint256 tokenId, address uniswapV3Router) external onlyOwner {
+    IWeb3PacksManagerOld oldMgr = IWeb3PacksManagerOld(oldManagerAddress);
+    IWeb3PacksManagerOld.LiquidityPosition[] memory positions = oldMgr.getLiquidityPositions(tokenId);
+    delete _liquidityPositions[tokenId];
+
+    for (uint256 i; i < positions.length; i++) {
+      IWeb3PacksManager.LiquidityPosition memory position = LiquidityPosition({
+        lpTokenId: positions[i].lpTokenId,
+        liquidity: positions[i].liquidity,
+        stable: positions[i].stable,
+        token0: positions[i].token0,
+        token1: positions[i].token1,
+        tickLower: positions[i].tickLower,
+        tickUpper: positions[i].tickUpper,
+        poolId: positions[i].poolId,
+        router: positions[i].router,
+        routerType: RouterType(uint(positions[i].routerType))
+      });
+      if (position.routerType == IWeb3PacksDefs.RouterType.UniswapV3) {
+        position.router = uniswapV3Router;
+      }
+      _liquidityPositions[tokenId].push(position);
+    }
   }
 
   modifier onlyWeb3PacksOrOwner(address sender) {
