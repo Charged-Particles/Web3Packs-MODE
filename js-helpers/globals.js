@@ -31,6 +31,7 @@ const globals = {
   ionTokenAddress: '0x18470019bF0E94611f15852F7e93cf5D65BC34CA',
   iclTokenAddress: '0x95177295A394f2b9B04545FFf58f4aF0673E839d',
   ionxTokenAddress: '0x77E7bcfeE826b12cD498Faa9831d7055b7478272',
+  wethModeLpTokenAddress: '0x7c86a44778c52a0aad17860924b53bf3f35dc932',
 
   // IPFS
   ipfsMetadata: 'Qmao3Rmq9m38JVV8kuQjnL3hF84cneyt5VQETirTH1VUST',
@@ -54,7 +55,7 @@ const globals = {
 
   // Standard Parameters
   deadline: Math.floor(Date.now() / 1000) + (60 * 10),
-  protocolFee: utils.parseUnits('0.0003', 18),
+  protocolFee: utils.parseUnits('0.0001', 18),
 
   // Random Addresses
   testAddress: '0x277BFc4a8dc79a9F194AD4a83468484046FAFD3A',

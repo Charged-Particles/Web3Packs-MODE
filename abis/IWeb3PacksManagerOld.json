@@ -153,12 +153,6 @@
         "internalType": "address",
         "name": "receiver",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ethAmount",
-        "type": "uint256"
       }
     ],
     "name": "PackUnbundled",
@@ -213,33 +207,7 @@
         "type": "address"
       }
     ],
-    "name": "Web3PacksExchangeManagerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "manager",
-        "type": "address"
-      }
-    ],
     "name": "Web3PacksManagerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "web3packs",
-        "type": "address"
-      }
-    ],
-    "name": "Web3PacksSet",
     "type": "event"
   },
   {
@@ -326,12 +294,12 @@
             "type": "address"
           },
           {
-            "internalType": "enum IWeb3PacksDefs.RouterType",
+            "internalType": "enum IWeb3PacksDefsOld.RouterType",
             "name": "routerType",
             "type": "uint8"
           }
         ],
-        "internalType": "struct IWeb3PacksDefs.LiquidityPosition[]",
+        "internalType": "struct IWeb3PacksDefsOld.LiquidityPosition[]",
         "name": "positions",
         "type": "tuple[]"
       }
@@ -413,12 +381,12 @@
             "type": "address"
           },
           {
-            "internalType": "enum IWeb3PacksDefs.RouterType",
+            "internalType": "enum IWeb3PacksDefsOld.RouterType",
             "name": "routerType",
             "type": "uint8"
           }
         ],
-        "internalType": "struct IWeb3PacksDefs.LiquidityPosition",
+        "internalType": "struct IWeb3PacksDefsOld.LiquidityPosition",
         "name": "position",
         "type": "tuple"
       }

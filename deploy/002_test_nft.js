@@ -13,17 +13,6 @@
 
       const chainId = chainIdByName(network.name);
 
-      log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-      log('Charged Particles - NFT test - Contract Deployment');
-      log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
-
-      log(`  Using Network: ${chainNameById(chainId)} (${network.name}:${chainId})`);
-      log('  Using Accounts:');
-      log('  - Deployer: ', deployer);
-      log('  - Treasury: ', treasury);
-      log('  - User1:    ', user1);
-      log(' ');
-
       //
       // Deploy Contracts
       //

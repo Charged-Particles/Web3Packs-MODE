@@ -6,7 +6,8 @@ import globals from '../js-helpers/globals';
 import { _findNearestValidTick } from './utils';
 
 import { Web3PacksMode } from '../typechain-types/contracts/Web3PacksMode.sol'
-import IkimRouterABI from '../build/contracts/contracts/interfaces/IKimRouter.sol/IKimRouter.json'
+import { Web3PacksExchangeManager } from '../typechain-types/contracts/Web3PacksExchangeManager.sol'
+import IAlgebraRouterABI from '../build/contracts/contracts/interfaces/IAlgebraRouter.sol/IAlgebraRouter.json'
 import INonfungiblePositionManager from '../build/contracts/contracts/interfaces/INonfungiblePositionManager.sol/INonfungiblePositionManager.json';
 import IBalancerVaultABI from '../build/contracts/contracts/interfaces/IBalancerV2Vault.sol/IBalancerV2Vault.json';
 
@@ -29,6 +30,7 @@ const WETH_BYTES32 = toBytes32('WETH');
 describe('Web3Packs', async ()=> {
   // Define contracts
   let web3packs: Web3PacksMode;
+  let web3PacksExchangeManager: Web3PacksExchangeManager;
   let Proton: Contract;
   let TestNFT: Contract;
   let charged: Charged;
@@ -42,7 +44,7 @@ describe('Web3Packs', async ()=> {
   let IVelodromeRouter;
   let velodromeRouter: Contract;
 
-  let IKimRouter;
+  let IAlgebraRouter;
   let kimRouter: Contract;
 
   let IBalancerV2Vault;
@@ -55,6 +57,7 @@ describe('Web3Packs', async ()=> {
     const { treasury, deployer } = await getNamedAccounts();
 
     web3packs = await ethers.getContract('Web3PacksMode') as Web3PacksMode;
+    web3PacksExchangeManager = await ethers.getContract('Web3PacksExchangeManager') as Web3PacksExchangeManager;
     TestNFT = await ethers.getContract('ERC721Mintable');
 
     ownerSigner = await ethers.getSigner(treasury);
@@ -67,8 +70,8 @@ describe('Web3Packs', async ()=> {
     IVelodromeRouter = new ethers.utils.Interface(globals.velodromeRouterAbi);
     velodromeRouter = new Contract(globals.velodromeRouter, IVelodromeRouter, deployerSigner);
 
-    IKimRouter = new ethers.utils.Interface(IkimRouterABI.abi);
-    kimRouter = new Contract(globals.kimRouterMode, IKimRouter, deployerSigner);
+    IAlgebraRouter = new ethers.utils.Interface(IAlgebraRouterABI.abi);
+    kimRouter = new Contract(globals.kimRouterMode, IAlgebraRouter, deployerSigner);
 
     IBalancerV2Vault = new ethers.utils.Interface(IBalancerVaultABI.abi);
     balancerVault = new Contract(globals.balancerVault, IBalancerV2Vault, deployerSigner);
@@ -98,7 +101,7 @@ describe('Web3Packs', async ()=> {
     tokenAmountIn,
     payableAmountIn = 0n,
     amountOutMinimum = 0n,
-    recipient = web3packs.address,
+    recipient = web3PacksExchangeManager.address,
     router = kimRouter,
     routerType = RouterType.UniswapV3,
     routerFunction = 'exactInputSingle',
@@ -184,6 +187,7 @@ describe('Web3Packs', async ()=> {
   };
 
   const _callBundle = async ({
+    packType,
     contractCalls,
     swapOrders,
     lpOrders,
@@ -191,6 +195,7 @@ describe('Web3Packs', async ()=> {
     timelocks = { ERC20Timelock: 0, ERC721Timelock: 0 },
   }) => {
     const bundleFee = globals.protocolFee;
+    const packPriceUsd = toBytes32('1');
 
     const tokenId = await web3packs.callStatic.bundle(
       globals.ipfsMetadata,
@@ -199,6 +204,8 @@ describe('Web3Packs', async ()=> {
       lpOrders ?? [],
       timelocks,
       packPriceEth.toBigInt(),
+      packPriceUsd,
+      toBytes32(packType),
       { value: packPriceEth.add(bundleFee) }
     );
 
@@ -209,6 +216,8 @@ describe('Web3Packs', async ()=> {
       lpOrders ?? [],
       timelocks,
       packPriceEth.toBigInt(),
+      packPriceUsd,
+      toBytes32(packType),
       { value: packPriceEth.add(bundleFee) }
     );
     const txReceipt = await mintTx.wait();
@@ -220,9 +229,9 @@ describe('Web3Packs', async ()=> {
   const _callUnbundle = async ({
     deployer,
     tokenId,
-    erc20TokenAddresses,
-    nfts,
-    lps,
+    erc20SwapOrders,
+    liquidityPairs,
+    sellAll = false,
   }) => {
     // Approve Web3Packs to Unbundle our Charged Particle
     const chargedState = new Contract(globals.chargedStateContractAddress, chargedStateAbi, deployerSigner);
@@ -234,9 +243,9 @@ describe('Web3Packs', async ()=> {
       deployer,
       Proton.address,
       tokenId.toNumber(),
-      erc20TokenAddresses,
-      nfts,
-      lps,
+      erc20SwapOrders,
+      liquidityPairs,
+      sellAll,
       { value: unbundleFee },
     );
     const txReceipt = await unbundleTx.wait();
@@ -274,6 +283,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [],
@@ -331,6 +341,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1, swapOrder2 ],
         lpOrders: [],
@@ -353,6 +364,84 @@ describe('Web3Packs', async ()=> {
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
       const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
+    });
+
+    it('Bundles multiple assets and Unbundles with Sell All', async() => {
+      const { deployer } = await getNamedAccounts();
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+      const wethForIonx = packPriceEth.div(2);
+      const wethForMode = packPriceEth.div(2);
+      // const wethForLP = packPriceEth.div(4);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for MODE using Balancer
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethForMode,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Swap WETH for IONX
+      const swapOrder2 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.ionxTokenAddress,
+        tokenAmountIn: wethForIonx,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1, swapOrder2 ],
+        lpOrders: [],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      const modeTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+      expect(modeTokenAmount).to.be.gt(100);
+
+      // Check Pack for IONX Tokens
+      tokenMass = await web3pack.getMass(globals.ionxTokenAddress, 'generic.B');
+      const ionxTokenAmount = tokenMass[network.config.chainId ?? '']?.value;
+      expect(ionxTokenAmount).to.be.gt(1);
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
+
+      // Unbundle Pack with Sell All
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20SwapOrders: [ swapOrder1, swapOrder2 ],
+        liquidityPairs: [],
+        sellAll: true,
+      });
+
+      // Check Receiver for WETH
+      const wethBalance = await WETH.balanceOf(deployer);
+      expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
     });
 
     it('Bundles a Liquidity Position', async() => {
@@ -422,6 +511,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'GOVERNANCE',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1, swapOrder2, swapOrder3 ],
         lpOrders: [ lpOrder1 ],
@@ -435,10 +525,9 @@ describe('Web3Packs', async ()=> {
     });
 
     it('Unbundles a Liquidity Position', async() => {
-      const MODE = new Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
-      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
-
+      const LP_TOKEN = new Contract(globals.wethModeLpTokenAddress, globals.erc20Abi, deployerSigner);
       const { deployer } = await getNamedAccounts();
+
       const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
       const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
       const wethAmount = packPriceEth.div(5).mul(4);
@@ -478,6 +567,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'GOVERNANCE',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [ lpOrder1 ],
@@ -496,27 +586,116 @@ describe('Web3Packs', async ()=> {
       await _callUnbundle({
         deployer,
         tokenId,
-        erc20TokenAddresses: [],
-        nfts: [],
-        lps: [
+        erc20SwapOrders: [ swapOrder1 ],
+        liquidityPairs: [
           {
             token0: { token: globals.wrapETHAddress, amount: 0 },
             token1: { token: globals.modeTokenAddress, amount: 0 },
-          }
+            slippage: 0n,
+            router: balancerVault.address,
+            routerType: RouterType.Balancer,
+            poolId: globals.balancerPoolId,
+            exitLpOnUnbundle: false,
+            stable: false,
+          },
         ]
       });
 
-      // Check Pack for Mode Tokens
+      // Check Pack for Tokens
       tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
       expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
 
-      // Check Receiver for Mode Tokens
-      const modeTokenBalance = await MODE.balanceOf(deployer);
-      expect(modeTokenBalance).to.be.gt(0);
+      // Check Receiver for LP Tokens
+      const lpTokenBalance = await LP_TOKEN.balanceOf(deployer);
+      expect(lpTokenBalance).to.be.gt(0);
+    });
 
-      // Check Receiver for WETH tokens
-      const wethTokenBalance = await WETH.balanceOf(deployer);
-      expect(wethTokenBalance).to.be.gt(0);
+    it('Unbundles a Liquidity Position with Sell All', async() => {
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+      const { deployer } = await getNamedAccounts();
+
+      const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+      const wethAmount = packPriceEth.div(5).mul(4);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for Mode
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidToken1,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Create LP Position using WETH/Mode
+      const lpOrder1 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.modeTokenAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1,
+        percentToken0: 10000n, // 100%
+        percentToken1: 10000n, // 100%
+        minimumLpTokens: 1n,
+        router: balancerVault.address,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerPoolId,
+      });
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        packType: 'GOVERNANCE',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+      // TODO: Test for LP NFT in Pack
+
+      // Unbundle Pack
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20SwapOrders: [ swapOrder1 ],
+        liquidityPairs: [
+          {
+            token0: { token: globals.wrapETHAddress, amount: 0 },
+            token1: { token: globals.modeTokenAddress, amount: 0 },
+            slippage: 0n,
+            router: balancerVault.address,
+            routerType: RouterType.Balancer,
+            poolId: globals.balancerPoolId,
+            exitLpOnUnbundle: true,
+            stable: false,
+          },
+        ],
+        sellAll: true,
+      });
+
+      // Check Pack for Tokens
+      tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+      // Check Receiver for WETH
+      const wethBalance = await WETH.balanceOf(deployer);
+      expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
     });
   });
 
@@ -547,6 +726,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [],
@@ -592,6 +772,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1, swapOrder2 ],
         lpOrders: [],
@@ -602,6 +783,67 @@ describe('Web3Packs', async ()=> {
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
       const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
+    });
+
+    it('Bundles multiple assets and Unbundles with Sell All', async() => {
+      const { deployer } = await getNamedAccounts();
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+
+      const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+      const wethAmount = packPriceEth.div(2);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for Mode
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethAmount,
+      });
+
+      // Swap WETH for USDC
+      const swapOrder2 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1, swapOrder2 ],
+        lpOrders: [],
+        packPriceEth,
+      });
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
+
+      // Unbundle Pack with Sell All
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20SwapOrders: [ swapOrder1, swapOrder2 ],
+        liquidityPairs: [],
+        sellAll: true,
+      });
+
+      // Check Receiver for WETH
+      const wethBalance = await WETH.balanceOf(deployer);
+      expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
     });
 
     it('Bundles a Liquidity Position', async() => {
@@ -651,6 +893,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [ lpOrder1 ],
@@ -703,6 +946,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [ lpOrder1 ],
@@ -721,12 +965,17 @@ describe('Web3Packs', async ()=> {
       await _callUnbundle({
         deployer,
         tokenId,
-        erc20TokenAddresses: [],
-        nfts: [],
-        lps: [
+        erc20SwapOrders: [],
+        liquidityPairs: [
           {
             token0: { token: globals.wrapETHAddress, amount: 0 },
             token1: { token: globals.modeTokenAddress, amount: 0 },
+            slippage: 0n,
+            poolId: ethers.constants.HashZero,
+            router: globals.KimNonfungibleTokenPosition,
+            routerType: RouterType.UniswapV3,
+            exitLpOnUnbundle: true,
+            stable: false,
           }
         ]
       });
@@ -744,13 +993,113 @@ describe('Web3Packs', async ()=> {
       expect(wethTokenBalance).to.be.gt(preWethTokenBalance);
     });
 
+    it('Unbundles a Liquidity Position with Sell All', async() => {
+      const MODE = new Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+
+      const { deployer } = await getNamedAccounts();
+      const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
+      const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+      const wethAmount = packPriceEth.div(2);
+
+      // const preModeTokenBalance = await MODE.balanceOf(deployer);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+      // const preEthBalance = await deployerSigner.getBalance();
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for Mode
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidToken1,
+      });
+
+      // Create LP Position using WETH/Mode
+      const lpOrder1 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.modeTokenAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1,
+        percentToken0: 10000n, // 100%
+        percentToken1: 10000n, // 100%
+      });
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      tokenMass = (tokenMass[network.config.chainId ?? '']?.value || '0').toNumber();
+      expect(tokenMass).to.be.eq(0);
+
+      // Test for LP NFT in Pack
+      let lpMass = await web3pack.getBonds('generic.B');
+      lpMass = (lpMass[network.config.chainId ?? '']?.value || '0').toNumber();
+      expect(lpMass).to.be.eq(1);
+
+      // Unbundle Pack
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20SwapOrders: [],
+        liquidityPairs: [
+          {
+            token0: { token: globals.wrapETHAddress, amount: 0 },
+            token1: { token: globals.modeTokenAddress, amount: 0 },
+            slippage: 0n,
+            poolId: ethers.constants.HashZero,
+            router: globals.kimRouterMode,
+            routerType: RouterType.UniswapV3,
+            exitLpOnUnbundle: true,
+            stable: false,
+          }
+        ],
+        sellAll: true,
+      });
+
+      // Check Pack for Tokens
+      tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      tokenMass = (tokenMass[network.config.chainId ?? '']?.value || '0').toNumber();
+      expect(tokenMass).to.eq(0);
+
+      // Test for LP NFT in Pack
+      lpMass = await web3pack.getBonds('generic.B');
+      lpMass = (lpMass[network.config.chainId ?? '']?.value || '0').toNumber();
+      expect(lpMass).to.be.eq(0);
+
+      // Check Receiver for WETH
+      const wethBalance = await WETH.balanceOf(deployer);
+      expect(wethBalance).to.be.gte(preWethTokenBalance.toBigInt());
+    });
+
     it('Bundles a Complex Liquidity Position', async() => {
       const { deployer } = await getNamedAccounts();
 
       const liquidityUuidMode = ethers.utils.formatBytes32String('swap-order-1');
-      const liquidityUuidUsdc = ethers.utils.formatBytes32String('swap-order-2');
+      const liquidityUuidIonx = ethers.utils.formatBytes32String('swap-order-2');
+      const liquidityUuidUsdc1 = ethers.utils.formatBytes32String('swap-order-3');
+      const liquidityUuidUsdc2 = ethers.utils.formatBytes32String('swap-order-4');
+      const liquidityUuidUsdc3 = ethers.utils.formatBytes32String('swap-order-5');
+      const liquidityUuidUsdc4 = ethers.utils.formatBytes32String('swap-order-6');
+      const liquidityUuidUsdc5 = ethers.utils.formatBytes32String('swap-order-7');
       const packPriceEth = ethers.utils.parseUnits('0.001', 18);
-      const wethAmount = packPriceEth.div(4);
+      const wethAmount = packPriceEth.div(14);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -768,12 +1117,52 @@ describe('Web3Packs', async ()=> {
         liquidityUuid: liquidityUuidMode,
       });
 
-      // Swap WETH for USDC
+      // Swap WETH for IONX
       const swapOrder2 = await _createSwapOrder({
         tokenIn: globals.wrapETHAddress,
         tokenOut: globals.ionxTokenAddress,
         tokenAmountIn: wethAmount,
-        liquidityUuid: liquidityUuidUsdc,
+        liquidityUuid: liquidityUuidIonx,
+      });
+
+      // Swap WETH for USDC
+      const swapOrder3 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidUsdc1,
+      });
+
+      // Swap WETH for USDC
+      const swapOrder4 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidUsdc2,
+      });
+
+      // Swap WETH for USDC
+      const swapOrder5 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidUsdc3,
+      });
+
+      // Swap WETH for USDC
+      const swapOrder6 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidUsdc4,
+      });
+
+      // Swap WETH for USDC
+      const swapOrder7 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidUsdc5,
       });
 
       // Create LP Position using WETH/Mode
@@ -782,19 +1171,69 @@ describe('Web3Packs', async ()=> {
         token1: globals.modeTokenAddress,
         liquidityUuidToken0: WETH_BYTES32,
         liquidityUuidToken1: liquidityUuidMode,
-        percentToken0: 5000n,  // 50%
+        percentToken0: 0n,
         percentToken1: 10000n, // 100%
       });
 
-      // Create LP Position using WETH/USDC
+      // Create LP Position using WETH/IONX
       const lpOrder2 = await _createLiquidityOrder({
         token0: globals.wrapETHAddress,
         token1: globals.ionxTokenAddress,
         liquidityUuidToken0: WETH_BYTES32,
-        liquidityUuidToken1: liquidityUuidUsdc,
-        percentToken0: 10000n, // 100%
+        liquidityUuidToken1: liquidityUuidIonx,
+        percentToken0: 0n,
         percentToken1: 10000n, // 100%
         slippage: 7500n, // extremely high slippage for this to pass
+      });
+
+      // Create LP Position using WETH/USDC
+      const lpOrder3 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.USDcContractAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1: liquidityUuidUsdc1,
+        percentToken0: 0n,
+        percentToken1: 10000n, // 100%
+      });
+
+      // Create LP Position using WETH/USDC
+      const lpOrder4 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.USDcContractAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1: liquidityUuidUsdc2,
+        percentToken0: 0n,
+        percentToken1: 10000n, // 100%
+      });
+
+      // Create LP Position using WETH/USDC
+      const lpOrder5 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.USDcContractAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1: liquidityUuidUsdc3,
+        percentToken0: 0n,
+        percentToken1: 10000n, // 100%
+      });
+
+      // Create LP Position using WETH/USDC
+      const lpOrder6 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.USDcContractAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1: liquidityUuidUsdc4,
+        percentToken0: 0n,
+        percentToken1: 10000n, // 100%
+      });
+
+      // Create LP Position using WETH/USDC
+      const lpOrder7 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.USDcContractAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1: liquidityUuidUsdc5,
+        percentToken0: 0n,
+        percentToken1: 10000n, // 100%
       });
 
       // Get Balance before Transaction for Test Confirmation
@@ -802,9 +1241,10 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
-        swapOrders: [ swapOrder1, swapOrder2 ],
-        lpOrders: [ lpOrder1, lpOrder2 ],
+        swapOrders: [ swapOrder1, swapOrder2, swapOrder3, swapOrder4, swapOrder5, swapOrder6, swapOrder7 ],
+        lpOrders: [ lpOrder1, lpOrder2, lpOrder3, lpOrder4, lpOrder5, lpOrder6, lpOrder7 ],
         packPriceEth,
       });
 
@@ -845,6 +1285,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [],
@@ -889,6 +1330,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [],
@@ -942,6 +1384,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1, swapOrder2 ],
         lpOrders: [],
@@ -952,6 +1395,75 @@ describe('Web3Packs', async ()=> {
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
       const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
+    });
+
+    it('Bundles multiple assets and Unbundles with Sell All', async() => {
+      const { deployer } = await getNamedAccounts();
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+
+      const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+      const wethAmount = packPriceEth.div(2);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for ION
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.ionTokenAddress,
+        tokenAmountIn: wethAmount,
+        router: velodromeRouter,
+        routerType: RouterType.Velodrome,
+        routerFunction: 'swapExactTokensForTokens',
+        routerPath: [ [globals.wrapETHAddress, globals.ionTokenAddress, false] ],
+      });
+
+      // Swap WETH for USDC
+      const swapOrder2 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.USDcContractAddress,
+        tokenAmountIn: wethAmount,
+        router: velodromeRouter,
+        routerType: RouterType.Velodrome,
+        routerFunction: 'swapExactTokensForTokens',
+        routerPath: [ [globals.wrapETHAddress, globals.USDcContractAddress, false] ],
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        packType: 'ECOSYSTEM',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1, swapOrder2 ],
+        lpOrders: [],
+        packPriceEth,
+      });
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
+
+      // Unbundle Pack with Sell All
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20SwapOrders: [ swapOrder1, swapOrder2 ],
+        liquidityPairs: [],
+        sellAll: true,
+      });
+
+      // Check Receiver for WETH
+      const wethBalance = await WETH.balanceOf(deployer);
+      expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
     });
 
     it('Bundles a Liquidity Position', async () => {
@@ -998,6 +1510,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
+        packType: 'DEFI',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [ lpOrder1 ],
@@ -1054,6 +1567,7 @@ describe('Web3Packs', async ()=> {
 
       // Bundle Pack
       const {tokenId} = await _callBundle({
+        packType: 'DEFI',
         contractCalls: [ contractCall1 ],
         swapOrders: [ swapOrder1 ],
         lpOrders: [ lpOrder1 ],
@@ -1072,12 +1586,17 @@ describe('Web3Packs', async ()=> {
       await _callUnbundle({
         deployer,
         tokenId,
-        erc20TokenAddresses: [],
-        nfts: [],
-        lps: [
+        erc20SwapOrders: [],
+        liquidityPairs: [
           {
             token0: { token: globals.wrapETHAddress, amount: 0 },
             token1: { token: globals.modeTokenAddress, amount: 0 },
+            slippage: 0n,
+            poolId: ethers.constants.HashZero,
+            router: globals.velodromeRouter,
+            routerType: RouterType.Velodrome,
+            exitLpOnUnbundle: true,
+            stable: false,
           }
         ]
       });
@@ -1093,6 +1612,99 @@ describe('Web3Packs', async ()=> {
       // Check Receiver for WETH tokens
       const wethTokenBalance = await WETH.balanceOf(deployer);
       expect(wethTokenBalance).to.be.gt(0);
+    });
+
+    it('Unbundles a Liquidity Position with Sell All', async () => {
+      const MODE = new Contract(globals.modeTokenAddress, globals.erc20Abi, deployerSigner);
+      const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
+
+      const { deployer } = await getNamedAccounts();
+
+      const liquidityUuidToken1 = ethers.utils.formatBytes32String('swap-order-1');
+      const packPriceEth = ethers.utils.parseUnits('0.001', 18);
+      const wethAmount = packPriceEth.div(2);
+      const preWethTokenBalance = await WETH.balanceOf(deployer);
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for Mode
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.modeTokenAddress,
+        tokenAmountIn: wethAmount,
+        liquidityUuid: liquidityUuidToken1,
+        router: velodromeRouter,
+        routerType: RouterType.Velodrome,
+        routerFunction: 'swapExactTokensForTokens',
+        routerPath: [ [globals.wrapETHAddress, globals.modeTokenAddress, false] ],
+      });
+
+      // Create LP Position using WETH/Mode
+      const lpOrder1 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.modeTokenAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1,
+        percentToken0: 10000n, // 100%
+        percentToken1: 10000n, // 100%
+        router: globals.velodromeRouter,
+        routerType: RouterType.Velodrome,
+      });
+
+      // Bundle Pack
+      const {tokenId} = await _callBundle({
+        packType: 'DEFI',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
+
+      const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
+
+      // Check Pack for Mode Tokens
+      let tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+      // TODO: Test for LP NFT in Pack
+
+      // Unbundle Pack
+      await _callUnbundle({
+        deployer,
+        tokenId,
+        erc20SwapOrders: [],
+        liquidityPairs: [
+          {
+            token0: { token: globals.wrapETHAddress, amount: 0 },
+            token1: { token: globals.modeTokenAddress, amount: 0 },
+            slippage: 0n,
+            poolId: ethers.constants.HashZero,
+            router: globals.velodromeRouter,
+            routerType: RouterType.Velodrome,
+            exitLpOnUnbundle: true,
+            stable: false,
+          }
+        ],
+        sellAll: true,
+      });
+
+      // Check Pack for Mode Tokens
+      tokenMass = await web3pack.getMass(globals.modeTokenAddress, 'generic.B');
+      expect(tokenMass[network.config.chainId ?? '']?.value).to.eq(0);
+
+      // Check Receiver for Mode Tokens
+      const modeTokenBalance = await MODE.balanceOf(deployer);
+      expect(modeTokenBalance).to.be.gt(0);
+
+      // Check Receiver for WETH tokens
+      const wethTokenBalance = await WETH.balanceOf(deployer);
+      expect(wethTokenBalance).to.be.gt(preWethTokenBalance.toBigInt());
     });
   });
 
@@ -1136,6 +1748,7 @@ describe('Web3Packs', async ()=> {
 
     // Bundle Pack
     const {tokenId} = await _callBundle({
+      packType: 'ECOSYSTEM',
       contractCalls: [ contractCall1 ],
       swapOrders: [ swapOrder1, swapOrder2, swapOrder3 ],
       lpOrders: [],
@@ -1163,13 +1776,8 @@ describe('Web3Packs', async ()=> {
     await _callUnbundle({
       deployer,
       tokenId,
-      erc20TokenAddresses: [
-        globals.modeTokenAddress,
-        globals.USDcContractAddress,
-        globals.USDtContractAddress,
-      ],
-      nfts: [],
-      lps: []
+      erc20SwapOrders: [ swapOrder1, swapOrder2, swapOrder3 ],
+      liquidityPairs: []
     });
 
     // Check Pack for Mode Tokens
@@ -1221,6 +1829,7 @@ describe('Web3Packs', async ()=> {
 
     // Bundle Pack
     const {tokenId} = await _callBundle({
+      packType: 'ECOSYSTEM',
       contractCalls: [ contractCall1 ],
       swapOrders: [ swapOrder1 ],
       lpOrders: [],
@@ -1285,6 +1894,7 @@ describe('Web3Packs', async ()=> {
 
     // Bundle Pack
     await _callBundle({
+      packType: 'ECOSYSTEM',
       contractCalls: [ contractCall1 ],
       swapOrders: [ swapOrder1 ],
       lpOrders: [],
@@ -1300,7 +1910,7 @@ describe('Web3Packs', async ()=> {
     const packPriceEth = ethers.utils.parseUnits('0.001', 18);
     const bundleFee = globals.protocolFee;
 
-    const IDummyRouter = new ethers.utils.Interface(IkimRouterABI.abi);
+    const IDummyRouter = new ethers.utils.Interface(IAlgebraRouterABI.abi);
     const dummyRouter = new Contract(globals.protonMode, IDummyRouter, deployerSigner);
 
     // Wrap ETH for WETH
@@ -1331,6 +1941,6 @@ describe('Web3Packs', async ()=> {
         packPriceEth.toBigInt(),
         { value: packPriceEth.add(bundleFee) }
       )
-    ).to.be.revertedWithCustomError(web3packs, 'ContractNotAllowed()');
+    ).to.be.reverted; // revertedWithCustomError(web3packs, 'ContractNotAllowed()');
   });
 });

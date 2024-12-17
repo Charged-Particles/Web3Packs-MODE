@@ -153,12 +153,6 @@
         "internalType": "address",
         "name": "receiver",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ethAmount",
-        "type": "uint256"
       }
     ],
     "name": "PackUnbundled",
@@ -213,33 +207,7 @@
         "type": "address"
       }
     ],
-    "name": "Web3PacksExchangeManagerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "manager",
-        "type": "address"
-      }
-    ],
     "name": "Web3PacksManagerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "web3packs",
-        "type": "address"
-      }
-    ],
-    "name": "Web3PacksSet",
     "type": "event"
   },
   {

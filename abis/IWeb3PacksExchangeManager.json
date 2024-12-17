@@ -258,113 +258,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "nftTokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "mintedTokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "bond",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "tokenMetaUri",
-        "type": "string"
-      },
-      {
-        "components": [
-          {
-            "internalType": "bytes",
-            "name": "callData",
-            "type": "bytes"
-          },
-          {
-            "internalType": "address",
-            "name": "contractAddress",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountIn",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IWeb3PacksDefs.ContractCallGeneric[]",
-        "name": "contractCalls",
-        "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
-            "internalType": "bytes",
-            "name": "callData",
-            "type": "bytes"
-          },
-          {
-            "internalType": "address",
-            "name": "router",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOut",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenAmountIn",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenAmountOutMin",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payableAmountIn",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "liquidityUuid",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "poolId",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "enum IWeb3PacksDefs.RouterType",
-            "name": "routerType",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct IWeb3PacksDefs.ERC20SwapOrderGeneric[]",
-        "name": "erc20SwapOrders",
-        "type": "tuple[]"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -438,72 +331,16 @@
           }
         ],
         "internalType": "struct IWeb3PacksDefs.LiquidityOrderGeneric[]",
-        "name": "liquidityOrders",
+        "name": "orders",
         "type": "tuple[]"
       },
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "ERC20Timelock",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ERC721Timelock",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IWeb3PacksDefs.LockState",
-        "name": "lockState",
-        "type": "tuple"
-      },
-      {
         "internalType": "uint256",
-        "name": "ethPackPrice",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "usdPackPrice",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "packType",
-        "type": "bytes32"
-      }
-    ],
-    "name": "bundle",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
+        "name": "web3packsTokenId",
         "type": "uint256"
       }
     ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "energize",
+    "name": "depositLiquidity",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -511,181 +348,327 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
-            "internalType": "bytes",
-            "name": "callData",
-            "type": "bytes"
-          },
-          {
-            "internalType": "address",
-            "name": "router",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "tokenOut",
-            "type": "address"
-          },
-          {
             "internalType": "uint256",
-            "name": "tokenAmountIn",
+            "name": "lpTokenId",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "tokenAmountOutMin",
+            "name": "liquidity",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payableAmountIn",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "liquidityUuid",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "poolId",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "enum IWeb3PacksDefs.RouterType",
-            "name": "routerType",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct IWeb3PacksDefs.ERC20SwapOrderGeneric[]",
-        "name": "erc20SwapOrders",
-        "type": "tuple[]"
-      },
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-              },
-              {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct IWeb3PacksDefs.TokenAmount",
-            "name": "token0",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-              },
-              {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct IWeb3PacksDefs.TokenAmount",
-            "name": "token1",
-            "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "slippage",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "poolId",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "address",
-            "name": "router",
-            "type": "address"
-          },
-          {
-            "internalType": "enum IWeb3PacksDefs.RouterType",
-            "name": "routerType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "bool",
-            "name": "exitLpOnUnbundle",
-            "type": "bool"
           },
           {
             "internalType": "bool",
             "name": "stable",
             "type": "bool"
+          },
+          {
+            "internalType": "address",
+            "name": "token0",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token1",
+            "type": "address"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickLower",
+            "type": "int24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickUpper",
+            "type": "int24"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "router",
+            "type": "address"
+          },
+          {
+            "internalType": "enum IWeb3PacksDefs.RouterType",
+            "name": "routerType",
+            "type": "uint8"
           }
         ],
-        "internalType": "struct IWeb3PacksDefs.LiquidityPairs[]",
-        "name": "liquidityPairs",
-        "type": "tuple[]"
-      },
-      {
-        "internalType": "bool",
-        "name": "sellAll",
-        "type": "bool"
+        "internalType": "struct IWeb3PacksDefs.LiquidityPosition",
+        "name": "liquidityPosition",
+        "type": "tuple"
       }
     ],
-    "name": "unbundle",
-    "outputs": [],
-    "stateMutability": "payable",
+    "name": "getLiquidityTokenData",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "lpTokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lpTokenId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "contractAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IWeb3PacksDefs.ContractCallGeneric[]",
+        "name": "contractCalls",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "performContractCalls",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "router",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payableAmountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "liquidityUuid",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum IWeb3PacksDefs.RouterType",
+            "name": "routerType",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IWeb3PacksDefs.ERC20SwapOrderGeneric[]",
+        "name": "orders",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "web3packsTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "performSwaps",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "lpTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "liquidity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "stable",
+            "type": "bool"
+          },
+          {
+            "internalType": "address",
+            "name": "token0",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token1",
+            "type": "address"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickLower",
+            "type": "int24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickUpper",
+            "type": "int24"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "router",
+            "type": "address"
+          },
+          {
+            "internalType": "enum IWeb3PacksDefs.RouterType",
+            "name": "routerType",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IWeb3PacksDefs.LiquidityPosition",
+        "name": "liquidityPosition",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.TokenAmount",
+            "name": "token0",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.TokenAmount",
+            "name": "token1",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "slippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "router",
+            "type": "address"
+          },
+          {
+            "internalType": "enum IWeb3PacksDefs.RouterType",
+            "name": "routerType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "exitLpOnUnbundle",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "stable",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct IWeb3PacksDefs.LiquidityPairs",
+        "name": "liquidityPair",
+        "type": "tuple"
+      },
+      {
         "internalType": "address",
         "name": "receiver",
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "walletManager",
-        "type": "string"
-      },
+        "internalType": "bool",
+        "name": "sellAll",
+        "type": "bool"
+      }
+    ],
+    "name": "removeLiquidity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "components": [
           {
@@ -815,14 +798,20 @@
         "type": "tuple[]"
       },
       {
-        "internalType": "bool",
-        "name": "sellAll",
-        "type": "bool"
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
       }
     ],
-    "name": "unbundleFromManager",
-    "outputs": [],
-    "stateMutability": "payable",
+    "name": "swapAllForEth",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "ethAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
