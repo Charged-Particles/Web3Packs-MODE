@@ -30,6 +30,7 @@ const globals = {
   modeTokenAddress: '0xDfc7C877a950e49D2610114102175A06C2e3167a',
   ionTokenAddress: '0x18470019bF0E94611f15852F7e93cf5D65BC34CA',
   iclTokenAddress: '0x95177295A394f2b9B04545FFf58f4aF0673E839d',
+  ezEthTokenAddress: '0x2416092f143378750bb29b79eD961ab195CcEea5',
   ionxTokenAddress: '0x77E7bcfeE826b12cD498Faa9831d7055b7478272',
   wethModeLpTokenAddress: '0x7c86a44778c52a0aad17860924b53bf3f35dc932',
 
@@ -51,7 +52,10 @@ const globals = {
 
   // Balancer (Router is Vault)
   balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
-  balancerPoolId: '0x7c86a44778c52a0aad17860924b53bf3f35dc932000200000000000000000007',
+  balancerModePoolId: '0x7c86a44778c52a0aad17860924b53bf3f35dc932000200000000000000000007',
+  balancerModeLpToken: '0x7c86a44778c52a0aad17860924b53bf3f35dc932',
+  balancerEzEthPoolId: '0x16453789fed619c7fa18c068dec1cb2766ba2e3e000000000000000000000006',
+  balancerEzEthLpToken: '0x16453789fed619c7fa18c068dec1cb2766ba2e3e',
 
   // Standard Parameters
   deadline: Math.floor(Date.now() / 1000) + (60 * 10),

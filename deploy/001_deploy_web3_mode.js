@@ -46,7 +46,7 @@ module.exports = async (hre) => {
 
   const useExistingWeb3PacksContract = isHardhat() ? '' : '0x750663B16Bd6404D06Ddc21Ea9A2A0148Ac968B6';
   const useExistingManagerContract = isHardhat() ? '' : '0x3c38A05998443555793366BDB9F68cA31F098519';
-  const useExistingExchangeContract = isHardhat() ? '' : '0xB3781bbB4799C47C7f803979e308f686B79A5997';
+  const useExistingExchangeContract = isHardhat() ? '' : '0x504775f2F49943E141464CB610b42a0BFdaB4080'; // '0xb3990e2F3eEE38Ae958FCd0737553f352b3F4c90'; // '0xB3781bbB4799C47C7f803979e308f686B79A5997';
   const migrateFromOldManager = {
     address: '', // '0xdBE000aDe32AcC1d81C38B01765902de6d698e5c',
     tokenRange: [765, 766], //[187, 530],
@@ -199,6 +199,9 @@ module.exports = async (hre) => {
 
     log(`  Setting Web3PacksManager in Web3PacksExchangeManager: ${web3packsManager.address}`);
     await web3packsExchangeManager.setWeb3PacksManager(web3packsManager.address).then(tx => tx.wait());
+
+    log(`  Setting Web3PacksExchangeManager Address in Web3Packs: ${web3packsExchangeManager.address}`);
+    await web3packs.setWeb3PacksExchangeManager(web3packsExchangeManager.address).then(tx => tx.wait());
 
     log(`  Setting Web3PacksExchangeManager Address in Web3PacksManager: ${web3packsExchangeManager.address}`);
     await web3packsManager.setWeb3PacksContract(web3packsExchangeManager.address, true).then(tx => tx.wait());

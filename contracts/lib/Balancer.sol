@@ -139,13 +139,14 @@ contract Balancer {
   ) {
     (address poolAddress, ) = IBalancerV2Vault(liquidityOrder.router).getPool(liquidityOrder.poolId);
 
-    IAsset[] memory assets = new IAsset[](2);
-    assets[0] = IAsset(liquidityOrder.token0);
-    assets[1] = IAsset(liquidityOrder.token1);
-
-    uint256[] memory amounts = new uint256[](2);
-    amounts[0] = balanceAmount0;
-    amounts[1] = balanceAmount1;
+    (IAsset[] memory assets, uint256[] memory amounts) = _getAssetsAndAmounts(
+      liquidityOrder.token0,
+      liquidityOrder.token1,
+      poolAddress,
+      balanceAmount0,
+      balanceAmount1,
+      liquidityOrder.stable
+    );
 
     // Add Liquidity
     bytes memory userData = abi.encode(IBalancerV2Vault.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, amounts, liquidityOrder.minimumLpTokens);
@@ -171,14 +172,14 @@ contract Balancer {
     returns (uint amount0, uint amount1)
   {
     (address poolAddress, ) = IBalancerV2Vault(liquidityPosition.router).getPool(liquidityPosition.poolId);
-
-    IAsset[] memory assets = new IAsset[](2);
-    assets[0] = IAsset(liquidityPosition.token0);
-    assets[1] = IAsset(liquidityPosition.token1);
-
-    uint256[] memory amounts = new uint256[](2);
-    amounts[0] = liquidityPairs.token0.amount;
-    amounts[1] = liquidityPairs.token1.amount;
+    (IAsset[] memory assets, uint256[] memory amounts) = _getAssetsAndAmounts(
+      liquidityPosition.token0,
+      liquidityPosition.token1,
+      poolAddress,
+      liquidityPairs.token0.amount,
+      liquidityPairs.token1.amount,
+      liquidityPosition.stable
+    );
 
     TransferHelper.safeApprove(
       poolAddress,
@@ -210,5 +211,89 @@ contract Balancer {
     (address poolAddress, ) = IBalancerV2Vault(liquidityPosition.router).getPool(liquidityPosition.poolId);
     lpTokenAddress = poolAddress;
     lpTokenId = 0;
+  }
+
+  function _getAssetsAndAmounts(
+    address token0,
+    address token1,
+    address poolAddress,
+    uint256 balanceAmount0,
+    uint256 balanceAmount1,
+    bool isStable
+  )
+    internal
+    pure
+    returns (
+      IAsset[] memory assets,
+      uint256[] memory amounts
+    )
+  {
+    // Balancer LPs must be entered into with Tokens ordered from Smallest to Largest.
+    // Stable LPs also require the Pool Address, which also must be sorted.
+    if (isStable) {
+      assets = new IAsset[](3);
+      amounts = new uint256[](3);
+
+      if (uint160(token0) <= uint160(token1) && uint160(token0) <= uint160(poolAddress)) {
+        assets[0] = IAsset(token0);
+        amounts[0] = balanceAmount0;
+        if (uint160(token1) <= uint160(poolAddress)) {
+          assets[1] = IAsset(token1);
+          assets[2] = IAsset(poolAddress);
+          amounts[1] = balanceAmount1;
+          amounts[2] = 0;
+        } else {
+          assets[1] = IAsset(poolAddress);
+          assets[2] = IAsset(token1);
+          amounts[1] = 0;
+          amounts[2] = balanceAmount1;
+        }
+      } else if (uint160(token1) <= uint160(token0) && uint160(token1) <= uint160(poolAddress)) {
+        assets[0] = IAsset(token1);
+        amounts[0] = balanceAmount1;
+        if (uint160(token0) <= uint160(poolAddress)) {
+          assets[1] = IAsset(token0);
+          assets[2] = IAsset(poolAddress);
+          amounts[1] = balanceAmount0;
+          amounts[2] = 0;
+        } else {
+          assets[1] = IAsset(poolAddress);
+          assets[2] = IAsset(token0);
+          amounts[1] = 0;
+          amounts[2] = balanceAmount0;
+        }
+      } else {
+        assets[0] = IAsset(poolAddress);
+        amounts[0] = 0;
+        if (uint160(token0) <= uint160(token1)) {
+          assets[1] = IAsset(token0);
+          assets[2] = IAsset(token1);
+          amounts[1] = balanceAmount0;
+          amounts[2] = balanceAmount1;
+        } else {
+          assets[1] = IAsset(token1);
+          assets[2] = IAsset(token0);
+          amounts[1] = balanceAmount1;
+          amounts[2] = balanceAmount0;
+        }
+      }
+    } else {
+      assets = new IAsset[](2);
+      amounts = new uint256[](2);
+
+      if (uint160(token0) < uint160(token1)) {
+        assets[0] = IAsset(token0);
+        assets[1] = IAsset(token1);
+
+        amounts[0] = balanceAmount0;
+        amounts[1] = balanceAmount1;
+      } else {
+        assets[0] = IAsset(token1);
+        assets[1] = IAsset(token0);
+
+        amounts[0] = balanceAmount1;
+        amounts[1] = balanceAmount0;
+      }
+    }
   }
 }

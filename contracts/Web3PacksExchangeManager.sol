@@ -172,8 +172,8 @@ contract Web3PacksExchangeManager is
       if (swap.routerType == RouterType.Balancer) {
         balancerSwapForEth(swap.tokenIn, swap.tokenOut, swap.router, swap.poolId);
       }
-      if (swap.routerType == RouterType.Velodrome) {
-        velodromeSwapForEth(swap.tokenIn, swap.tokenOut, swap.router);
+      if (swap.routerType == RouterType.Velodrome || swap.routerType == RouterType.SwapMode) {
+        velodromeSwapForEth(swap.tokenIn, swap.tokenOut, swap.router, swap.reverseRoute, swap.stable);
       }
       if (swap.routerType == RouterType.UniswapV2) {
         uniswapV2SwapForEth(swap.tokenIn, swap.tokenOut, swap.router);
@@ -191,8 +191,8 @@ contract Web3PacksExchangeManager is
       if (lp.routerType == RouterType.Balancer) {
         balancerSwapForEth(lp.token0.token, lp.token1.token, lp.router, lp.poolId);
       }
-      if (lp.routerType == RouterType.Velodrome) {
-        velodromeSwapForEth(lp.token0.token, lp.token1.token, lp.router);
+      if (lp.routerType == RouterType.Velodrome || lp.routerType == RouterType.SwapMode) {
+        velodromeSwapForEth(lp.token0.token, lp.token1.token, lp.router, lp.reverseRoute, lp.stable);
       }
       if (lp.routerType == RouterType.UniswapV2) {
         uniswapV2SwapForEth(lp.token0.token, lp.token1.token, lp.router);
@@ -264,7 +264,7 @@ contract Web3PacksExchangeManager is
     if (swapOrder.routerType == RouterType.Balancer) {
       amountOut = balancerSwapSingle(swapOrder);
     }
-    if (swapOrder.routerType == RouterType.Velodrome) {
+    if (swapOrder.routerType == RouterType.Velodrome || swapOrder.routerType == RouterType.SwapMode) {
       amountOut = velodromeSwapSingle(swapOrder);
     }
     if (swapOrder.routerType == RouterType.UniswapV2) {

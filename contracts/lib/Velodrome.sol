@@ -35,6 +35,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "../interfaces/IWeb3PacksDefs.sol";
 import "../interfaces/IWeb3Packs.sol";
 import "../interfaces/IVelodrome.sol";
 
@@ -69,16 +70,20 @@ contract Velodrome {
   function velodromeSwapForEth(
     address token0,
     address token1,
-    address router
+    address router,
+    IWeb3PacksDefs.Route[] memory reverseRoutes,
+    bool stable
   )
     internal
   {
     uint256 balance;
-    IVelodrome.Route[] memory routes = new IVelodrome.Route[](1);
+    IVelodrome.Route[] memory routes = new IVelodrome.Route[](reverseRoutes.length);
+    for (uint i = 0; i < reverseRoutes.length; i++) {
+      routes[i] = IVelodrome.Route({from: reverseRoutes[i].token0, to: reverseRoutes[i].token1, stable: stable});
+    }
 
     if (token0 != weth) {
       balance = IERC20(token0).balanceOf(address(this));
-      routes[0] = IVelodrome.Route(token0, weth, false);
       if (balance > 0) {
         TransferHelper.safeApprove(token0, router, balance);
         IVelodrome(router).swapExactTokensForTokens(
@@ -92,7 +97,6 @@ contract Velodrome {
     }
     if (token1 != weth) {
       balance = IERC20(token1).balanceOf(address(this));
-      routes[0] = IVelodrome.Route(token1, weth, false);
       if (balance > 0) {
         TransferHelper.safeApprove(token1, router, balance);
         IVelodrome(router).swapExactTokensForTokens(

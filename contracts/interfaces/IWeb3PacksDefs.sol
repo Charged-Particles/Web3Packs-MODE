@@ -54,11 +54,16 @@ interface IWeb3PacksDefs {
     SwapMode
   }
 
-  /// @notice Represents the deposit of an NFT
   struct TokenAmount {
     address token;
     uint256 amount;
   }
+
+  struct Route {
+    address token0;
+    address token1;
+  }
+
   struct LiquidityPairs {
     TokenAmount token0;
     TokenAmount token1;
@@ -67,6 +72,7 @@ interface IWeb3PacksDefs {
     address router;
     RouterType routerType;
     bool exitLpOnUnbundle;
+    Route[] reverseRoute;
     bool stable;
   }
 
@@ -86,6 +92,8 @@ interface IWeb3PacksDefs {
     uint256 payableAmountIn;
     bytes32 liquidityUuid;
     bytes32 poolId;
+    bool stable;
+    Route[] reverseRoute;
     RouterType routerType;
   }
 

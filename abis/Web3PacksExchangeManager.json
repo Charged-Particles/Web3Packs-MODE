@@ -760,6 +760,28 @@
             "type": "bytes32"
           },
           {
+            "internalType": "bool",
+            "name": "stable",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token0",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "token1",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.Route[]",
+            "name": "reverseRoute",
+            "type": "tuple[]"
+          },
+          {
             "internalType": "enum IWeb3PacksDefs.RouterType",
             "name": "routerType",
             "type": "uint8"
@@ -901,6 +923,23 @@
             "type": "bool"
           },
           {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token0",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "token1",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.Route[]",
+            "name": "reverseRoute",
+            "type": "tuple[]"
+          },
+          {
             "internalType": "bool",
             "name": "stable",
             "type": "bool"
@@ -1009,6 +1048,28 @@
             "type": "bytes32"
           },
           {
+            "internalType": "bool",
+            "name": "stable",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token0",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "token1",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.Route[]",
+            "name": "reverseRoute",
+            "type": "tuple[]"
+          },
+          {
             "internalType": "enum IWeb3PacksDefs.RouterType",
             "name": "routerType",
             "type": "uint8"
@@ -1078,6 +1139,23 @@
             "internalType": "bool",
             "name": "exitLpOnUnbundle",
             "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "token0",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "token1",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct IWeb3PacksDefs.Route[]",
+            "name": "reverseRoute",
+            "type": "tuple[]"
           },
           {
             "internalType": "bool",

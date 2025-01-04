@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { ethers, network, getNamedAccounts } from 'hardhat';
 import { Contract, Signer } from 'ethers';
+import _ from 'lodash';
 
 import globals from '../js-helpers/globals';
 import { _findNearestValidTick } from './utils';
@@ -108,6 +109,7 @@ describe('Web3Packs', async ()=> {
     routerPath = [] as any[][],
     liquidityUuid = toBytes32(''),
     poolId = ethers.constants.HashZero,
+    stable = false,
   }) => {
     let calldata;
 
@@ -134,6 +136,12 @@ describe('Web3Packs', async ()=> {
       calldata = { data: toBytes32('') };
     }
 
+    let reverseRoute:Object[] = [];
+    if ((routerPath ?? []).length > 0) {
+      reverseRoute = routerPath.map((route: string[]) => ({ token0: route[1], token1: route[0] }));
+      _.reverse(reverseRoute);
+    }
+
     const swapOrder = {
       callData: <string>calldata.data,
       router: router.address,
@@ -143,7 +151,9 @@ describe('Web3Packs', async ()=> {
       tokenAmountOutMin: amountOutMinimum,
       payableAmountIn,
       routerType,
+      reverseRoute,
       poolId,
+      stable,
       liquidityUuid,
     };
 
@@ -166,7 +176,7 @@ describe('Web3Packs', async ()=> {
     router = globals.KimNonfungibleTokenPosition,
     routerType = RouterType.UniswapV3,
   }) => {
-    // craft call data
+    let reverseRoute:Object[] = [];
     const lpOrder = {
       router,
       token0,
@@ -182,6 +192,7 @@ describe('Web3Packs', async ()=> {
       tickUpper,
       poolId,
       routerType,
+      reverseRoute,
     }
     return lpOrder;
   };
@@ -275,7 +286,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: packPriceEth,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Get Balance before Transaction for Test Confirmation
@@ -326,7 +337,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: wethForMode,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Swap WETH for IONX
@@ -391,7 +402,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: wethForMode,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Swap WETH for IONX
@@ -444,7 +455,7 @@ describe('Web3Packs', async ()=> {
       expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
     });
 
-    it('Bundles a Liquidity Position', async() => {
+    it('Bundles an Unstable Liquidity Position', async() => {
       const { deployer } = await getNamedAccounts();
 
       const liquidityUuidToken1 = ethers.utils.formatBytes32String('weth-mode-1');
@@ -453,7 +464,7 @@ describe('Web3Packs', async ()=> {
       const wethForIonx = packPriceEth.mul(300).div(10000); // 3%
       const wethForMode = packPriceEth.mul(4850).div(10000); // 48.5%
       const remainingWeth = packPriceEth.sub(wethForIonx).sub(wethForMode); // 48.5%
-      const wethForModeLP = remainingWeth.div(5);
+      const wethForModeLP = remainingWeth.div(5); // MODE/WETH LP is an 80/20 Position
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -470,7 +481,7 @@ describe('Web3Packs', async ()=> {
         tokenAmountIn: wethForMode,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Swap WETH for IONX
@@ -484,11 +495,11 @@ describe('Web3Packs', async ()=> {
       const swapOrder3 = await _createSwapOrder({
         tokenIn: globals.wrapETHAddress,
         tokenOut: globals.modeTokenAddress,
-        tokenAmountIn: wethForModeLP.mul(4), // 80% of remaining WETH
+        tokenAmountIn: wethForModeLP.mul(4), // 80% of remaining WETH (MODE/WETH LP is an 80/20 Position)
         liquidityUuid: liquidityUuidToken1,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Create LP Position using WETH/Mode
@@ -503,7 +514,7 @@ describe('Web3Packs', async ()=> {
         minimumLpTokens: 1n,
         router: balancerVault.address,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Get Balance before Transaction for Test Confirmation
@@ -524,7 +535,7 @@ describe('Web3Packs', async ()=> {
       expect(postBalance).to.eq(expectedBalance);
     });
 
-    it('Unbundles a Liquidity Position', async() => {
+    it('Unbundles an Unstable Liquidity Position', async() => {
       const LP_TOKEN = new Contract(globals.wethModeLpTokenAddress, globals.erc20Abi, deployerSigner);
       const { deployer } = await getNamedAccounts();
 
@@ -548,7 +559,7 @@ describe('Web3Packs', async ()=> {
         liquidityUuid: liquidityUuidToken1,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Create LP Position using WETH/Mode
@@ -562,7 +573,7 @@ describe('Web3Packs', async ()=> {
         minimumLpTokens: 1n,
         router: balancerVault.address,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Bundle Pack
@@ -594,9 +605,10 @@ describe('Web3Packs', async ()=> {
             slippage: 0n,
             router: balancerVault.address,
             routerType: RouterType.Balancer,
-            poolId: globals.balancerPoolId,
+            poolId: globals.balancerModePoolId,
             exitLpOnUnbundle: false,
             stable: false,
+            reverseRoute: [],
           },
         ]
       });
@@ -610,7 +622,7 @@ describe('Web3Packs', async ()=> {
       expect(lpTokenBalance).to.be.gt(0);
     });
 
-    it('Unbundles a Liquidity Position with Sell All', async() => {
+    it('Unbundles an Unstable Liquidity Position with Sell All', async() => {
       const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
       const { deployer } = await getNamedAccounts();
 
@@ -635,7 +647,7 @@ describe('Web3Packs', async ()=> {
         liquidityUuid: liquidityUuidToken1,
         router: balancerVault,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Create LP Position using WETH/Mode
@@ -649,7 +661,7 @@ describe('Web3Packs', async ()=> {
         minimumLpTokens: 1n,
         router: balancerVault.address,
         routerType: RouterType.Balancer,
-        poolId: globals.balancerPoolId,
+        poolId: globals.balancerModePoolId,
       });
 
       // Bundle Pack
@@ -681,8 +693,9 @@ describe('Web3Packs', async ()=> {
             slippage: 0n,
             router: balancerVault.address,
             routerType: RouterType.Balancer,
-            poolId: globals.balancerPoolId,
+            poolId: globals.balancerModePoolId,
             exitLpOnUnbundle: true,
+            reverseRoute: [],
             stable: false,
           },
         ],
@@ -696,6 +709,69 @@ describe('Web3Packs', async ()=> {
       // Check Receiver for WETH
       const wethBalance = await WETH.balanceOf(deployer);
       expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
+    });
+
+    xit('Bundles a Stable Liquidity Position', async() => {
+      const { deployer } = await getNamedAccounts();
+
+      const liquidityUuidToken1 = ethers.utils.formatBytes32String('weth-ezeth-1');
+
+      const packPriceEth = ethers.utils.parseUnits('0.00001', 18);
+      const wethForEzEth = packPriceEth.mul(5000).div(10000); // 50%
+      const remainingWeth = packPriceEth.sub(wethForEzEth); // 50%
+
+      // Wrap ETH for WETH
+      const wethCalldata = await wETH.populateTransaction.deposit();
+      const contractCall1 = {
+        callData: wethCalldata.data,
+        contractAddress: globals.wrapETHAddress,
+        amountIn: packPriceEth.toBigInt(),
+      };
+
+      // Swap WETH for ezETH using Balancer
+      const swapOrder1 = await _createSwapOrder({
+        tokenIn: globals.wrapETHAddress,
+        tokenOut: globals.ezEthTokenAddress,
+        tokenAmountIn: wethForEzEth,
+        liquidityUuid: liquidityUuidToken1,
+        router: balancerVault,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerEzEthPoolId,
+      });
+
+      // Create LP Position using WETH/Mode
+      // NOTE: Order of tokens must be in numerical order with the lowest token address (as int) comes first.
+      const lpOrder1 = await _createLiquidityOrder({
+        token0: globals.wrapETHAddress,
+        token1: globals.ezEthTokenAddress,
+        liquidityUuidToken0: WETH_BYTES32,
+        liquidityUuidToken1,
+        percentToken0: 10000n, // 100%
+        percentToken1: 10000n, // 100%
+        minimumLpTokens: 1n,
+        stable: true,
+        slippage: 1000n,
+        router: balancerVault.address,
+        routerType: RouterType.Balancer,
+        poolId: globals.balancerEzEthPoolId,
+      });
+
+      // Get Balance before Transaction for Test Confirmation
+      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+
+      // Bundle Pack
+      const {tokenId, gasCost} = await _callBundle({
+        packType: 'GOVERNANCE',
+        contractCalls: [ contractCall1 ],
+        swapOrders: [ swapOrder1 ],
+        lpOrders: [ lpOrder1 ],
+        packPriceEth,
+      });
+
+      // Expect REFUND on Excessive Fees
+      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      expect(postBalance).to.eq(expectedBalance);
     });
   });
 
@@ -975,6 +1051,7 @@ describe('Web3Packs', async ()=> {
             router: globals.KimNonfungibleTokenPosition,
             routerType: RouterType.UniswapV3,
             exitLpOnUnbundle: true,
+            reverseRoute: [],
             stable: false,
           }
         ]
@@ -1067,6 +1144,7 @@ describe('Web3Packs', async ()=> {
             router: globals.kimRouterMode,
             routerType: RouterType.UniswapV3,
             exitLpOnUnbundle: true,
+            reverseRoute: [],
             stable: false,
           }
         ],
@@ -1596,6 +1674,7 @@ describe('Web3Packs', async ()=> {
             router: globals.velodromeRouter,
             routerType: RouterType.Velodrome,
             exitLpOnUnbundle: true,
+            reverseRoute: [],
             stable: false,
           }
         ]
@@ -1688,6 +1767,7 @@ describe('Web3Packs', async ()=> {
             router: globals.velodromeRouter,
             routerType: RouterType.Velodrome,
             exitLpOnUnbundle: true,
+            reverseRoute: [ { token0: globals.modeTokenAddress, token1: globals.wrapETHAddress } ],
             stable: false,
           }
         ],
