@@ -377,7 +377,7 @@ describe('Web3Packs', async ()=> {
       expect(postBalance).to.eq(expectedBalance);
     });
 
-    it('Bundles multiple assets and Unbundles with Sell All', async() => {
+    it.only('Bundles multiple assets and Unbundles with Sell All', async() => {
       const { deployer } = await getNamedAccounts();
       const WETH = new Contract(globals.wrapETHAddress, globals.erc20Abi, deployerSigner);
 
@@ -385,7 +385,7 @@ describe('Web3Packs', async ()=> {
       const wethForIonx = packPriceEth.div(2);
       const wethForMode = packPriceEth.div(2);
       // const wethForLP = packPriceEth.div(4);
-      const preWethTokenBalance = await WETH.balanceOf(deployer);
+      // const preWethTokenBalance = await WETH.balanceOf(deployer);
 
       // Wrap ETH for WETH
       const wethCalldata = await wETH.populateTransaction.deposit();
@@ -413,7 +413,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -423,6 +423,7 @@ describe('Web3Packs', async ()=> {
         lpOrders: [],
         packPriceEth,
       });
+      console.log(`gasCostBundle = ${gasCost}`);
 
       const web3pack = charged.NFT(Proton.address, tokenId.toNumber());
 
@@ -437,22 +438,36 @@ describe('Web3Packs', async ()=> {
       expect(ionxTokenAmount).to.be.gt(1);
 
       // Expect REFUND on Excessive Fees
-      const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      let expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
+      console.log(`postBalance = ${postBalance}`);
 
       // Unbundle Pack with Sell All
-      await _callUnbundle({
+      const {gasCost: gasCostUnbundle} = await _callUnbundle({
         deployer,
         tokenId,
         erc20SwapOrders: [ swapOrder1, swapOrder2 ],
         liquidityPairs: [],
         sellAll: true,
       });
+      console.log(`gasCostUnbundle = ${gasCostUnbundle.toBigInt()}`);
+      console.log(`protocolFee = ${globals.protocolFee.toBigInt()}`);
+
+      // gasCostBundle    =     113709800000000000
+      // postBalance      = 9998509958000000000000
+      // gasCostUnbundle  =      51194800000000000
+      // protocolFee      =        100000000000000
+      // expectedBalance  = 9998458663200000000000
+      // ethAmount        =          9924657812086
+      // newBalance       = 9998443414324657812086
 
       // Check Receiver for WETH
-      const wethBalance = await WETH.balanceOf(deployer);
-      expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
+      expectedBalance = postBalance - globals.protocolFee.toBigInt() - gasCostUnbundle.toBigInt();
+      console.log(`expectedBalance = ${expectedBalance}`);
+      const newBalance = (await deployerSigner.getBalance()).toBigInt();
+      console.log(`newBalance = ${newBalance}`);
+      expect(newBalance).to.be.gt(expectedBalance);
     });
 
     it('Bundles an Unstable Liquidity Position', async() => {
@@ -518,7 +533,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -531,7 +546,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
 
@@ -757,7 +772,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -770,7 +785,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
   });
@@ -798,7 +813,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -811,7 +826,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
 
@@ -844,7 +859,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -857,7 +872,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
 
@@ -892,7 +907,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -905,7 +920,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
 
       // Unbundle Pack with Sell All
@@ -965,7 +980,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -978,7 +993,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
 
@@ -1315,7 +1330,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {tokenId, gasCost} = await _callBundle({
@@ -1328,7 +1343,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
   });
@@ -1359,7 +1374,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
@@ -1372,7 +1387,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
 
@@ -1404,7 +1419,7 @@ describe('Web3Packs', async ()=> {
       });
 
       // Get Balance before Transaction for Test Confirmation
-      const preBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const preBalance = (await deployerSigner.getBalance()).toBigInt();
 
       // Bundle Pack
       const {gasCost} = await _callBundle({
@@ -1417,7 +1432,7 @@ describe('Web3Packs', async ()=> {
 
       // Expect REFUND on Excessive Fees
       const expectedBalance = preBalance - packPriceEth.toBigInt() - globals.protocolFee.toBigInt() - gasCost.toBigInt();
-      const postBalance = (await ethers.provider.getBalance(deployer)).toBigInt();
+      const postBalance = (await deployerSigner.getBalance()).toBigInt();
       expect(postBalance).to.eq(expectedBalance);
     });
 

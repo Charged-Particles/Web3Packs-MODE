@@ -44,9 +44,9 @@ module.exports = async (hre) => {
     return isForked || network?.name === 'hardhat';
   };
 
-  const useExistingWeb3PacksContract = isHardhat() ? '' : '0x750663B16Bd6404D06Ddc21Ea9A2A0148Ac968B6';
+  const useExistingWeb3PacksContract = isHardhat() ? '' : '0x8Db1C69d9E05d7A1b82972377D894007cD71674D';
   const useExistingManagerContract = isHardhat() ? '' : '0x3c38A05998443555793366BDB9F68cA31F098519';
-  const useExistingExchangeContract = isHardhat() ? '' : '0x504775f2F49943E141464CB610b42a0BFdaB4080'; // '0xb3990e2F3eEE38Ae958FCd0737553f352b3F4c90'; // '0xB3781bbB4799C47C7f803979e308f686B79A5997';
+  const useExistingExchangeContract = isHardhat() ? '' : '0x395Bbb9776B0CC6F180862f814BF66e42894Ad61';
   const migrateFromOldManager = {
     address: '', // '0xdBE000aDe32AcC1d81C38B01765902de6d698e5c',
     tokenRange: [765, 766], //[187, 530],

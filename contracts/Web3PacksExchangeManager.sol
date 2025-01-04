@@ -39,11 +39,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "./lib/BlackholePrevention.sol";
 import "./lib/Balancer.sol";
 import "./lib/UniswapV2.sol";
 import "./lib/UniswapV3.sol";
 import "./lib/Velodrome.sol";
+import "./lib/SwapMode.sol";
 import "./interfaces/IWeb3Packs.sol";
 import "./interfaces/IWeb3PacksManager.sol";
 import "./interfaces/IWeb3PacksExchangeManager.sol";
@@ -57,12 +59,12 @@ contract Web3PacksExchangeManager is
   Balancer,
   UniswapV2,
   UniswapV3,
-  Velodrome
+  Velodrome,
+  SwapMode
 {
   address public _weth;
   address public _web3Packs;
   address public _web3PacksManager;
-  uint256 internal _receivedAmount;
 
   mapping (bytes32 => TokenAmount) internal _swapForLiquidityAmount;
 
@@ -73,17 +75,12 @@ contract Web3PacksExchangeManager is
     UniswapV2(weth)
     UniswapV3(weth)
     Velodrome(weth)
+    SwapMode(weth)
   {
     _weth = weth;
   }
 
-  receive() external payable {
-    _receivedAmount = msg.value;
-  }
-
-  fallback() external payable {
-    _receivedAmount = msg.value;
-  }
+  receive() external payable {}
 
   /***********************************|
   |          Public Functions         |
@@ -172,8 +169,11 @@ contract Web3PacksExchangeManager is
       if (swap.routerType == RouterType.Balancer) {
         balancerSwapForEth(swap.tokenIn, swap.tokenOut, swap.router, swap.poolId);
       }
-      if (swap.routerType == RouterType.Velodrome || swap.routerType == RouterType.SwapMode) {
+      if (swap.routerType == RouterType.Velodrome) {
         velodromeSwapForEth(swap.tokenIn, swap.tokenOut, swap.router, swap.reverseRoute, swap.stable);
+      }
+      if (swap.routerType == RouterType.SwapMode) {
+        swapModeSwapForEth(swap.tokenIn, swap.tokenOut, swap.router, swap.reverseRoute);
       }
       if (swap.routerType == RouterType.UniswapV2) {
         uniswapV2SwapForEth(swap.tokenIn, swap.tokenOut, swap.router);
@@ -191,8 +191,11 @@ contract Web3PacksExchangeManager is
       if (lp.routerType == RouterType.Balancer) {
         balancerSwapForEth(lp.token0.token, lp.token1.token, lp.router, lp.poolId);
       }
-      if (lp.routerType == RouterType.Velodrome || lp.routerType == RouterType.SwapMode) {
+      if (lp.routerType == RouterType.Velodrome) {
         velodromeSwapForEth(lp.token0.token, lp.token1.token, lp.router, lp.reverseRoute, lp.stable);
+      }
+      if (lp.routerType == RouterType.SwapMode) {
+        swapModeSwapForEth(lp.token0.token, lp.token1.token, lp.router, lp.reverseRoute);
       }
       if (lp.routerType == RouterType.UniswapV2) {
         uniswapV2SwapForEth(lp.token0.token, lp.token1.token, lp.router);
@@ -202,9 +205,11 @@ contract Web3PacksExchangeManager is
       }
     }
 
-    // Transfer wETH to Receiver
+    // Transfer ETH to Receiver
     ethAmount = IERC20(_weth).balanceOf(address(this));
-    TransferHelper.safeTransfer(_weth, receiver, ethAmount);
+    IWETH(_weth).withdraw(ethAmount);
+    ethAmount = address(this).balance;
+    payable(receiver).transfer(ethAmount);
   }
 
   function getLiquidityTokenData(LiquidityPosition calldata liquidityPosition)
@@ -218,6 +223,9 @@ contract Web3PacksExchangeManager is
     }
     if (liquidityPosition.routerType == RouterType.Velodrome) {
       return velodromeGetLiquidityTokenAddress(liquidityPosition);
+    }
+    if (liquidityPosition.routerType == RouterType.SwapMode) {
+      return swapModeGetLiquidityTokenAddress(liquidityPosition);
     }
     if (liquidityPosition.routerType == RouterType.UniswapV2) {
       return uniswapV2GetLiquidityTokenAddress(liquidityPosition);
@@ -236,7 +244,7 @@ contract Web3PacksExchangeManager is
     ContractCallGeneric memory contractCall
   ) internal {
     _requireAllowlisted(contractCall.contractAddress);
-    require(_receivedAmount >= contractCall.amountIn, "Invalid amount for ContractCall");
+    require(address(this).balance >= contractCall.amountIn, "Invalid amount for ContractCall");
 
     (bool success, bytes memory data) = contractCall.contractAddress.call{value: contractCall.amountIn}(
       contractCall.callData
@@ -264,8 +272,11 @@ contract Web3PacksExchangeManager is
     if (swapOrder.routerType == RouterType.Balancer) {
       amountOut = balancerSwapSingle(swapOrder);
     }
-    if (swapOrder.routerType == RouterType.Velodrome || swapOrder.routerType == RouterType.SwapMode) {
+    if (swapOrder.routerType == RouterType.Velodrome) {
       amountOut = velodromeSwapSingle(swapOrder);
+    }
+    if (swapOrder.routerType == RouterType.SwapMode) {
+      amountOut = swapModeSwapSingle(swapOrder);
     }
     if (swapOrder.routerType == RouterType.UniswapV2) {
       amountOut = uniswapV2SwapSingle(swapOrder);
@@ -309,6 +320,11 @@ contract Web3PacksExchangeManager is
 
     if (liquidityOrder.routerType == RouterType.Velodrome) {
       (lpTokenId, liquidity, amount0, amount1) = velodromeCreatePosition(liquidityOrder, balanceAmount0, balanceAmount1, amount0Min, amount1Min);
+      _energize(web3PacksTokenId, address(uint160(lpTokenId)), 0);
+    }
+
+    if (liquidityOrder.routerType == RouterType.SwapMode) {
+      (lpTokenId, liquidity, amount0, amount1) = swapModeCreatePosition(liquidityOrder, balanceAmount0, balanceAmount1, amount0Min, amount1Min);
       _energize(web3PacksTokenId, address(uint160(lpTokenId)), 0);
     }
 
@@ -362,6 +378,9 @@ contract Web3PacksExchangeManager is
     }
     if (liquidityPosition.routerType == RouterType.Velodrome) {
       (amount0, amount1) = velodromeRemoveLiquidity(liquidityPosition, liquidityPair);
+    }
+    if (liquidityPosition.routerType == RouterType.SwapMode) {
+      (amount0, amount1) = swapModeRemoveLiquidity(liquidityPosition, liquidityPair);
     }
     if (liquidityPosition.routerType == RouterType.UniswapV2) {
       (amount0, amount1) = uniswapV2RemoveLiquidity(liquidityPosition, liquidityPair);

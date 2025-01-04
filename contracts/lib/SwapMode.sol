@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Velodrome.sol
+// SwapMode.sol
 // Copyright (c) 2023 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,16 +37,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../interfaces/IWeb3PacksDefs.sol";
 import "../interfaces/IWeb3Packs.sol";
-import "../interfaces/IVelodrome.sol";
+import "../interfaces/IPancakeRouter02.sol";
+import "../interfaces/IPancakeFactory.sol";
 
-contract Velodrome {
+contract SwapMode {
   address private weth;
 
   constructor(address _weth) {
     weth = _weth;
   }
 
-  function velodromeSwapSingle(
+  function swapModeSwapSingle(
     IWeb3Packs.ERC20SwapOrderGeneric memory swapOrder
   )
     internal
@@ -67,26 +68,24 @@ contract Velodrome {
     amountOut = amounts[amounts.length-1];
   }
 
-  function velodromeSwapForEth(
+  function swapModeSwapForEth(
     address token0,
     address token1,
     address router,
-    IWeb3PacksDefs.Route[] memory reverseRoutes,
-    bool stable
+    IWeb3PacksDefs.Route[] memory reverseRoutes
   )
     internal
   {
     uint256 balance;
-    IVelodrome.Route[] memory routes = new IVelodrome.Route[](reverseRoutes.length);
-    for (uint i = 0; i < reverseRoutes.length; i++) {
-      routes[i] = IVelodrome.Route({from: reverseRoutes[i].token0, to: reverseRoutes[i].token1, stable: stable});
-    }
+    address[] memory routes = new address[](1);
+    routes[0] = reverseRoutes[0].token0;
+    routes[1] = reverseRoutes[0].token0;
 
     if (token0 != weth) {
       balance = IERC20(token0).balanceOf(address(this));
       if (balance > 0) {
         TransferHelper.safeApprove(token0, router, balance);
-        IVelodrome(router).swapExactTokensForTokens(
+        IPancakeRouter02(router).swapExactTokensForTokens(
           balance,
           0,
           routes,
@@ -99,7 +98,7 @@ contract Velodrome {
       balance = IERC20(token1).balanceOf(address(this));
       if (balance > 0) {
         TransferHelper.safeApprove(token1, router, balance);
-        IVelodrome(router).swapExactTokensForTokens(
+        IPancakeRouter02(router).swapExactTokensForTokens(
           balance,
           0,
           routes,
@@ -110,7 +109,7 @@ contract Velodrome {
     }
   }
 
-  function velodromeCreatePosition(
+  function swapModeCreatePosition(
     IWeb3Packs.LiquidityOrderGeneric memory liquidityOrder,
     uint256 balanceAmount0,
     uint256 balanceAmount1,
@@ -126,10 +125,9 @@ contract Velodrome {
     )
   {
     // Add Liquidity
-    (amount0, amount1, liquidity) = IVelodrome(liquidityOrder.router).addLiquidity(
+    (amount0, amount1, liquidity) = IPancakeRouter02(liquidityOrder.router).addLiquidity(
       liquidityOrder.token0,
       liquidityOrder.token1,
-      liquidityOrder.stable,
       balanceAmount0,
       balanceAmount1,
       minAmount0,
@@ -139,18 +137,18 @@ contract Velodrome {
     );
 
     // Deposit the LP tokens into the Web3Packs NFT
-    address lpTokenAddress = _getVelodromePairAddress(liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
+    address lpTokenAddress = _getSwapModePairAddress(liquidityOrder.router, liquidityOrder.token0, liquidityOrder.token1);
     lpTokenId = uint256(uint160(lpTokenAddress));
   }
 
-  function velodromeRemoveLiquidity(
+  function swapModeRemoveLiquidity(
     IWeb3Packs.LiquidityPosition memory liquidityPosition,
     IWeb3Packs.LiquidityPairs memory liquidityPairs
   )
     internal
     returns (uint amount0, uint amount1)
   {
-    address lpTokenAddress = _getVelodromePairAddress(liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
+    address lpTokenAddress = _getSwapModePairAddress(liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
 
     TransferHelper.safeApprove(
       lpTokenAddress,
@@ -158,10 +156,9 @@ contract Velodrome {
       liquidityPosition.liquidity
     );
 
-    (amount0, amount1) = IVelodrome(liquidityPosition.router).removeLiquidity(
+    (amount0, amount1) = IPancakeRouter02(liquidityPosition.router).removeLiquidity(
       liquidityPosition.token0,
       liquidityPosition.token1,
-      liquidityPosition.stable,
       liquidityPosition.liquidity,
       liquidityPairs.token0.amount,
       liquidityPairs.token1.amount,
@@ -170,18 +167,23 @@ contract Velodrome {
     );
   }
 
-  function velodromeGetLiquidityTokenAddress(
+  function swapModeGetLiquidityTokenAddress(
     IWeb3Packs.LiquidityPosition memory liquidityPosition
   )
     internal
     view
     returns (address lpTokenAddress, uint256 lpTokenId)
   {
-    lpTokenAddress = _getVelodromePairAddress(liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
+    lpTokenAddress = _getSwapModePairAddress(liquidityPosition.router, liquidityPosition.token0, liquidityPosition.token1);
     lpTokenId = 0;
   }
 
-  function _getVelodromePairAddress(address router, address token0, address token1) private view returns (address) {
-    return IVelodrome(router).poolFor(token0, token1, false);
+  function _getSwapModeFactory(address router) private pure returns (address) {
+    return IPancakeRouter02(router).factory();
+  }
+
+  function _getSwapModePairAddress(address router, address token0, address token1) private view returns (address) {
+    IPancakeFactory _factory = IPancakeFactory(_getSwapModeFactory(router));
+    return _factory.getPair(token0, token1);
   }
 }
