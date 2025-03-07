@@ -46,8 +46,8 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: !optimizerDisabled,
-            runs: 200
-          }
+            runs: 200,
+          },
         },
       },
     ],
@@ -85,7 +85,7 @@ const config: HardhatUserConfig = {
       chainId: 34443,
       gasPrice: 100e9,
       forking: {
-        // url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
+        // url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_ETH_APIKEY,
         // blockNumber: 30784049
         url: 'https://mainnet.mode.network',
         blockNumber: 15004000
@@ -97,62 +97,103 @@ const config: HardhatUserConfig = {
       },
     },
     mainnet: {
-        url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-        gasPrice: 'auto',
-        // blockGasLimit: 12487794,
-        accounts: {
-            mnemonic: mnemonic.mainnet,
-            initialIndex: 0,
-            count: 10,
-        }
+      url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ETH_APIKEY}`,
+      gasPrice: 'auto',
+      // blockGasLimit: 12487794,
+      accounts: {
+        mnemonic: mnemonic.mainnet,
+        initialIndex: 0,
+        count: 10,
+      },
+    },
+    sepolia: {
+      url: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_ETH_APIKEY}`,
+      gasPrice: 'auto',
+      accounts: {
+        mnemonic: mnemonic.testnet,
+        initialIndex: 0,
+        count: 10,
+      },
+      chainId: 11155111,
     },
     polygon: {
-        url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY,
-        gasPrice: 'auto',
-        accounts: {
-            mnemonic: mnemonic.mainnet,
-            // initialIndex: 0,
-            count: 8,
-        },
-        chainId: 137
-    },
-    modeSepolia: {
-      url: "https://sepolia.mode.network",
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_POLYGON_APIKEY}`,
       gasPrice: 'auto',
       accounts: {
-          mnemonic: mnemonic.testnet,
-          initialIndex: 0,
-          count: 10,
+        mnemonic: mnemonic.mainnet,
+        // initialIndex: 0,
+        count: 8,
       },
-      chainId: 919,
+      chainId: 137,
+    },
+    mumbai: {
+      url: `https://polygon-mumbai.g.alchemy.io/v2/${process.env.ALCHEMY_POLYGON_APIKEY}`,
+      gasPrice: 10e9,
+      accounts: {
+        mnemonic: mnemonic.testnet,
+        initialIndex: 0,
+        count: 10,
+      },
+      chainId: 80001,
     },
     mode: {
-      url: "https://mainnet.mode.network",
+      url: 'https://mainnet.mode.network',
       gasPrice: 'auto',
       accounts: {
-          mnemonic: mnemonic.mainnet,
-          initialIndex: 0,
-          count: 10,
+        mnemonic: mnemonic.mainnet,
+        initialIndex: 0,
+        count: 10,
       },
       chainId: 34443,
     },
-    optimism: {
-      url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY_OP}`,
+    modeSepolia: {
+      url: 'https://sepolia.mode.network',
       gasPrice: 'auto',
       accounts: {
-          mnemonic: mnemonic.mainnet,
-          initialIndex: 0,
-          count: 10,
+        mnemonic: mnemonic.testnet,
+        initialIndex: 0,
+        count: 10,
+      },
+      chainId: 919,
+    },
+    base: {
+      url: `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_BASE_APIKEY}`,
+      gasPrice: 'auto',
+      accounts: {
+        mnemonic: mnemonic.mainnet,
+        initialIndex: 0,
+        count: 10,
+      },
+      chainId: 8453,
+    },
+    baseSepolia: {
+      url: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_BASE_SEPOLIA_APIKEY}`,
+      gasPrice: 1000000000,
+      accounts: {
+        mnemonic: mnemonic.testnet,
+        initialIndex: 0,
+        count: 10,
+      },
+      chainId: 84532,
+    },
+    optimism: {
+      url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_OP_APIKEY}`,
+      gasPrice: 'auto',
+      accounts: {
+        mnemonic: mnemonic.mainnet,
+        initialIndex: 0,
+        count: 10,
       },
       chainId: 10,
     },
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY ?? '',
+      mainnet: process.env.ETHERSCAN_APIKEY ?? '',
+      sepolia: process.env.ETHERSCAN_APIKEY ?? '',
       mode: process.env.ETHERSCAN_APIKEY ?? '',
       modeSepolia: 'MODE-NETWORK-TESTNET',
-      optimism: 'FZDJWADMSRXXEK35YJNFR3T7WVB4SK3CJW', // process.env.ETHERSCAN_API_KEY ?? '',
+      optimism: process.env.ALCHEMY_OP_APIKEY ?? '',
     },
     customChains: [
       {
@@ -177,23 +218,24 @@ const config: HardhatUserConfig = {
         network: 'modeSepolia',
         chainId: 919,
         urls: {
-          apiURL: 'https://sepolia.explorer.mode.network/api',
-          browserURL: 'https://sepolia.explorer.mode.network'
-        }
-      }
+          apiURL: 'https://sepolia.mode.network/api',
+          browserURL: 'https://sepolia.explorer.mode.network',
+        },
+      },
     ],
   },
   gasReporter: {
-      currency: 'USD',
-      gasPrice: 1,
-      enabled: (process.env.REPORT_GAS) ? true : false
+    currency: 'USD',
+    gasPrice: 1,
+    enabled: process.env.REPORT_GAS ? true : false,
   },
   abiExporter: {
     path: './abis',
     runOnCompile: true,
     clear: true,
     flat: true,
-    only: [ 'Web3Packs' ],
+    only: ['Web3Packs', 'ERC20Mintable'],
+    except: ['IWeb3Packs', 'Web3PacksRouterBase'],
   },
   sourcify: { enabled: true },
 };
