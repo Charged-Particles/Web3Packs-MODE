@@ -18,8 +18,9 @@ module.exports = async (hre) => {
     // Deploy Contracts
     //
     log('Deploying Test ERC20...');
+    log(`Deployer = ${deployer}`);
 
-    const constructorArgs = [ 'Web3Packs Mode Epoch 1 Rewards', 'W3P-E1' ];
+    const constructorArgs = [ 'ERC20 Mintable', 'E20M' ];
     await deploy('ERC20Mintable', {
       from: deployer,
       args: constructorArgs,
@@ -31,9 +32,9 @@ module.exports = async (hre) => {
       await verifyContract('ERC20Mintable', erc20, constructorArgs);
     }
 
-    const amount = ethers.utils.parseUnits('5000', 18);
-    log(`  Minting ${amount} Tokens to Deployer: ${deployer}`);
-    await erc20.mint(deployer, amount);
+    // const amount = ethers.utils.parseUnits('5000', 18);
+    // log(`  Minting ${amount} Tokens to Deployer: ${deployer}`);
+    // await erc20.mint(deployer, amount);
 
     log('Done!');
 };
