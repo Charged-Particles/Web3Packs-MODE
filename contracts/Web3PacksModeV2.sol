@@ -232,11 +232,9 @@ contract Web3PacksModeV2 is
     uint256 lpTokenId;
     for (uint i; i < _bundlesByPackId[packTokenId].length; i++) {
       bytes32 bundlerId = _bundlesByPackId[packTokenId][i];
-
-      // Ensure Bundler is Registered
       if (_bundlersById[bundlerId] == address(0)) {
-        // revert BundlerNotRegistered(bundlerId);
-        continue; // skip unregistered bundlers
+        // skip unregistered bundlers to prevent breaking unbundle
+        continue;
       }
       bundler = IWeb3PacksBundler(_bundlersById[bundlerId]);
 

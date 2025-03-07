@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// SSWethWmlt.sol
+// SSWethSmd.sol
 // Copyright (c) 2025 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,48 +25,31 @@ pragma solidity 0.8.17;
 pragma abicoder v2;
 
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "../routers/VelodromeV1Router.sol";
+import "../routers/PancakeRouter.sol";
 import "../../../interfaces/v2/IWeb3PacksBundler.sol";
-import "../../../interfaces/IVelodrome.sol";
 
 /*
-  Performs a Single-Sided Swap on Velodrome Exchange using the Velodrome V1 Router
+  Performs a Single-Sided Swap on SwapMode Exchange using the Pancake Router
   Token 0 = WETH
-  Token 1 = wMLT
+  Token 1 = SMD
  */
-contract SSWethWmlt is IWeb3PacksBundler, VelodromeV1Router {
-  address public _usdc;
+contract SSWethSmd is IWeb3PacksBundler, PancakeRouter {
+  // Inherit from the Pancake Router
+  constructor(IWeb3PacksDefs.RouterConfig memory config) PancakeRouter(config) {}
 
-  // Inherit from the Velodrome V1 Router
-  constructor(IWeb3PacksDefs.RouterConfig memory config, address usdc) VelodromeV1Router(config) {
-    _usdc = usdc;
-  }
-
-  // Token 1 = wMLT on Mode (Velodrome Exchange)
+  // Token 1 = SMD on Mode (SwapMode Exchange)
   function getToken1() public view override returns (IWeb3PacksDefs.Token memory token1) {
     IWeb3PacksDefs.Token memory token = IWeb3PacksDefs.Token({
       tokenAddress: _primaryToken,
       tokenDecimals: 18,
-      tokenSymbol: "wMLT"
+      tokenSymbol: "SMD"
     });
     return token;
   }
 
   function getLiquidityToken(uint256) public override view returns (address tokenAddress, uint256 tokenId) {
-    tokenAddress = _getVelodromePairAddress(getToken0().tokenAddress, getToken1().tokenAddress);
+    tokenAddress = getToken1().tokenAddress;
     tokenId = 0;
-  }
-
-  function getTokenPath(bool reverse) internal override view returns (IWeb3PacksDefs.Route[] memory tokenPath) {
-    IWeb3PacksDefs.Route[] memory tokens = new IWeb3PacksDefs.Route[](2);
-    if (reverse) {
-      tokens[0] = IWeb3PacksDefs.Route({token0: getToken1().tokenAddress, token1: _usdc, stable: false});
-      tokens[1] = IWeb3PacksDefs.Route({token0: _usdc, token1: getToken0().tokenAddress, stable: false});
-    } else {
-      tokens[0] = IWeb3PacksDefs.Route({token0: getToken0().tokenAddress, token1: _usdc, stable: false});
-      tokens[1] = IWeb3PacksDefs.Route({token0: _usdc, token1: getToken1().tokenAddress, stable: false});
-    }
-    return tokens;
   }
 
   // NOTE: Call via "staticCall" for Quote
@@ -87,7 +70,7 @@ contract SSWethWmlt is IWeb3PacksBundler, VelodromeV1Router {
     )
   {
     // Perform Swap
-    amountOut = swapSingle(10000, false); // 100% WETH -> wMLT
+    amountOut = swapSingle(10000, false); // 100% WETH -> SMD
 
     // Transfer back to Manager
     tokenAddress = getToken1().tokenAddress;
@@ -105,7 +88,7 @@ contract SSWethWmlt is IWeb3PacksBundler, VelodromeV1Router {
     returns(uint256 ethAmountOut)
   {
     // Perform Swap
-    swapSingle(10000, true); // 100% wMLT -> WETH
+    swapSingle(10000, true); // 100% SMD -> WETH
 
     // Transfer Assets to Receiver
     if (sellAll) {
