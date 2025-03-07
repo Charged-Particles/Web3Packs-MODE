@@ -23,7 +23,7 @@
     "gas": "REPORT_GAS=true hardhat test",
     "start": "hardhat node --port 8545",
     "deploy": "hardhat deploy --tags mode_packs --network",
-    "mint-erc20": "hardhat deploy --tags ERC20Mintable --network",
+    "erc20": "hardhat deploy --tags ERC20Mintable --network",
     "rewards": "hardhat deploy --tags DistroRewards --network"
   },
   "dependencies": {
