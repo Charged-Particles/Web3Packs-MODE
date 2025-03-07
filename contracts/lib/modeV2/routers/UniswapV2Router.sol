@@ -50,18 +50,6 @@ abstract contract UniswapV2Router is Web3PacksRouterBase {
     amountOut = _performSwap(percentOfAmount, token0.tokenAddress, token1.tokenAddress);
   }
 
-  // function swapForEth(uint256 percentOfAmount)
-  //   public
-  //   virtual
-  //   override
-  //   onlyManagerOrSelf
-  //   returns (uint256 amountOut)
-  // {
-  //   IWeb3PacksDefs.Token memory token0 = getToken0();
-  //   IWeb3PacksDefs.Token memory token1 = getToken1();
-  //   amountOut = _performSwap(percentOfAmount, token1.tokenAddress, token0.tokenAddress);
-  // }
-
   function createLiquidityPosition(
     uint256 balanceAmount0,
     uint256 balanceAmount1,

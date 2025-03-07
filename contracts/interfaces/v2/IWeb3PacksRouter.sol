@@ -40,10 +40,6 @@ interface IWeb3PacksRouter is IWeb3PacksDefs {
     external
     returns (uint256 amountOut);
 
-  // function swapForEth(uint256 percentOfAmount)
-  //   external
-  //   returns (uint256 amountOut);
-
   function createLiquidityPosition(
     uint256 balanceAmount0,
     uint256 balanceAmount1,
