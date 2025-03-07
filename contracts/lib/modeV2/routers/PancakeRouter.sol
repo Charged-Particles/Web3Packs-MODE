@@ -36,8 +36,7 @@ import "../../../interfaces/IPancakeFactory.sol";
 // UniswapV2-like Router
 abstract contract PancakeRouter is Web3PacksRouterBase {
   // Pass constructor data
-  constructor(address weth, address router, address manager, string memory bundlerId, int24 tickLower, int24 tickUpper)
-    Web3PacksRouterBase(weth, router, manager, bundlerId, tickLower, tickUpper) {}
+  constructor(IWeb3PacksDefs.RouterConfig memory config) Web3PacksRouterBase(config) {}
 
   function swapSingle(uint256 percentOfAmount, bool reverse)
     public
@@ -153,11 +152,11 @@ abstract contract PancakeRouter is Web3PacksRouterBase {
     }
   }
 
-  function _getPancakeFactory() private view returns (address) {
+  function _getPancakeFactory() internal view returns (address) {
     return IPancakeRouter02(_router).factory();
   }
 
-  function _getPancakePairAddress(address token0, address token1) private view returns (address) {
+  function _getPancakePairAddress(address token0, address token1) internal view returns (address) {
     IPancakeFactory _factory = IPancakeFactory(_getPancakeFactory());
     return _factory.getPair(token0, token1);
   }
