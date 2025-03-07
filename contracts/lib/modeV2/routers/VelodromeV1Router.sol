@@ -55,21 +55,6 @@ abstract contract VelodromeV1Router is Web3PacksRouterBase {
     amountOut = _performSwap(percentOfAmount, token0.tokenAddress, token1.tokenAddress, routes);
   }
 
-  // function swapForEth(uint256 percentOfAmount)
-  //   public
-  //   virtual
-  //   override
-  //   onlyManagerOrSelf
-  //   returns (uint256 amountOut)
-  // {
-  //   IWeb3PacksDefs.Route[] memory tokens = getTokenPath(true);
-  //   IVelodrome.Route[] memory routes = new IVelodrome.Route[](tokens.length);
-  //   for (uint i; i < tokens.length; i++) {
-  //     routes[i] = IVelodrome.Route({from: tokens[i].token0, to: tokens[i].token1, stable: tokens[i].stable});
-  //   }
-  //   amountOut = _performSwap(percentOfAmount, tokens[0].token0, routes);
-  // }
-
   function createLiquidityPosition(
     uint256 balanceAmount0,
     uint256 balanceAmount1,

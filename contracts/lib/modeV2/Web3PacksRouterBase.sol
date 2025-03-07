@@ -86,6 +86,10 @@ abstract contract Web3PacksRouterBase is
     return tokens;
   }
 
+  function getPoolId() internal virtual view returns (bytes32 poolId) {
+    return bytes32("");
+  }
+
   function getBalanceToken0() public virtual view returns (uint256 balanceToken0) {
     return IERC20(getToken0().tokenAddress).balanceOf(address(this));
   }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// UniswapV2Router.sol
+// VelodromeV2Router.sol
 // Copyright (c) 2025 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,14 +26,23 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../Web3PacksRouterBase.sol";
 import "../../../interfaces/v2/IWeb3PacksDefs.sol";
+import {IUniversalRouter} from "../../../interfaces/IVelodromeUniversalRouter.sol";
+import {Commands} from "./lib/VelodromeV2Commands.sol";
+import {Constants} from "./lib/VelodromeV2Constants.sol";
 
+// REF: https://github.com/velodrome-finance/universal-router/blob/main/test/foundry-tests/v2/UniswapV2MultiHop.t.sol#L68
 
-abstract contract UniswapV2Router is Web3PacksRouterBase {
+// Velodrome Universal Router
+abstract contract VelodromeV2Router is Web3PacksRouterBase {
+  struct VRoute {
+    address from;
+    address to;
+    bool stable;
+  }
+
   // Pass constructor data
   constructor(address weth, address router, address manager, string memory bundlerId, int24 tickLower, int24 tickUpper)
     Web3PacksRouterBase(weth, router, manager, bundlerId, tickLower, tickUpper) {}
@@ -45,16 +54,21 @@ abstract contract UniswapV2Router is Web3PacksRouterBase {
     onlyManagerOrSelf
     returns (uint256 amountOut)
   {
-    IWeb3PacksDefs.Token memory token0 = reverse ? getToken1() : getToken0();
-    IWeb3PacksDefs.Token memory token1 = reverse ? getToken0() : getToken1();
-    amountOut = _performSwap(percentOfAmount, token0.tokenAddress, token1.tokenAddress);
+    IWeb3PacksDefs.Token memory token0 = getToken0();
+    IWeb3PacksDefs.Token memory token1 = getToken1();
+    IWeb3PacksDefs.Route[] memory tokens = getTokenPath(reverse);
+    VRoute[] memory routes = new VRoute[](tokens.length);
+    for (uint i; i < tokens.length; i++) {
+      routes[i] = VRoute({from: tokens[i].token0, to: tokens[i].token1, stable: tokens[i].stable});
+    }
+    amountOut = _performSwap(percentOfAmount, token0.tokenAddress, token1.tokenAddress, routes);
   }
 
   function createLiquidityPosition(
-    uint256 balanceAmount0,
-    uint256 balanceAmount1,
-    uint256 minAmount0,
-    uint256 minAmount1,
+    uint256,
+    uint256,
+    uint256,
+    uint256,
     bool
   )
     public
@@ -68,24 +82,10 @@ abstract contract UniswapV2Router is Web3PacksRouterBase {
       uint256 amount1
     )
   {
-    IWeb3PacksDefs.Token memory token0 = getToken0();
-    IWeb3PacksDefs.Token memory token1 = getToken1();
-
-    // Add Liquidity
-    (amount0, amount1, liquidity) = IUniswapV2Router02(_router).addLiquidity(
-      token0.tokenAddress,
-      token1.tokenAddress,
-      balanceAmount0,
-      balanceAmount1,
-      minAmount0,
-      minAmount1,
-      address(this),
-      block.timestamp
-    );
-
-    // Deposit the LP tokens into the Web3Packs NFT
-    address lpTokenAddress = _getUniswapV2PairAddress(token0.tokenAddress, token1.tokenAddress);
-    lpTokenId = uint256(uint160(lpTokenAddress));
+    lpTokenId = 0;
+    liquidity = 0;
+    amount0 = 0;
+    amount1 = 0;
   }
 
   function collectLpFees(IWeb3PacksDefs.LiquidityPosition memory)
@@ -99,65 +99,32 @@ abstract contract UniswapV2Router is Web3PacksRouterBase {
     amount1 = 0;
   }
 
-  function removeLiquidityPosition(IWeb3PacksDefs.LiquidityPosition memory liquidityPosition)
+  function removeLiquidityPosition(IWeb3PacksDefs.LiquidityPosition memory)
     public
     virtual
     override
     onlyManagerOrSelf
     returns (uint amount0, uint amount1)
   {
-    IWeb3PacksDefs.Token memory token0 = getToken0();
-    IWeb3PacksDefs.Token memory token1 = getToken1();
-
-    address lpTokenAddress = _getUniswapV2PairAddress(token0.tokenAddress, token1.tokenAddress);
-    TransferHelper.safeApprove(
-      lpTokenAddress,
-      _router,
-      liquidityPosition.liquidity
-    );
-
-    // Release Liquidity
-    (amount0, amount1) = IUniswapV2Router02(_router).removeLiquidity(
-      token0.tokenAddress,
-      token1.tokenAddress,
-      liquidityPosition.liquidity,
-      0,
-      0,
-      address(this),
-      block.timestamp
-    );
+    amount0 = 0;
+    amount1 = 0;
   }
 
 
-  function _performSwap(uint256 percentOfAmount, address token0, address token1)
+  function _performSwap(uint256 percentOfAmount, address token0, address token1, VRoute[] memory routes)
     internal
     returns (uint256 amountOut)
   {
     uint256 balance = IERC20(token0).balanceOf(address(this));
     uint256 swapAmount = (balance * percentOfAmount) / 10000;
-    address[] memory path;
-    path[0] = token0;
-    path[1] = token1;
 
     if (swapAmount > 0) {
       TransferHelper.safeApprove(token0, _router, swapAmount);
-      IUniswapV2Router02(_router).swapExactTokensForETHSupportingFeeOnTransferTokens(
-        swapAmount,
-        0,
-        path,
-        address(this),
-        block.timestamp
-      );
+      bytes memory commands = abi.encodePacked(bytes1(uint8(Commands.V2_SWAP_EXACT_IN)));
+      bytes[] memory inputs = new bytes[](1);
+      inputs[0] = abi.encode(Constants.MSG_SENDER, swapAmount, 0, routes, true);
+      IUniversalRouter(_router).execute(commands, inputs, block.timestamp);
       amountOut = IERC20(token1).balanceOf(address(this));
     }
-  }
-
-  function _getUniswapV2Factory() private view returns (address) {
-    return IUniswapV2Router02(_router).factory();
-  }
-
-  function _getUniswapV2PairAddress(address token0, address token1) private view returns (address) {
-    IUniswapV2Factory _factory = IUniswapV2Factory(_getUniswapV2Factory());
-    return _factory.getPair(token0, token1);
   }
 }
