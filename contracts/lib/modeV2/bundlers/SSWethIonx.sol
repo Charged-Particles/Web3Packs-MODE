@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// LiquidityWethMode.sol
+// SSWethIonx.sol
 // Copyright (c) 2025 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,49 +24,32 @@
 pragma solidity 0.8.17;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "../routers/AlgebraRouter.sol";
 import "../../../interfaces/v2/IWeb3PacksBundler.sol";
 
-
 /*
-  Creates a Liquidity Position on Kim Exchange using the Algebra Router
-  Token 0 = WETH 50%
-  Token 1 = MODE 50%
+  Performs a Single-Sided Swap on Kim Exchange using the Algebra Router
+  Token 0 = WETH
+  Token 1 = IONX
  */
-contract LiquidityWethMode is IWeb3PacksBundler, AlgebraRouter {
-  address internal _primaryToken;
-
+contract SSWethIonx is IWeb3PacksBundler, AlgebraRouter {
   // Inherit from the Algebra Router
-  constructor(
-    address weth,
-    address primaryToken, // for reuse on various chains
-    address router,
-    address manager,
-    string memory bundlerId,
-    int24 tickLower,
-    int24 tickUpper
-  )
-    AlgebraRouter(weth, router, manager, bundlerId, tickLower, tickUpper)
-  {
-    _primaryToken = primaryToken;
-  }
+  constructor(IWeb3PacksDefs.RouterConfig memory config) AlgebraRouter(config) {}
 
-  // Token 0 = WETH
-  // Token 1 = Mode on Mode (Kim Exchange)
+  // Token 1 = IONX on Mode (Kim Exchange)
   function getToken1() public view override returns (IWeb3PacksDefs.Token memory token1) {
     IWeb3PacksDefs.Token memory token = IWeb3PacksDefs.Token({
       tokenAddress: _primaryToken,
       tokenDecimals: 18,
-      tokenSymbol: "MODE"
+      tokenSymbol: "IONX"
     });
     return token;
   }
 
-  function getLiquidityToken(uint256 packTokenId) public override view returns (address tokenAddress, uint256 tokenId) {
-    tokenAddress = _router;
-    tokenId = _liquidityPositionsByTokenId[packTokenId].lpTokenId;
+  function getLiquidityToken(uint256) public override view returns (address tokenAddress, uint256 tokenId) {
+    tokenAddress = getToken1().tokenAddress;
+    tokenId = 0;
   }
 
   // NOTE: Call via "staticCall" for Quote
@@ -75,7 +58,7 @@ contract LiquidityWethMode is IWeb3PacksBundler, AlgebraRouter {
     amountOut = swapSingle(10000, reverse);
   }
 
-  function bundle(uint256 packTokenId, address sender)
+  function bundle(uint256, address sender)
     payable
     external
     override
@@ -86,54 +69,32 @@ contract LiquidityWethMode is IWeb3PacksBundler, AlgebraRouter {
       uint256 nftTokenId
     )
   {
-    uint256 wethBalance = getBalanceToken0();
-
     // Perform Swap
-    amountOut = swapSingle(5000, false); // 50% WETH -> MODE
-    wethBalance = getBalanceToken0();
-
-    // Deposit Liquidity
-    (uint256 lpTokenId, uint256 liquidity, , ) = createLiquidityPosition(wethBalance, amountOut, 0, 0, false);
-    nftTokenId = lpTokenId;
+    amountOut = swapSingle(10000, false); // 100% WETH -> IONX
 
     // Transfer back to Manager
-    tokenAddress = _router;
-    IERC721(tokenAddress).safeTransferFrom(address(this), _manager, nftTokenId);
-
-    // Track Liquidity Position by Pack Token ID
-    _liquidityPositionsByTokenId[packTokenId] = IWeb3PacksDefs.LiquidityPosition({
-      lpTokenId: lpTokenId,
-      liquidity: liquidity,
-      stable: false
-    });
+    tokenAddress = getToken1().tokenAddress;
+    nftTokenId = 0;
+    TransferHelper.safeTransfer(tokenAddress, _manager, amountOut);
 
     // Refund Unused Amounts
     refundUnusedTokens(sender);
   }
 
-  function unbundle(address payable receiver, uint256 packTokenId, bool sellAll)
+  function unbundle(address payable receiver, uint256, bool sellAll)
     external
     override
     onlyManagerOrSelf
     returns(uint256 ethAmountOut)
   {
-    // Remove Liquidity
-    IWeb3PacksDefs.LiquidityPosition memory liquidityPosition = _liquidityPositionsByTokenId[packTokenId];
-    removeLiquidityPosition(liquidityPosition);
-    collectLpFees(liquidityPosition);
-
     // Perform Swap
+    swapSingle(10000, true); // 100% IONX -> WETH
+
+    // Transfer Assets to Receiver
     if (sellAll) {
-      // Swap Assets back to WETH
-      swapSingle(10000, true); // 100% MODE -> WETH
       ethAmountOut = exitWethAndTransfer(receiver);
     } else {
-      // Transfer Assets to Receiver
       TransferHelper.safeTransfer(getToken0().tokenAddress, receiver, getBalanceToken0());
-      TransferHelper.safeTransfer(getToken1().tokenAddress, receiver, getBalanceToken1());
     }
-
-    // Clear Liquidity Position
-    delete _liquidityPositionsByTokenId[packTokenId];
   }
 }

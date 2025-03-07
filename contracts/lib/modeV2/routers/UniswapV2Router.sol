@@ -35,8 +35,7 @@ import "../../../interfaces/v2/IWeb3PacksDefs.sol";
 
 abstract contract UniswapV2Router is Web3PacksRouterBase {
   // Pass constructor data
-  constructor(address weth, address router, address manager, string memory bundlerId, int24 tickLower, int24 tickUpper)
-    Web3PacksRouterBase(weth, router, manager, bundlerId, tickLower, tickUpper) {}
+  constructor(IWeb3PacksDefs.RouterConfig memory config) Web3PacksRouterBase(config) {}
 
   function swapSingle(uint256 percentOfAmount, bool reverse)
     public
@@ -152,11 +151,11 @@ abstract contract UniswapV2Router is Web3PacksRouterBase {
     }
   }
 
-  function _getUniswapV2Factory() private view returns (address) {
+  function _getUniswapV2Factory() internal view returns (address) {
     return IUniswapV2Router02(_router).factory();
   }
 
-  function _getUniswapV2PairAddress(address token0, address token1) private view returns (address) {
+  function _getUniswapV2PairAddress(address token0, address token1) internal view returns (address) {
     IUniswapV2Factory _factory = IUniswapV2Factory(_getUniswapV2Factory());
     return _factory.getPair(token0, token1);
   }

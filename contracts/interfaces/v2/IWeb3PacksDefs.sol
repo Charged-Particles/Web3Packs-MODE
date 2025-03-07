@@ -37,13 +37,15 @@ interface IWeb3PacksDefs {
   error UnsucessfulSwap(address tokenOut, uint256 amountIn, address router);
   error InsufficientForFee(uint256 value, uint256 ethPackPrice, uint256 protocolFee);
 
-  // enum RouterType {
-  //   UniswapV2,
-  //   UniswapV3,
-  //   Velodrome,
-  //   Balancer,
-  //   SwapMode
-  // }
+  struct RouterConfig {
+    address weth;
+    address primaryToken;
+    address router;
+    address manager;
+    bytes32 bundlerId;
+    int24 tickLower;
+    int24 tickUpper;
+  }
 
   struct BundleChunk {
     bytes32 bundlerId;
@@ -56,11 +58,6 @@ interface IWeb3PacksDefs {
     string tokenSymbol;
   }
 
-  // struct TokenAmount {
-  //   address token;
-  //   uint256 amount;
-  // }
-
   struct Route {
     address token0;
     address token1;
@@ -72,18 +69,6 @@ interface IWeb3PacksDefs {
     uint256 liquidity;
     bool stable;
   }
-
-  // struct LiquidityPositionResult {
-  //   address token0;
-  //   address token1;
-  //   uint256 amount0;
-  //   uint256 amount1;
-  // }
-
-  // struct NFT {
-  //   address tokenAddress;
-  //   uint256 id;
-  // }
 
   struct LockState {
     uint256 ERC20Timelock;

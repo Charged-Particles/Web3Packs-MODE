@@ -36,8 +36,7 @@ import "../../../interfaces/INonfungiblePositionManager.sol";
 // UniswapV3-like Router
 abstract contract AlgebraRouter is Web3PacksRouterBase {
   // Pass constructor data
-  constructor(address weth, address router, address manager, string memory bundlerId, int24 tickLower, int24 tickUpper)
-    Web3PacksRouterBase(weth, router, manager, bundlerId, tickLower, tickUpper) {}
+  constructor(IWeb3PacksDefs.RouterConfig memory config) Web3PacksRouterBase(config) {}
 
   function swapSingle(uint256 percentOfAmount, bool reverse)
     public

@@ -41,23 +41,25 @@ abstract contract Web3PacksRouterBase is
   address public _weth;
   address public _router;
   address public _manager;
+  address public _primaryToken;
 
   int24 public _tickLower;
   int24 public _tickUpper;
 
   // The ID Associated with this Bundler (must be Registered with Web3Packs)
-  string public _bundlerId;
+  bytes32 public _bundlerId;
 
   // Store Liquidity Positions by Pack Token ID
   mapping(uint256 => IWeb3PacksDefs.LiquidityPosition) internal _liquidityPositionsByTokenId;
 
-  constructor(address weth, address router, address manager, string memory bundlerId, int24 tickLower, int24 tickUpper) {
-    _weth = weth;
-    _router = router;
-    _manager = manager;
-    _bundlerId = bundlerId;
-    _tickLower = tickLower;
-    _tickUpper = tickUpper;
+  constructor(IWeb3PacksDefs.RouterConfig memory config) {
+    _weth = config.weth;
+    _primaryToken = config.primaryToken;
+    _router = config.router;
+    _manager = config.manager;
+    _bundlerId = config.bundlerId;
+    _tickLower = config.tickLower;
+    _tickUpper = config.tickUpper;
   }
 
   function getToken0() public virtual view returns (IWeb3PacksDefs.Token memory token0) {

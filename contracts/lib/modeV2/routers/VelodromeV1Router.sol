@@ -35,8 +35,7 @@ import "../../../interfaces/IVelodrome.sol";
 // UniswapV2-like Router
 abstract contract VelodromeV1Router is Web3PacksRouterBase {
   // Pass constructor data
-  constructor(address weth, address router, address manager, string memory bundlerId, int24 tickLower, int24 tickUpper)
-    Web3PacksRouterBase(weth, router, manager, bundlerId, tickLower, tickUpper) {}
+  constructor(IWeb3PacksDefs.RouterConfig memory config) Web3PacksRouterBase(config) {}
 
   function swapSingle(uint256 percentOfAmount, bool reverse)
     public
@@ -155,7 +154,7 @@ abstract contract VelodromeV1Router is Web3PacksRouterBase {
     }
   }
 
-  function _getVelodromePairAddress(address token0, address token1) private view returns (address) {
+  function _getVelodromePairAddress(address token0, address token1) internal view returns (address) {
     return IVelodrome(_router).poolFor(token0, token1, false);
   }
 }

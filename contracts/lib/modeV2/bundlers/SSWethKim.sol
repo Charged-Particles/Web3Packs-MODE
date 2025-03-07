@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// SingleSidedWethIonx.sol
+// SSWethKim.sol
 // Copyright (c) 2025 Firma Lux, Inc. <https://charged.fi>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,32 +31,18 @@ import "../../../interfaces/v2/IWeb3PacksBundler.sol";
 /*
   Performs a Single-Sided Swap on Kim Exchange using the Algebra Router
   Token 0 = WETH
-  Token 1 = IONX
+  Token 1 = KIM
  */
-contract SingleSidedWethIonx is IWeb3PacksBundler, AlgebraRouter {
-  address internal _primaryToken;
-
+contract SSWethKim is IWeb3PacksBundler, AlgebraRouter {
   // Inherit from the Algebra Router
-  constructor(
-    address weth,
-    address primaryToken, // for reuse on various chains
-    address router,
-    address manager,
-    string memory bundlerId,
-    int24 tickLower,
-    int24 tickUpper
-  )
-    AlgebraRouter(weth, router, manager, bundlerId, tickLower, tickUpper)
-  {
-    _primaryToken = primaryToken;
-  }
+  constructor(IWeb3PacksDefs.RouterConfig memory config) AlgebraRouter(config) {}
 
-  // Token 1 = IONX on Mode (Kim Exchange)
+  // Token 1 = KIM on Mode (Kim Exchange)
   function getToken1() public view override returns (IWeb3PacksDefs.Token memory token1) {
     IWeb3PacksDefs.Token memory token = IWeb3PacksDefs.Token({
       tokenAddress: _primaryToken,
       tokenDecimals: 18,
-      tokenSymbol: "IONX"
+      tokenSymbol: "KIM"
     });
     return token;
   }
@@ -84,7 +70,7 @@ contract SingleSidedWethIonx is IWeb3PacksBundler, AlgebraRouter {
     )
   {
     // Perform Swap
-    amountOut = swapSingle(10000, false); // 100% WETH -> IONX
+    amountOut = swapSingle(10000, false); // 100% WETH -> KIM
 
     // Transfer back to Manager
     tokenAddress = getToken1().tokenAddress;
@@ -102,7 +88,7 @@ contract SingleSidedWethIonx is IWeb3PacksBundler, AlgebraRouter {
     returns(uint256 ethAmountOut)
   {
     // Perform Swap
-    swapSingle(10000, true); // 100% IONX -> WETH
+    swapSingle(10000, true); // 100% KIM -> WETH
 
     // Transfer Assets to Receiver
     if (sellAll) {
