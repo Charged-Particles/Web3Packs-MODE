@@ -11,7 +11,7 @@ contract ERC721Mintable is ERC721, ERC721URIStorage  {
 
   Counters.Counter private _tokenIdCounter;
 
-  constructor() ERC721("MyTestToken", "MTK") {}
+  constructor() ERC721("MyTestToken", "MTK") ERC721URIStorage() {}
 
   function mint(address to)
     public
@@ -30,12 +30,12 @@ contract ERC721Mintable is ERC721, ERC721URIStorage  {
   {
     return super.tokenURI(tokenId);
   }
- 
+
   function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
       super._burn(tokenId);
   }
 
-  function supportsInterface(bytes4 interfaceId) public view override(ERC721 ) returns (bool) {
+  function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage) returns (bool) {
     return super.supportsInterface(interfaceId);
   }
 

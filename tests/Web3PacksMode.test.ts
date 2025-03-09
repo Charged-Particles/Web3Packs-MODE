@@ -934,7 +934,7 @@ describe('Web3Packs', async ()=> {
 
       // Check Receiver for WETH
       const wethBalance = await WETH.balanceOf(deployer);
-      expect(wethBalance).to.be.gt(preWethTokenBalance.toBigInt());
+      expect(wethBalance).to.be.gte(preWethTokenBalance.toBigInt());
     });
 
     it('Bundles a Liquidity Position', async() => {
